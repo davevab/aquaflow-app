@@ -591,20 +591,40 @@
             var PRICE_WITH_FAUCET = 30;
             var MINIMUM_QUANTITY = 3;
 
-            // Set minimum date to today and disable past dates
+            // Set minimum date to today
             var today = new Date();
+            today.setHours(0, 0, 0, 0);
             var todayString = today.toISOString().split('T')[0];
             document.getElementById('deliveryDate').setAttribute('min', todayString);
 
-            // Handle date selection with day name display
+            // Handle date selection with validation for past dates (iOS fix)
             document.getElementById('deliveryDate').addEventListener('change', function() {
                 var dateValue = this.value;
                 if (dateValue) {
-                    var dateObj = new Date(dateValue + 'T00:00:00');
+                    // Check if selected date is in the past
+                    var selectedDate = new Date(dateValue + 'T00:00:00');
+                    var todayDate = new Date();
+                    todayDate.setHours(0, 0, 0, 0);
+                    
+                    if (selectedDate < todayDate) {
+                        // Past date selected - reject it
+                        alert('Please select today or a future date for delivery.');
+                        this.value = '';
+                        document.getElementById('dateButtonText').textContent = 'Select when you want your water delivered';
+                        document.getElementById('dateButton').classList.remove('filled');
+                        document.getElementById('dateButton').style.borderColor = '#ef4444';
+                        document.getElementById('dateError').textContent = 'Cannot select past dates';
+                        document.getElementById('dateError').classList.add('show');
+                        return;
+                    }
+                    
+                    // Valid date - show it
                     var options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
-                    var formattedDate = dateObj.toLocaleDateString('en-US', options);
+                    var formattedDate = selectedDate.toLocaleDateString('en-US', options);
                     document.getElementById('dateButtonText').textContent = formattedDate;
                     document.getElementById('dateButton').classList.add('filled');
+                    document.getElementById('dateButton').style.borderColor = '';
+                    document.getElementById('dateError').classList.remove('show');
                 } else {
                     document.getElementById('dateButtonText').textContent = 'Select when you want your water delivered';
                     document.getElementById('dateButton').classList.remove('filled');
@@ -695,10 +715,23 @@
                 var deliveryDate = document.getElementById('deliveryDate').value;
                 if (!deliveryDate) {
                     document.getElementById('dateButton').style.borderColor = '#ef4444';
+                    document.getElementById('dateError').textContent = 'Please select delivery date';
                     document.getElementById('dateError').classList.add('show');
                     isValid = false;
                 } else {
-                    document.getElementById('dateButton').style.borderColor = '';
+                    // Double-check date is not in the past (final validation)
+                    var selectedDate = new Date(deliveryDate + 'T00:00:00');
+                    var todayDate = new Date();
+                    todayDate.setHours(0, 0, 0, 0);
+                    
+                    if (selectedDate < todayDate) {
+                        document.getElementById('dateButton').style.borderColor = '#ef4444';
+                        document.getElementById('dateError').textContent = 'Cannot select past dates';
+                        document.getElementById('dateError').classList.add('show');
+                        isValid = false;
+                    } else {
+                        document.getElementById('dateButton').style.borderColor = '';
+                    }
                 }
 
                 return isValid;
