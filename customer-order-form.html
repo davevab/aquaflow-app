@@ -94,7 +94,6 @@
         input[type="text"],
         input[type="tel"],
         input[type="number"],
-        input[type="date"],
         textarea,
         select {
             width: 100%;
@@ -104,6 +103,47 @@
             font-size: 1rem;
             -webkit-appearance: none;
             appearance: none;
+        }
+        
+        /* Custom date button */
+        .date-button {
+            width: 100%;
+            min-height: 5rem;
+            padding: 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            background: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .date-button.filled {
+            background: white;
+            border-color: #2563eb;
+        }
+        
+        .date-button-text {
+            font-size: 1rem;
+            color: #111827;
+            font-weight: 500;
+        }
+        
+        .date-button-placeholder {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        
+        input[type="date"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
         }
         
         input:focus,
@@ -418,9 +458,11 @@
 
                 <div class="form-group">
                     <label>Delivery Date <span class="required">*</span></label>
-                    <input type="date" id="deliveryDate">
+                    <div class="date-button" id="dateButton">
+                        <div class="date-button-text" id="dateButtonText">Select when you want your water delivered</div>
+                        <input type="date" id="deliveryDate">
+                    </div>
                     <p class="error-text" id="dateError">Please select delivery date</p>
-                    <p class="hint-text">Select when you want your water delivered</p>
                 </div>
 
                 <div class="form-group">
@@ -542,41 +584,50 @@
     </div>
 
     <script>
-        // Wait for DOM to be fully loaded
         document.addEventListener('DOMContentLoaded', function() {
             console.log('App loaded successfully');
             
-            // Constants
             var PRICE_PER_GALLON = 20;
             var PRICE_WITH_FAUCET = 30;
             var MINIMUM_QUANTITY = 3;
 
-            // Set minimum date to today
-            var today = new Date().toISOString().split('T')[0];
-            document.getElementById('deliveryDate').setAttribute('min', today);
+            // Set minimum date to today and disable past dates
+            var today = new Date();
+            var todayString = today.toISOString().split('T')[0];
+            document.getElementById('deliveryDate').setAttribute('min', todayString);
 
-            // Calculate and update total
+            // Handle date selection with day name display
+            document.getElementById('deliveryDate').addEventListener('change', function() {
+                var dateValue = this.value;
+                if (dateValue) {
+                    var dateObj = new Date(dateValue + 'T00:00:00');
+                    var options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+                    var formattedDate = dateObj.toLocaleDateString('en-US', options);
+                    document.getElementById('dateButtonText').textContent = formattedDate;
+                    document.getElementById('dateButton').classList.add('filled');
+                } else {
+                    document.getElementById('dateButtonText').textContent = 'Select when you want your water delivered';
+                    document.getElementById('dateButton').classList.remove('filled');
+                }
+            });
+
             function updateTotal() {
                 var productType = document.getElementById('productType').value;
                 var quantity = parseInt(document.getElementById('quantity').value) || 0;
                 var price = productType === 'with_faucet' ? PRICE_WITH_FAUCET : PRICE_PER_GALLON;
                 var total = quantity * price;
                 document.getElementById('totalAmount').textContent = '₱' + total;
-                console.log('Total updated:', total);
             }
 
-            // Event listeners for total calculation
             document.getElementById('productType').addEventListener('change', updateTotal);
             document.getElementById('quantity').addEventListener('input', updateTotal);
             document.getElementById('quantity').addEventListener('change', updateTotal);
 
-            // Radio button for delivery window
             document.getElementById('radioAM').addEventListener('click', function(e) {
                 e.preventDefault();
                 document.getElementById('radioAM').classList.add('selected');
                 document.getElementById('radioPM').classList.remove('selected');
                 document.querySelector('input[name="deliveryWindow"][value="am"]').checked = true;
-                console.log('AM selected');
             });
 
             document.getElementById('radioPM').addEventListener('click', function(e) {
@@ -584,16 +635,13 @@
                 document.getElementById('radioPM').classList.add('selected');
                 document.getElementById('radioAM').classList.remove('selected');
                 document.querySelector('input[name="deliveryWindow"][value="pm"]').checked = true;
-                console.log('PM selected');
             });
 
-            // Payment option buttons
             document.getElementById('payCOD').addEventListener('click', function(e) {
                 e.preventDefault();
                 document.getElementById('payCOD').classList.add('selected');
                 document.getElementById('payGCash').classList.remove('selected');
                 document.querySelector('input[name="paymentMethod"][value="cod"]').checked = true;
-                console.log('COD selected');
             });
 
             document.getElementById('payGCash').addEventListener('click', function(e) {
@@ -601,14 +649,11 @@
                 document.getElementById('payGCash').classList.add('selected');
                 document.getElementById('payCOD').classList.remove('selected');
                 document.querySelector('input[name="paymentMethod"][value="gcash"]').checked = true;
-                console.log('GCash selected');
             });
 
-            // Form validation
             function validateForm() {
                 var isValid = true;
 
-                // Clear all errors
                 var errorTexts = document.querySelectorAll('.error-text');
                 for (var i = 0; i < errorTexts.length; i++) {
                     errorTexts[i].classList.remove('show');
@@ -618,7 +663,6 @@
                     inputs[i].classList.remove('error');
                 }
 
-                // Validate name
                 var name = document.getElementById('name').value.trim();
                 if (!name) {
                     document.getElementById('name').classList.add('error');
@@ -626,7 +670,6 @@
                     isValid = false;
                 }
 
-                // Validate phone
                 var phone = document.getElementById('phone').value.trim();
                 var phoneRegex = /^(\+63|0)?9\d{9}$/;
                 if (!phone || !phoneRegex.test(phone.replace(/\s/g, ''))) {
@@ -635,7 +678,6 @@
                     isValid = false;
                 }
 
-                // Validate address
                 var address = document.getElementById('address').value.trim();
                 if (!address) {
                     document.getElementById('address').classList.add('error');
@@ -643,7 +685,6 @@
                     isValid = false;
                 }
 
-                // Validate quantity
                 var quantity = parseInt(document.getElementById('quantity').value);
                 if (!quantity || quantity < MINIMUM_QUANTITY) {
                     document.getElementById('quantity').classList.add('error');
@@ -651,30 +692,23 @@
                     isValid = false;
                 }
 
-                // Validate date
                 var deliveryDate = document.getElementById('deliveryDate').value;
                 if (!deliveryDate) {
-                    document.getElementById('deliveryDate').classList.add('error');
+                    document.getElementById('dateButton').style.borderColor = '#ef4444';
                     document.getElementById('dateError').classList.add('show');
                     isValid = false;
+                } else {
+                    document.getElementById('dateButton').style.borderColor = '';
                 }
 
-                console.log('Validation result:', isValid);
                 return isValid;
             }
 
-            // Place order button
             document.getElementById('placeOrderBtn').addEventListener('click', function(e) {
                 e.preventDefault();
-                console.log('Place order clicked');
                 
                 if (validateForm()) {
-                    console.log('Form is valid, processing order...');
-                    
-                    // Generate tracking number
                     var trackingNumber = 'ORD' + Date.now().toString().slice(-6);
-
-                    // Get form data
                     var name = document.getElementById('name').value;
                     var phone = document.getElementById('phone').value;
                     var address = document.getElementById('address').value;
@@ -685,22 +719,16 @@
                     var paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
                     var specialInstructions = document.getElementById('specialInstructions').value.trim();
 
-                    // Calculate total
                     var price = productType === 'with_faucet' ? PRICE_WITH_FAUCET : PRICE_PER_GALLON;
                     var total = quantity * price;
 
-                    // Populate confirmation screen
                     document.getElementById('confirmTrackingNumber').textContent = '#' + trackingNumber;
                     document.getElementById('confirmProduct').textContent = quantity + ' × ' + 
                         (productType === 'standard' ? 'Standard Container' : 'Container with Faucet');
                     
                     var dateObj = new Date(deliveryDate + 'T00:00:00');
-                    document.getElementById('confirmDate').textContent = dateObj.toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                    });
+                    var options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+                    document.getElementById('confirmDate').textContent = dateObj.toLocaleDateString('en-US', options);
                     
                     document.getElementById('confirmTime').textContent = 
                         deliveryWindow === 'am' ? 'Morning (10AM-12PM)' : 'Afternoon (3PM-5PM)';
@@ -711,18 +739,13 @@
                     document.getElementById('confirmPhone').textContent = phone;
                     document.getElementById('confirmAddress').textContent = address;
                     
-                    // Show/hide special instructions
-                    console.log('Special instructions:', specialInstructions);
                     if (specialInstructions) {
-                        console.log('Showing special instructions');
                         document.getElementById('confirmInstructions').textContent = specialInstructions;
                         document.getElementById('instructionsBox').classList.remove('hidden');
                     } else {
-                        console.log('No special instructions, hiding box');
                         document.getElementById('instructionsBox').classList.add('hidden');
                     }
 
-                    // Show GCash instructions if needed
                     if (paymentMethod === 'gcash') {
                         document.getElementById('gcashInstructions').classList.remove('hidden');
                         document.getElementById('gcashAmount').textContent = '₱' + total;
@@ -733,25 +756,15 @@
                         document.getElementById('confirmMessage').classList.remove('hidden');
                     }
 
-                    // Show confirmation, hide form
                     document.getElementById('orderForm').classList.add('hidden');
                     document.getElementById('confirmationScreen').classList.remove('hidden');
-
-                    // Scroll to top
                     window.scrollTo(0, 0);
-
-                    console.log('Order submitted successfully');
-                } else {
-                    console.log('Form validation failed');
                 }
             });
 
-            // New order button
             document.getElementById('newOrderBtn').addEventListener('click', function(e) {
                 e.preventDefault();
-                console.log('New order clicked');
                 
-                // Clear form
                 document.getElementById('name').value = '';
                 document.getElementById('phone').value = '';
                 document.getElementById('address').value = '';
@@ -759,18 +772,17 @@
                 document.getElementById('quantity').value = '';
                 document.getElementById('deliveryDate').value = '';
                 document.getElementById('specialInstructions').value = '';
+                document.getElementById('dateButtonText').textContent = 'Select when you want your water delivered';
+                document.getElementById('dateButton').classList.remove('filled');
                 
-                // Reset radio buttons
                 document.querySelector('input[name="deliveryWindow"][value="am"]').checked = true;
                 document.querySelector('input[name="paymentMethod"][value="cod"]').checked = true;
                 
-                // Reset styling
                 document.getElementById('radioAM').classList.add('selected');
                 document.getElementById('radioPM').classList.remove('selected');
                 document.getElementById('payCOD').classList.add('selected');
                 document.getElementById('payGCash').classList.remove('selected');
                 
-                // Clear errors
                 var errorTexts = document.querySelectorAll('.error-text');
                 for (var i = 0; i < errorTexts.length; i++) {
                     errorTexts[i].classList.remove('show');
@@ -780,18 +792,12 @@
                     inputs[i].classList.remove('error');
                 }
                 
-                // Update total
                 updateTotal();
                 
-                // Show form, hide confirmation
                 document.getElementById('orderForm').classList.remove('hidden');
                 document.getElementById('confirmationScreen').classList.add('hidden');
-                
-                // Scroll to top
                 window.scrollTo(0, 0);
             });
-
-            console.log('All event listeners attached');
         });
     </script>
 </body>
