@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaFlow - Owner Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+        }
+        
+        /* Header */
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+        }
+        
+        .station-name {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #111827;
+        }
+        
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            color: #374151;
+        }
+        
+        .logout-btn:hover {
+            background: #e5e7eb;
+        }
+        
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+        
+        /* Summary Card (Single Combined) */
+        .summary-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+        
+        .summary-item {
+            text-align: center;
+        }
+        
+        .summary-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+        
+        .summary-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #111827;
+        }
+        
+        .summary-item.revenue .summary-value {
+            color: #059669;
+        }
+        
+        .summary-item.inventory .summary-value {
+            color: #2563eb;
+        }
+        
+        .summary-item.warning .summary-value {
+            color: #dc2626;
+        }
+        
+        /* Section */
+        .section {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111827;
+        }
+        
+        .section-count {
+            background: #2563eb;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        /* Order Card */
+        .order-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        .order-card.expanded {
+            background: #f0f9ff;
+            border-color: #3b82f6;
+        }
+        
+        .order-card-header {
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+            background: white;
+        }
+        
+        .order-card-header:hover {
+            background: #f9fafb;
+        }
+        
+        .order-card.expanded .order-card-header {
+            background: #dbeafe;
+        }
+        
+        .order-card-header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+        
+        .order-card-header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .expand-icon {
+            color: #6b7280;
+            font-size: 1.25rem;
+            transition: transform 0.2s;
+        }
+        
+        .order-card.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+        
+        .order-card-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        
+        .order-card.expanded .order-card-body {
+            max-height: 1000px;
+        }
+        
+        .order-card-content {
+            padding: 0 1rem 1rem 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+        
+        .order-number {
+            font-weight: 600;
+            color: #2563eb;
+            font-size: 0.95rem;
+        }
+        
+        .order-customer {
+            color: #111827;
+            font-weight: 500;
+        }
+        
+        .order-time {
+            font-size: 0.75rem;
+            color: #6b7280;
+            white-space: nowrap;
+        }
+        
+        .order-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        .badge-am {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .badge-pm {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .order-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.875rem;
+        }
+        
+        .order-detail-label {
+            color: #6b7280;
+        }
+        
+        .order-detail-value {
+            color: #111827;
+            font-weight: 500;
+        }
+        
+        .order-address {
+            font-size: 0.875rem;
+            color: #374151;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            background: #f9fafb;
+            border-radius: 0.25rem;
+        }
+        
+        /* Driver Assignment */
+        .driver-assignment {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .driver-select {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+        
+        .assign-btn {
+            padding: 0.5rem 1rem;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .assign-btn:hover {
+            background: #1d4ed8;
+        }
+        
+        /* Delivery Card */
+        .delivery-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: white;
+        }
+        
+        .delivery-driver {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .driver-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1e40af;
+            background: #dbeafe;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+        }
+        
+        .driver-stats {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        
+        .delivery-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .status-preparing {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-out {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .delivery-orders {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .delivery-order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: #f9fafb;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .delivery-order-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: 1;
+        }
+        
+        .delivery-order-number {
+            font-weight: 600;
+            color: #2563eb;
+            font-size: 0.875rem;
+        }
+        
+        .delivery-order-customer {
+            font-weight: 500;
+            color: #111827;
+        }
+        
+        .delivery-order-location {
+            color: #6b7280;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+        
+        .delivery-order-amount {
+            font-weight: 600;
+            color: #059669;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6b7280;
+        }
+        
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .summary-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .order-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <span class="logo">💧</span>
+            <span class="station-name">AquaFlow Water Station</span>
+        </div>
+        <button class="logout-btn">Logout</button>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Summary Card -->
+        <div class="summary-card">
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">Today's Orders</div>
+                    <div class="summary-value" id="todayOrders">12</div>
+                </div>
+                <div class="summary-item revenue">
+                    <div class="summary-label">Today's Revenue</div>
+                    <div class="summary-value" id="todayRevenue">₱2,400</div>
+                </div>
+                <div class="summary-item inventory">
+                    <div class="summary-label">Inventory</div>
+                    <div class="summary-value" id="inventoryCount">45 gal</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Orders -->
+        <div class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Pending Orders</h2>
+                    <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">Orders awaiting driver assignment</p>
+                </div>
+                <span class="section-count" id="pendingCount">3</span>
+            </div>
+            
+            <div id="pendingOrdersList">
+                <!-- Pending orders will be inserted here -->
+            </div>
+        </div>
+
+        <!-- AM Batch Deliveries -->
+        <div class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">AM Deliveries (10AM-12PM)</h2>
+                    <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">Morning delivery batch</p>
+                </div>
+                <span class="section-count" id="amCount">5</span>
+            </div>
+            
+            <div id="amDeliveriesList">
+                <!-- AM deliveries will be inserted here -->
+            </div>
+        </div>
+
+        <!-- PM Batch Deliveries -->
+        <div class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">PM Deliveries (3PM-5PM)</h2>
+                    <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">Afternoon delivery batch</p>
+                </div>
+                <span class="section-count" id="pmCount">4</span>
+            </div>
+            
+            <div id="pmDeliveriesList">
+                <!-- PM deliveries will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Demo Data
+        var demoData = {
+            drivers: [
+                { id: 1, name: 'Mang Jose', capacity: 30 },
+                { id: 2, name: 'Kuya Ben', capacity: 50 },
+                { id: 3, name: 'Boy Louie', capacity: 24 }
+            ],
+            
+            pendingOrders: [
+                {
+                    id: 'ORD179138',
+                    customer: 'Dave Salar',
+                    phone: '09277450757',
+                    address: 'Purok 1, Doyos Carrascal, Surigao Del Sur',
+                    quantity: 5,
+                    productType: 'Standard Container',
+                    total: 100,
+                    payment: 'GCash',
+                    deliveryWindow: 'AM',
+                    time: '9:30 AM',
+                    instructions: 'dddddd dddddd dddddddd'
+                },
+                {
+                    id: 'ORD179139',
+                    customer: 'Maria Santos',
+                    phone: '0912 345 6789',
+                    address: 'Brgy. Carmen, CDO City',
+                    quantity: 3,
+                    productType: 'Standard Container',
+                    total: 60,
+                    payment: 'COD',
+                    deliveryWindow: 'AM',
+                    time: '9:45 AM',
+                    instructions: null
+                },
+                {
+                    id: 'ORD179140',
+                    customer: 'Pedro Reyes',
+                    phone: '0917 234 5678',
+                    address: 'Brgy. Bulua, CDO City',
+                    quantity: 10,
+                    productType: 'Container with Faucet',
+                    total: 300,
+                    payment: 'COD',
+                    deliveryWindow: 'PM',
+                    time: '10:15 AM',
+                    instructions: null
+                }
+            ],
+            
+            amDeliveries: [
+                {
+                    driver: 'Mang Jose',
+                    status: 'Out for Delivery',
+                    orders: [
+                        { id: 'ORD179135', customer: 'Juan Cruz', location: 'Carmen', qty: 5, amount: 100 },
+                        { id: 'ORD179136', customer: 'Ana Lopez', location: 'Carmen', qty: 3, amount: 60 },
+                        { id: 'ORD179137', customer: 'Rico Tan', location: 'Nazareth', qty: 4, amount: 80 }
+                    ]
+                },
+                {
+                    driver: 'Kuya Ben',
+                    status: 'Preparing',
+                    orders: [
+                        { id: 'ORD179141', customer: 'ABC Store', location: 'Bulua', qty: 15, amount: 300 },
+                        { id: 'ORD179142', customer: 'Linda Garcia', location: 'Lapasan', qty: 5, amount: 100 }
+                    ]
+                }
+            ],
+            
+            pmDeliveries: [
+                {
+                    driver: 'Boy Louie',
+                    status: 'Preparing',
+                    orders: [
+                        { id: 'ORD179143', customer: 'XYZ Company', location: 'Balulang', qty: 20, amount: 400 },
+                        { id: 'ORD179144', customer: 'Rina Flores', location: 'Kauswagan', qty: 3, amount: 60 },
+                        { id: 'ORD179145', customer: 'Mark Santos', location: 'Kauswagan', qty: 4, amount: 80 },
+                        { id: 'ORD179146', customer: 'Lisa Chen', location: 'Balulang', qty: 5, amount: 100 }
+                    ]
+                }
+            ]
+        };
+
+        // Render Pending Orders (Collapsible)
+        function renderPendingOrders() {
+            var container = document.getElementById('pendingOrdersList');
+            var html = '';
+            
+            if (demoData.pendingOrders.length === 0) {
+                html = '<div class="empty-state"><div class="empty-icon">✓</div><p>All orders have been assigned!</p></div>';
+            } else {
+                demoData.pendingOrders.forEach(function(order) {
+                    html += '<div class="order-card" id="order-' + order.id + '">';
+                    
+                    // Collapsible Header
+                    html += '  <div class="order-card-header" onclick="toggleOrder(\'' + order.id + '\')">'; 
+                    html += '    <div class="order-card-header-left">';
+                    html += '      <span class="order-number">#' + order.id + '</span>';
+                    html += '      <span class="order-customer">' + order.customer + '</span>';
+                    html += '    </div>';
+                    html += '    <div class="order-card-header-right">';
+                    var badgeClass = order.deliveryWindow === 'AM' ? 'badge-am' : 'badge-pm';
+                    html += '      <span class="order-badge ' + badgeClass + '">' + order.deliveryWindow + '</span>';
+                    html += '      <span class="order-time">' + order.time + '</span>';
+                    html += '      <span class="expand-icon">▼</span>';
+                    html += '    </div>';
+                    html += '  </div>';
+                    
+                    // Collapsible Body
+                    html += '  <div class="order-card-body">';
+                    html += '    <div class="order-card-content">';
+                    html += '      <div class="order-details">';
+                    html += '        <div><span class="order-detail-label">Phone:</span></div>';
+                    html += '        <div class="order-detail-value">' + order.phone + '</div>';
+                    html += '        <div><span class="order-detail-label">Quantity:</span></div>';
+                    html += '        <div class="order-detail-value">' + order.quantity + ' gallons (' + order.productType + ')</div>';
+                    html += '        <div><span class="order-detail-label">Payment:</span></div>';
+                    html += '        <div class="order-detail-value">' + order.payment + ' - ₱' + order.total + '</div>';
+                    html += '      </div>';
+                    html += '      <div class="order-address">📍 ' + order.address + '</div>';
+                    if (order.instructions) {
+                        html += '      <div class="order-address" style="background: #fef3c7;">💬 ' + order.instructions + '</div>';
+                    }
+                    html += '      <div class="driver-assignment">';
+                    html += '        <select class="driver-select" id="driver-' + order.id + '">';
+                    html += '          <option value="">Select Driver...</option>';
+                    demoData.drivers.forEach(function(driver) {
+                        html += '          <option value="' + driver.id + '">' + driver.name + ' (Capacity: ' + driver.capacity + ' gal)</option>';
+                    });
+                    html += '        </select>';
+                    html += '        <button class="assign-btn" onclick="assignDriver(\'' + order.id + '\')">Assign</button>';
+                    html += '      </div>';
+                    html += '    </div>';
+                    html += '  </div>';
+                    
+                    html += '</div>';
+                });
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        // Toggle Order Expansion
+        function toggleOrder(orderId) {
+            var orderCard = document.getElementById('order-' + orderId);
+            orderCard.classList.toggle('expanded');
+        }
+
+        // Render Deliveries
+        function renderDeliveries(deliveries, containerId) {
+            var container = document.getElementById(containerId);
+            var html = '';
+            
+            if (deliveries.length === 0) {
+                html = '<div class="empty-state"><div class="empty-icon">📦</div><p>No deliveries scheduled yet</p></div>';
+            } else {
+                deliveries.forEach(function(delivery) {
+                    html += '<div class="delivery-card">';
+                    html += '  <div class="delivery-driver">';
+                    html += '    <div>';
+                    html += '      <div class="driver-name">' + delivery.driver + '</div>';
+                    html += '      <div class="driver-stats">' + delivery.orders.length + ' deliveries • ';
+                    var totalQty = delivery.orders.reduce(function(sum, o) { return sum + o.qty; }, 0);
+                    html += totalQty + ' gallons total</div>';
+                    html += '    </div>';
+                    var statusClass = delivery.status === 'Out for Delivery' ? 'status-out' : 'status-preparing';
+                    html += '    <span class="delivery-status ' + statusClass + '">' + delivery.status + '</span>';
+                    html += '  </div>';
+                    html += '  <div class="delivery-orders">';
+                    delivery.orders.forEach(function(order) {
+                        html += '    <div class="delivery-order-item">';
+                        html += '      <div class="delivery-order-info">';
+                        html += '        <span class="delivery-order-number">#' + order.id + '</span>';
+                        html += '        <div style="flex: 1;">';
+                        html += '          <div class="delivery-order-customer">' + order.customer + '</div>';
+                        html += '          <div class="delivery-order-location">📍 ' + order.location + ' • ' + order.qty + ' gal</div>';
+                        html += '        </div>';
+                        html += '      </div>';
+                        html += '      <span class="delivery-order-amount">₱' + order.amount + '</span>';
+                        html += '    </div>';
+                    });
+                    html += '  </div>';
+                    html += '</div>';
+                });
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // Assign Driver
+        function assignDriver(orderId) {
+            var selectElement = document.getElementById('driver-' + orderId);
+            var driverId = selectElement.value;
+            
+            if (!driverId) {
+                alert('Please select a driver first');
+                return;
+            }
+            
+            var driver = demoData.drivers.find(function(d) { return d.id == driverId; });
+            var order = demoData.pendingOrders.find(function(o) { return o.id === orderId; });
+            
+            if (confirm('Assign order #' + orderId + ' to ' + driver.name + '?')) {
+                // Move order from pending to appropriate batch
+                var batch = order.deliveryWindow === 'AM' ? demoData.amDeliveries : demoData.pmDeliveries;
+                
+                // Find or create driver's delivery group
+                var driverDelivery = batch.find(function(d) { return d.driver === driver.name; });
+                if (!driverDelivery) {
+                    driverDelivery = {
+                        driver: driver.name,
+                        status: 'Preparing',
+                        orders: []
+                    };
+                    batch.push(driverDelivery);
+                }
+                
+                // Add order to driver's list
+                driverDelivery.orders.push({
+                    id: order.id,
+                    customer: order.customer,
+                    location: order.address.split(',')[0],
+                    qty: order.quantity,
+                    amount: order.total
+                });
+                
+                // Remove from pending
+                demoData.pendingOrders = demoData.pendingOrders.filter(function(o) { return o.id !== orderId; });
+                
+                // Update counts and re-render
+                updateCounts();
+                renderAll();
+                
+                alert('Order assigned successfully!');
+            }
+        }
+
+        // Update Summary Counts
+        function updateCounts() {
+            document.getElementById('pendingCount').textContent = demoData.pendingOrders.length;
+            
+            var amCount = demoData.amDeliveries.reduce(function(sum, d) { return sum + d.orders.length; }, 0);
+            document.getElementById('amCount').textContent = amCount;
+            
+            var pmCount = demoData.pmDeliveries.reduce(function(sum, d) { return sum + d.orders.length; }, 0);
+            document.getElementById('pmCount').textContent = pmCount;
+            
+            var totalOrders = demoData.pendingOrders.length + amCount + pmCount;
+            document.getElementById('todayOrders').textContent = totalOrders;
+        }
+
+        // Render All
+        function renderAll() {
+            renderPendingOrders();
+            renderDeliveries(demoData.amDeliveries, 'amDeliveriesList');
+            renderDeliveries(demoData.pmDeliveries, 'pmDeliveriesList');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Owner Dashboard loaded');
+            updateCounts();
+            renderAll();
+        });
+    </script>
+</body>
+</html>
