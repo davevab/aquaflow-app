@@ -94,6 +94,7 @@
         input[type="text"],
         input[type="tel"],
         input[type="number"],
+        input[type="date"],
         textarea,
         select {
             width: 100%;
@@ -103,47 +104,6 @@
             font-size: 1rem;
             -webkit-appearance: none;
             appearance: none;
-        }
-        
-        /* Custom date button */
-        .date-button {
-            width: 100%;
-            min-height: 5rem;
-            padding: 1rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-            background: #f3f4f6;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            position: relative;
-        }
-        
-        .date-button.filled {
-            background: white;
-            border-color: #2563eb;
-        }
-        
-        .date-button-text {
-            font-size: 1rem;
-            color: #111827;
-            font-weight: 500;
-        }
-        
-        .date-button-placeholder {
-            font-size: 0.875rem;
-            color: #6b7280;
-            margin-top: 0.25rem;
-        }
-        
-        input[type="date"] {
-            position: absolute;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
         }
         
         input:focus,
@@ -188,6 +148,27 @@
             border-radius: 0.5rem;
             margin-bottom: 0.75rem;
             cursor: pointer;
+        }
+        
+        .radio-option.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #f9fafb;
+        }
+        
+        .cutoff-warning {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            color: #78350f;
+            display: none;
+        }
+        
+        .cutoff-warning.show {
+            display: block;
         }
         
         .radio-option.selected {
@@ -394,29 +375,6 @@
             line-height: 1.6;
         }
         
-        .gcash-warning {
-            background: #fef2f2;
-            border: 2px solid #dc2626;
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            margin-top: 0.75rem;
-            display: flex;
-            align-items: flex-start;
-            gap: 0.5rem;
-        }
-        
-        .gcash-warning-icon {
-            font-size: 1.25rem;
-            flex-shrink: 0;
-        }
-        
-        .gcash-warning-text {
-            font-size: 0.875rem;
-            font-weight: 700;
-            color: #991b1b;
-            line-height: 1.4;
-        }
-        
         .info-text {
             text-align: center;
             font-size: 0.875rem;
@@ -481,15 +439,16 @@
 
                 <div class="form-group">
                     <label>Delivery Date <span class="required">*</span></label>
-                    <div class="date-button" id="dateButton">
-                        <div class="date-button-text" id="dateButtonText">Select when you want your water delivered</div>
-                        <input type="date" id="deliveryDate">
-                    </div>
+                    <input type="date" id="deliveryDate">
                     <p class="error-text" id="dateError">Please select delivery date</p>
+                    <p class="hint-text">Select when you want your water delivered</p>
                 </div>
 
                 <div class="form-group">
                     <label>Delivery Time Window</label>
+                    <div class="cutoff-warning" id="cutoffWarning">
+                        ⚠️ <span id="cutoffMessage"></span>
+                    </div>
                     <div class="radio-option selected" id="radioAM">
                         <input type="radio" name="deliveryWindow" value="am" checked>
                         <div class="radio-content">
@@ -592,10 +551,9 @@
                         Please send payment to: <strong>0912-345-6789</strong><br>
                         Amount: <strong id="gcashAmount">₱100</strong><br>
                         Reference: <strong id="gcashReference">#ORD123456</strong>
-                    </div>
-                    <div class="gcash-warning">
-                        <span class="gcash-warning-icon">⚠️</span>
-                        <p class="gcash-warning-text">Send payment first, then the station will verify and schedule your delivery.</p>
+                        <p style="font-size: 0.875rem; margin-top: 0.75rem; font-weight: 700; color: #dc2626; background: #fee2e2; padding: 0.5rem; border-radius: 0.375rem; border-left: 3px solid #dc2626;">
+                            ⚠️ Send payment first, then the station will verify and schedule your delivery.
+                        </p>
                     </div>
                 </div>
 
@@ -608,84 +566,135 @@
     </div>
 
     <script>
+        // Wait for DOM to be fully loaded
         document.addEventListener('DOMContentLoaded', function() {
             console.log('App loaded successfully');
             
+            // Constants
             var PRICE_PER_GALLON = 20;
             var PRICE_WITH_FAUCET = 30;
             var MINIMUM_QUANTITY = 3;
 
             // Set minimum date to today
-            var today = new Date();
-            today.setHours(0, 0, 0, 0);
-            var todayString = today.toISOString().split('T')[0];
-            document.getElementById('deliveryDate').setAttribute('min', todayString);
-
-            // Handle date selection with validation for past dates (iOS fix)
-            document.getElementById('deliveryDate').addEventListener('change', function() {
-                var dateValue = this.value;
-                if (dateValue) {
-                    // Check if selected date is in the past
-                    var selectedDate = new Date(dateValue + 'T00:00:00');
-                    var todayDate = new Date();
-                    todayDate.setHours(0, 0, 0, 0);
-                    
-                    if (selectedDate < todayDate) {
-                        // Past date selected - reject it
-                        alert('Please select today or a future date for delivery.');
-                        this.value = '';
-                        document.getElementById('dateButtonText').textContent = 'Select when you want your water delivered';
-                        document.getElementById('dateButton').classList.remove('filled');
-                        document.getElementById('dateButton').style.borderColor = '#ef4444';
-                        document.getElementById('dateError').textContent = 'Cannot select past dates';
-                        document.getElementById('dateError').classList.add('show');
-                        return;
+            var today = new Date().toISOString().split('T')[0];
+            document.getElementById('deliveryDate').setAttribute('min', today);
+            
+            // Function to check delivery availability based on current time
+            function checkDeliveryAvailability() {
+                var selectedDate = document.getElementById('deliveryDate').value;
+                if (!selectedDate) return;
+                
+                var now = new Date();
+                var currentHour = now.getHours();
+                var todayDate = now.toISOString().split('T')[0];
+                
+                var amOption = document.getElementById('radioAM');
+                var pmOption = document.getElementById('radioPM');
+                var warningBox = document.getElementById('cutoffWarning');
+                var warningMessage = document.getElementById('cutoffMessage');
+                
+                // Check if selected date is today
+                if (selectedDate === todayDate) {
+                    // After 3 PM cutoff - both unavailable
+                    if (currentHour >= 15) {
+                        amOption.classList.add('disabled');
+                        pmOption.classList.add('disabled');
+                        warningBox.classList.add('show');
+                        warningMessage.textContent = 'Orders placed after 3 PM will be delivered tomorrow. Please select tomorrow\'s date.';
+                        
+                        // Force select PM and disable both
+                        document.querySelector('input[name="deliveryWindow"][value="pm"]').checked = true;
+                        pmOption.classList.add('selected');
+                        amOption.classList.remove('selected');
                     }
-                    
-                    // Valid date - show it
-                    var options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
-                    var formattedDate = selectedDate.toLocaleDateString('en-US', options);
-                    document.getElementById('dateButtonText').textContent = formattedDate;
-                    document.getElementById('dateButton').classList.add('filled');
-                    document.getElementById('dateButton').style.borderColor = '';
-                    document.getElementById('dateError').classList.remove('show');
+                    // After 10 AM cutoff - only AM unavailable
+                    else if (currentHour >= 10) {
+                        amOption.classList.add('disabled');
+                        pmOption.classList.remove('disabled');
+                        warningBox.classList.add('show');
+                        warningMessage.textContent = 'Morning delivery cutoff (10 AM) has passed. Only afternoon delivery is available for today.';
+                        
+                        // Auto-select PM if AM was selected
+                        if (document.querySelector('input[name="deliveryWindow"][value="am"]').checked) {
+                            document.querySelector('input[name="deliveryWindow"][value="pm"]').checked = true;
+                            pmOption.classList.add('selected');
+                            amOption.classList.remove('selected');
+                        }
+                    }
+                    // Before 10 AM - both available
+                    else {
+                        amOption.classList.remove('disabled');
+                        pmOption.classList.remove('disabled');
+                        warningBox.classList.remove('show');
+                    }
                 } else {
-                    document.getElementById('dateButtonText').textContent = 'Select when you want your water delivered';
-                    document.getElementById('dateButton').classList.remove('filled');
+                    // Future date - both available
+                    amOption.classList.remove('disabled');
+                    pmOption.classList.remove('disabled');
+                    warningBox.classList.remove('show');
                 }
-            });
+            }
 
+            // Calculate and update total
             function updateTotal() {
                 var productType = document.getElementById('productType').value;
                 var quantity = parseInt(document.getElementById('quantity').value) || 0;
                 var price = productType === 'with_faucet' ? PRICE_WITH_FAUCET : PRICE_PER_GALLON;
                 var total = quantity * price;
                 document.getElementById('totalAmount').textContent = '₱' + total;
+                console.log('Total updated:', total);
             }
 
+            // Event listeners for total calculation
             document.getElementById('productType').addEventListener('change', updateTotal);
             document.getElementById('quantity').addEventListener('input', updateTotal);
             document.getElementById('quantity').addEventListener('change', updateTotal);
+            
+            // Event listener for delivery date change
+            document.getElementById('deliveryDate').addEventListener('change', function() {
+                console.log('Date changed:', this.value);
+                checkDeliveryAvailability();
+            });
+            
+            // Check availability on page load if date is already selected
+            if (document.getElementById('deliveryDate').value) {
+                checkDeliveryAvailability();
+            }
 
+            // Radio button for delivery window
             document.getElementById('radioAM').addEventListener('click', function(e) {
                 e.preventDefault();
+                // Prevent selection if disabled
+                if (this.classList.contains('disabled')) {
+                    console.log('AM option is disabled');
+                    return;
+                }
                 document.getElementById('radioAM').classList.add('selected');
                 document.getElementById('radioPM').classList.remove('selected');
                 document.querySelector('input[name="deliveryWindow"][value="am"]').checked = true;
+                console.log('AM selected');
             });
 
             document.getElementById('radioPM').addEventListener('click', function(e) {
                 e.preventDefault();
+                // Prevent selection if disabled
+                if (this.classList.contains('disabled')) {
+                    console.log('PM option is disabled');
+                    return;
+                }
                 document.getElementById('radioPM').classList.add('selected');
                 document.getElementById('radioAM').classList.remove('selected');
                 document.querySelector('input[name="deliveryWindow"][value="pm"]').checked = true;
+                console.log('PM selected');
             });
 
+            // Payment option buttons
             document.getElementById('payCOD').addEventListener('click', function(e) {
                 e.preventDefault();
                 document.getElementById('payCOD').classList.add('selected');
                 document.getElementById('payGCash').classList.remove('selected');
                 document.querySelector('input[name="paymentMethod"][value="cod"]').checked = true;
+                console.log('COD selected');
             });
 
             document.getElementById('payGCash').addEventListener('click', function(e) {
@@ -693,11 +702,14 @@
                 document.getElementById('payGCash').classList.add('selected');
                 document.getElementById('payCOD').classList.remove('selected');
                 document.querySelector('input[name="paymentMethod"][value="gcash"]').checked = true;
+                console.log('GCash selected');
             });
 
+            // Form validation
             function validateForm() {
                 var isValid = true;
 
+                // Clear all errors
                 var errorTexts = document.querySelectorAll('.error-text');
                 for (var i = 0; i < errorTexts.length; i++) {
                     errorTexts[i].classList.remove('show');
@@ -706,7 +718,11 @@
                 for (var i = 0; i < inputs.length; i++) {
                     inputs[i].classList.remove('error');
                 }
+                
+                // Reset date error message to default
+                document.getElementById('dateError').textContent = 'Please select delivery date';
 
+                // Validate name
                 var name = document.getElementById('name').value.trim();
                 if (!name) {
                     document.getElementById('name').classList.add('error');
@@ -714,6 +730,7 @@
                     isValid = false;
                 }
 
+                // Validate phone
                 var phone = document.getElementById('phone').value.trim();
                 var phoneRegex = /^(\+63|0)?9\d{9}$/;
                 if (!phone || !phoneRegex.test(phone.replace(/\s/g, ''))) {
@@ -722,6 +739,7 @@
                     isValid = false;
                 }
 
+                // Validate address
                 var address = document.getElementById('address').value.trim();
                 if (!address) {
                     document.getElementById('address').classList.add('error');
@@ -729,6 +747,7 @@
                     isValid = false;
                 }
 
+                // Validate quantity
                 var quantity = parseInt(document.getElementById('quantity').value);
                 if (!quantity || quantity < MINIMUM_QUANTITY) {
                     document.getElementById('quantity').classList.add('error');
@@ -736,36 +755,42 @@
                     isValid = false;
                 }
 
+                // Validate date
                 var deliveryDate = document.getElementById('deliveryDate').value;
                 if (!deliveryDate) {
-                    document.getElementById('dateButton').style.borderColor = '#ef4444';
-                    document.getElementById('dateError').textContent = 'Please select delivery date';
+                    document.getElementById('deliveryDate').classList.add('error');
                     document.getElementById('dateError').classList.add('show');
                     isValid = false;
                 } else {
-                    // Double-check date is not in the past (final validation)
-                    var selectedDate = new Date(deliveryDate + 'T00:00:00');
-                    var todayDate = new Date();
-                    todayDate.setHours(0, 0, 0, 0);
+                    // Check if both time windows are disabled (after 3 PM cutoff)
+                    var now = new Date();
+                    var todayDate = now.toISOString().split('T')[0];
+                    var currentHour = now.getHours();
                     
-                    if (selectedDate < todayDate) {
-                        document.getElementById('dateButton').style.borderColor = '#ef4444';
-                        document.getElementById('dateError').textContent = 'Cannot select past dates';
+                    if (deliveryDate === todayDate && currentHour >= 15) {
+                        document.getElementById('deliveryDate').classList.add('error');
+                        document.getElementById('dateError').textContent = 'Orders after 3 PM will be delivered tomorrow. Please select tomorrow\'s date.';
                         document.getElementById('dateError').classList.add('show');
                         isValid = false;
-                    } else {
-                        document.getElementById('dateButton').style.borderColor = '';
                     }
                 }
 
+                console.log('Validation result:', isValid);
                 return isValid;
             }
 
+            // Place order button
             document.getElementById('placeOrderBtn').addEventListener('click', function(e) {
                 e.preventDefault();
+                console.log('Place order clicked');
                 
                 if (validateForm()) {
+                    console.log('Form is valid, processing order...');
+                    
+                    // Generate tracking number
                     var trackingNumber = 'ORD' + Date.now().toString().slice(-6);
+
+                    // Get form data
                     var name = document.getElementById('name').value;
                     var phone = document.getElementById('phone').value;
                     var address = document.getElementById('address').value;
@@ -776,16 +801,22 @@
                     var paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
                     var specialInstructions = document.getElementById('specialInstructions').value.trim();
 
+                    // Calculate total
                     var price = productType === 'with_faucet' ? PRICE_WITH_FAUCET : PRICE_PER_GALLON;
                     var total = quantity * price;
 
+                    // Populate confirmation screen
                     document.getElementById('confirmTrackingNumber').textContent = '#' + trackingNumber;
                     document.getElementById('confirmProduct').textContent = quantity + ' × ' + 
                         (productType === 'standard' ? 'Standard Container' : 'Container with Faucet');
                     
                     var dateObj = new Date(deliveryDate + 'T00:00:00');
-                    var options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
-                    document.getElementById('confirmDate').textContent = dateObj.toLocaleDateString('en-US', options);
+                    document.getElementById('confirmDate').textContent = dateObj.toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
                     
                     document.getElementById('confirmTime').textContent = 
                         deliveryWindow === 'am' ? 'Morning (10AM-12PM)' : 'Afternoon (3PM-5PM)';
@@ -796,13 +827,18 @@
                     document.getElementById('confirmPhone').textContent = phone;
                     document.getElementById('confirmAddress').textContent = address;
                     
+                    // Show/hide special instructions
+                    console.log('Special instructions:', specialInstructions);
                     if (specialInstructions) {
+                        console.log('Showing special instructions');
                         document.getElementById('confirmInstructions').textContent = specialInstructions;
                         document.getElementById('instructionsBox').classList.remove('hidden');
                     } else {
+                        console.log('No special instructions, hiding box');
                         document.getElementById('instructionsBox').classList.add('hidden');
                     }
 
+                    // Show GCash instructions if needed
                     if (paymentMethod === 'gcash') {
                         document.getElementById('gcashInstructions').classList.remove('hidden');
                         document.getElementById('gcashAmount').textContent = '₱' + total;
@@ -813,15 +849,25 @@
                         document.getElementById('confirmMessage').classList.remove('hidden');
                     }
 
+                    // Show confirmation, hide form
                     document.getElementById('orderForm').classList.add('hidden');
                     document.getElementById('confirmationScreen').classList.remove('hidden');
+
+                    // Scroll to top
                     window.scrollTo(0, 0);
+
+                    console.log('Order submitted successfully');
+                } else {
+                    console.log('Form validation failed');
                 }
             });
 
+            // New order button
             document.getElementById('newOrderBtn').addEventListener('click', function(e) {
                 e.preventDefault();
+                console.log('New order clicked');
                 
+                // Clear form
                 document.getElementById('name').value = '';
                 document.getElementById('phone').value = '';
                 document.getElementById('address').value = '';
@@ -829,17 +875,18 @@
                 document.getElementById('quantity').value = '';
                 document.getElementById('deliveryDate').value = '';
                 document.getElementById('specialInstructions').value = '';
-                document.getElementById('dateButtonText').textContent = 'Select when you want your water delivered';
-                document.getElementById('dateButton').classList.remove('filled');
                 
+                // Reset radio buttons
                 document.querySelector('input[name="deliveryWindow"][value="am"]').checked = true;
                 document.querySelector('input[name="paymentMethod"][value="cod"]').checked = true;
                 
+                // Reset styling
                 document.getElementById('radioAM').classList.add('selected');
                 document.getElementById('radioPM').classList.remove('selected');
                 document.getElementById('payCOD').classList.add('selected');
                 document.getElementById('payGCash').classList.remove('selected');
                 
+                // Clear errors
                 var errorTexts = document.querySelectorAll('.error-text');
                 for (var i = 0; i < errorTexts.length; i++) {
                     errorTexts[i].classList.remove('show');
@@ -849,12 +896,26 @@
                     inputs[i].classList.remove('error');
                 }
                 
+                // Reset date error message to default
+                document.getElementById('dateError').textContent = 'Please select delivery date';
+                
+                // Hide cutoff warning and remove disabled states
+                document.getElementById('cutoffWarning').classList.remove('show');
+                document.getElementById('radioAM').classList.remove('disabled');
+                document.getElementById('radioPM').classList.remove('disabled');
+                
+                // Update total
                 updateTotal();
                 
+                // Show form, hide confirmation
                 document.getElementById('orderForm').classList.remove('hidden');
                 document.getElementById('confirmationScreen').classList.add('hidden');
+                
+                // Scroll to top
                 window.scrollTo(0, 0);
             });
+
+            console.log('All event listeners attached');
         });
     </script>
 </body>
