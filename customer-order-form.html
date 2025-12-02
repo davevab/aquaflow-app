@@ -717,6 +717,27 @@
             // Event listener for delivery date change
             document.getElementById('deliveryDate').addEventListener('change', function() {
                 console.log('Date changed:', this.value);
+                
+                // Check if selected date is in the past
+                var selectedDate = new Date(this.value + 'T00:00:00');
+                var today = new Date();
+                today.setHours(0, 0, 0, 0); // Reset time to midnight for comparison
+                
+                if (selectedDate < today) {
+                    // Past date selected - clear it and show error
+                    this.value = '';
+                    this.classList.add('error');
+                    document.getElementById('dateError').textContent = 'Cannot select past dates. Please choose today or a future date.';
+                    document.getElementById('dateError').classList.add('show');
+                    alert('Cannot select past dates. Please choose today or a future date.');
+                    return;
+                } else {
+                    // Valid date - clear any errors
+                    this.classList.remove('error');
+                    document.getElementById('dateError').classList.remove('show');
+                    document.getElementById('dateError').textContent = 'Please select delivery date';
+                }
+                
                 checkDeliveryAvailability();
             });
             
