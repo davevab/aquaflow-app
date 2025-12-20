@@ -500,17 +500,9 @@
                 <h3 class="section-title">Order Details</h3>
 
                 <div class="form-group">
-                    <label>Container Size</label>
-                    <select id="containerSize">
-                        <option value="5gal">5 Gallon (₱20 each)</option>
-                        <option value="round">Round (₱15 each)</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Quantity <span class="required">*</span></label>
-                    <input type="number" id="quantity" min="1" placeholder="5">
-                    <p class="error-text" id="quantityError">Minimum order is 1 container</p>
+                    <label>Quantity (Gallons) <span class="required">*</span></label>
+                    <input type="number" id="quantity" min="1" placeholder="3">
+                    <p class="error-text" id="quantityError">Please enter quantity</p>
                 </div>
 
                 <div class="form-group">
@@ -645,11 +637,8 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_8kUVR1zO703wEgv1je_wtQ_88YK988G';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Container prices
-        const CONTAINER_PRICES = {
-            '5gal': 20,
-            'round': 15
-        };
+        // Price per gallon
+        const PRICE_PER_GALLON = 20;
 
         // Wait for DOM to be fully loaded
         document.addEventListener('DOMContentLoaded', function() {
@@ -718,15 +707,12 @@
 
             // Calculate and update total
             function updateTotal() {
-                var containerSize = document.getElementById('containerSize').value;
                 var quantity = parseInt(document.getElementById('quantity').value) || 0;
-                var price = CONTAINER_PRICES[containerSize] || 20;
-                var total = quantity * price;
+                var total = quantity * PRICE_PER_GALLON;
                 document.getElementById('totalAmount').textContent = '₱' + total;
             }
 
             // Event listeners for total calculation
-            document.getElementById('containerSize').addEventListener('change', updateTotal);
             document.getElementById('quantity').addEventListener('input', updateTotal);
             document.getElementById('quantity').addEventListener('change', updateTotal);
             
@@ -882,7 +868,6 @@
                     var name = document.getElementById('name').value.trim();
                     var phone = document.getElementById('phone').value.trim();
                     var address = document.getElementById('address').value.trim();
-                    var containerSize = document.getElementById('containerSize').value;
                     var quantity = parseInt(document.getElementById('quantity').value);
                     var deliveryDate = document.getElementById('deliveryDate').value;
                     var deliveryTime = document.querySelector('input[name="deliveryWindow"]:checked').value;
@@ -890,8 +875,7 @@
                     var notes = document.getElementById('specialInstructions').value.trim();
 
                     // Calculate total
-                    var price = CONTAINER_PRICES[containerSize];
-                    var total = quantity * price;
+                    var total = quantity * PRICE_PER_GALLON;
 
                     // Format delivery time
                     var deliveryTimeText = deliveryTime === 'am' ? '10AM-12PM' : '3PM-5PM';
@@ -908,7 +892,7 @@
                                 delivery_date: deliveryDate,
                                 delivery_time: deliveryTimeText,
                                 quantity: quantity,
-                                container_size: containerSize,
+                                container_size: 'standard',
                                 payment_method: paymentMethod,
                                 payment_status: 'pending',
                                 order_status: 'pending',
@@ -934,8 +918,7 @@
 
                     // Populate confirmation screen
                     document.getElementById('confirmTrackingNumber').textContent = '#' + trackingNumber;
-                    document.getElementById('confirmProduct').textContent = quantity + ' × ' + 
-                        (containerSize === '5gal' ? '5 Gallon' : 'Round Container');
+                    document.getElementById('confirmProduct').textContent = quantity + ' Gallons';
                     
                     var dateObj = new Date(deliveryDate + 'T00:00:00');
                     document.getElementById('confirmDate').textContent = dateObj.toLocaleDateString('en-US', {
@@ -998,7 +981,6 @@
                 document.getElementById('name').value = '';
                 document.getElementById('phone').value = '';
                 document.getElementById('address').value = '';
-                document.getElementById('containerSize').value = '5gal';
                 document.getElementById('quantity').value = '';
                 document.getElementById('deliveryDate').value = '';
                 document.getElementById('specialInstructions').value = '';
