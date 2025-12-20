@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AquaFlow Water - Order Now</title>
-    <!-- Updated with delivery cutoff system -->
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -338,6 +339,12 @@
             transform: scale(0.98);
         }
         
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
         .btn-secondary {
             background: #f3f4f6;
             color: #374151;
@@ -452,6 +459,11 @@
             font-weight: bold;
             color: #111827;
         }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -488,18 +500,17 @@
                 <h3 class="section-title">Order Details</h3>
 
                 <div class="form-group">
-                    <label>Product Type</label>
-                    <select id="productType">
-                        <option value="standard">Standard Container (₱20/gallon)</option>
-                        <option value="with_faucet">Container with Faucet (₱30/gallon)</option>
+                    <label>Container Size</label>
+                    <select id="containerSize">
+                        <option value="5gal">5 Gallon (₱20 each)</option>
+                        <option value="round">Round (₱15 each)</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label>Quantity (Gallons) <span class="required">*</span></label>
+                    <label>Quantity <span class="required">*</span></label>
                     <input type="number" id="quantity" min="1" placeholder="5">
-                    <p class="error-text" id="quantityError">Minimum order is 3 gallons</p>
-                    <p class="hint-text">Minimum 3 gallons required</p>
+                    <p class="error-text" id="quantityError">Minimum order is 1 container</p>
                 </div>
 
                 <div class="form-group">
@@ -569,7 +580,7 @@
                 </div>
 
                 <div class="tracking-box">
-                    <p class="tracking-label">Tracking Number</p>
+                    <p class="tracking-label">Order Reference</p>
                     <p class="tracking-number" id="confirmTrackingNumber">#ORD123456</p>
                 </div>
 
@@ -577,7 +588,7 @@
                     <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Order Details:</h3>
                     <div class="detail-row">
                         <span class="detail-label">Product:</span>
-                        <span class="detail-value" id="confirmProduct">5 × Standard Container</span>
+                        <span class="detail-value" id="confirmProduct">5 × 5 Gallon</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Delivery Date:</span>
@@ -623,21 +634,27 @@
 
                 <p class="info-text" id="confirmMessage">The station will confirm your delivery shortly.</p>
 
-                <button class="btn btn-primary">View Order Status</button>
                 <button class="btn btn-secondary" id="newOrderBtn">Place New Order</button>
             </div>
         </div>
     </div>
 
     <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://objfqhffofsrttjxswkx.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_8kUVR1zO703wEgv1je_wtQ_88YK988G';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Container prices
+        const CONTAINER_PRICES = {
+            '5gal': 20,
+            'round': 15
+        };
+
         // Wait for DOM to be fully loaded
         document.addEventListener('DOMContentLoaded', function() {
             console.log('App loaded successfully');
-            
-            // Constants
-            var PRICE_PER_GALLON = 20;
-            var PRICE_WITH_FAUCET = 30;
-            var MINIMUM_QUANTITY = 3;
+            console.log('Supabase client initialized');
 
             // Set minimum date to today
             var today = new Date().toISOString().split('T')[0];
@@ -701,30 +718,25 @@
 
             // Calculate and update total
             function updateTotal() {
-                var productType = document.getElementById('productType').value;
+                var containerSize = document.getElementById('containerSize').value;
                 var quantity = parseInt(document.getElementById('quantity').value) || 0;
-                var price = productType === 'with_faucet' ? PRICE_WITH_FAUCET : PRICE_PER_GALLON;
+                var price = CONTAINER_PRICES[containerSize] || 20;
                 var total = quantity * price;
                 document.getElementById('totalAmount').textContent = '₱' + total;
-                console.log('Total updated:', total);
             }
 
             // Event listeners for total calculation
-            document.getElementById('productType').addEventListener('change', updateTotal);
+            document.getElementById('containerSize').addEventListener('change', updateTotal);
             document.getElementById('quantity').addEventListener('input', updateTotal);
             document.getElementById('quantity').addEventListener('change', updateTotal);
             
             // Event listener for delivery date change
             document.getElementById('deliveryDate').addEventListener('change', function() {
-                console.log('Date changed:', this.value);
-                
-                // Check if selected date is in the past
                 var selectedDate = new Date(this.value + 'T00:00:00');
                 var today = new Date();
-                today.setHours(0, 0, 0, 0); // Reset time to midnight for comparison
+                today.setHours(0, 0, 0, 0);
                 
                 if (selectedDate < today) {
-                    // Past date selected - clear it and show error
                     this.value = '';
                     this.classList.add('error');
                     document.getElementById('dateError').textContent = 'Cannot select past dates. Please choose today or a future date.';
@@ -732,7 +744,6 @@
                     alert('Cannot select past dates. Please choose today or a future date.');
                     return;
                 } else {
-                    // Valid date - clear any errors
                     this.classList.remove('error');
                     document.getElementById('dateError').classList.remove('show');
                     document.getElementById('dateError').textContent = 'Please select delivery date';
@@ -749,28 +760,18 @@
             // Radio button for delivery window
             document.getElementById('radioAM').addEventListener('click', function(e) {
                 e.preventDefault();
-                // Prevent selection if disabled
-                if (this.classList.contains('disabled')) {
-                    console.log('AM option is disabled');
-                    return;
-                }
+                if (this.classList.contains('disabled')) return;
                 document.getElementById('radioAM').classList.add('selected');
                 document.getElementById('radioPM').classList.remove('selected');
                 document.querySelector('input[name="deliveryWindow"][value="am"]').checked = true;
-                console.log('AM selected');
             });
 
             document.getElementById('radioPM').addEventListener('click', function(e) {
                 e.preventDefault();
-                // Prevent selection if disabled
-                if (this.classList.contains('disabled')) {
-                    console.log('PM option is disabled');
-                    return;
-                }
+                if (this.classList.contains('disabled')) return;
                 document.getElementById('radioPM').classList.add('selected');
                 document.getElementById('radioAM').classList.remove('selected');
                 document.querySelector('input[name="deliveryWindow"][value="pm"]').checked = true;
-                console.log('PM selected');
             });
 
             // Payment option buttons
@@ -779,7 +780,6 @@
                 document.getElementById('payCOD').classList.add('selected');
                 document.getElementById('payGCash').classList.remove('selected');
                 document.querySelector('input[name="paymentMethod"][value="cod"]').checked = true;
-                console.log('COD selected');
             });
 
             document.getElementById('payGCash').addEventListener('click', function(e) {
@@ -787,7 +787,6 @@
                 document.getElementById('payGCash').classList.add('selected');
                 document.getElementById('payCOD').classList.remove('selected');
                 document.querySelector('input[name="paymentMethod"][value="gcash"]').checked = true;
-                console.log('GCash selected');
             });
 
             // Form validation
@@ -804,7 +803,6 @@
                     inputs[i].classList.remove('error');
                 }
                 
-                // Reset date error message to default
                 document.getElementById('dateError').textContent = 'Please select delivery date';
 
                 // Validate name
@@ -834,7 +832,7 @@
 
                 // Validate quantity
                 var quantity = parseInt(document.getElementById('quantity').value);
-                if (!quantity || quantity < MINIMUM_QUANTITY) {
+                if (!quantity || quantity < 1) {
                     document.getElementById('quantity').classList.add('error');
                     document.getElementById('quantityError').classList.add('show');
                     isValid = false;
@@ -847,7 +845,6 @@
                     document.getElementById('dateError').classList.add('show');
                     isValid = false;
                 } else {
-                    // Check if both time windows are disabled (after 3 PM cutoff)
                     var now = new Date();
                     var todayDate = now.toISOString().split('T')[0];
                     var currentHour = now.getHours();
@@ -860,40 +857,85 @@
                     }
                 }
 
-                console.log('Validation result:', isValid);
                 return isValid;
             }
 
             // Place order button
-            document.getElementById('placeOrderBtn').addEventListener('click', function(e) {
+            document.getElementById('placeOrderBtn').addEventListener('click', async function(e) {
                 e.preventDefault();
                 console.log('Place order clicked');
                 
-                if (validateForm()) {
-                    console.log('Form is valid, processing order...');
-                    
-                    // Generate tracking number
-                    var trackingNumber = 'ORD' + Date.now().toString().slice(-6);
-
+                if (!validateForm()) {
+                    console.log('Form validation failed');
+                    return;
+                }
+                
+                console.log('Form is valid, processing order...');
+                
+                // Disable button and show loading
+                var btn = this;
+                btn.disabled = true;
+                btn.textContent = 'Processing...';
+                
+                try {
                     // Get form data
-                    var name = document.getElementById('name').value;
-                    var phone = document.getElementById('phone').value;
-                    var address = document.getElementById('address').value;
-                    var productType = document.getElementById('productType').value;
-                    var quantity = document.getElementById('quantity').value;
+                    var name = document.getElementById('name').value.trim();
+                    var phone = document.getElementById('phone').value.trim();
+                    var address = document.getElementById('address').value.trim();
+                    var containerSize = document.getElementById('containerSize').value;
+                    var quantity = parseInt(document.getElementById('quantity').value);
                     var deliveryDate = document.getElementById('deliveryDate').value;
-                    var deliveryWindow = document.querySelector('input[name="deliveryWindow"]:checked').value;
+                    var deliveryTime = document.querySelector('input[name="deliveryWindow"]:checked').value;
                     var paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
-                    var specialInstructions = document.getElementById('specialInstructions').value.trim();
+                    var notes = document.getElementById('specialInstructions').value.trim();
 
                     // Calculate total
-                    var price = productType === 'with_faucet' ? PRICE_WITH_FAUCET : PRICE_PER_GALLON;
+                    var price = CONTAINER_PRICES[containerSize];
                     var total = quantity * price;
+
+                    // Format delivery time
+                    var deliveryTimeText = deliveryTime === 'am' ? '10AM-12PM' : '3PM-5PM';
+
+                    // Save to Supabase
+                    console.log('Saving order to Supabase...');
+                    var { data, error } = await supabaseClient
+                        .from('orders')
+                        .insert([
+                            {
+                                customer_name: name,
+                                customer_phone: phone,
+                                customer_address: address,
+                                delivery_date: deliveryDate,
+                                delivery_time: deliveryTimeText,
+                                quantity: quantity,
+                                container_size: containerSize,
+                                payment_method: paymentMethod,
+                                payment_status: 'pending',
+                                order_status: 'pending',
+                                total_amount: total,
+                                notes: notes || null
+                            }
+                        ])
+                        .select();
+
+                    if (error) {
+                        console.error('Supabase error:', error);
+                        alert('Failed to place order. Please try again.');
+                        btn.disabled = false;
+                        btn.textContent = 'Place Order';
+                        return;
+                    }
+
+                    console.log('Order saved successfully:', data);
+                    
+                    // Get the order ID from response
+                    var orderId = data[0].id;
+                    var trackingNumber = 'AQF-' + orderId.slice(0, 8).toUpperCase();
 
                     // Populate confirmation screen
                     document.getElementById('confirmTrackingNumber').textContent = '#' + trackingNumber;
                     document.getElementById('confirmProduct').textContent = quantity + ' × ' + 
-                        (productType === 'standard' ? 'Standard Container' : 'Container with Faucet');
+                        (containerSize === '5gal' ? '5 Gallon' : 'Round Container');
                     
                     var dateObj = new Date(deliveryDate + 'T00:00:00');
                     document.getElementById('confirmDate').textContent = dateObj.toLocaleDateString('en-US', {
@@ -904,7 +946,7 @@
                     });
                     
                     document.getElementById('confirmTime').textContent = 
-                        deliveryWindow === 'am' ? 'Morning (10AM-12PM)' : 'Afternoon (3PM-5PM)';
+                        deliveryTime === 'am' ? 'Morning (10AM-12PM)' : 'Afternoon (3PM-5PM)';
                     document.getElementById('confirmTotal').textContent = '₱' + total;
                     document.getElementById('confirmPayment').textContent = 
                         paymentMethod === 'cod' ? 'Cash on Delivery' : 'GCash';
@@ -913,13 +955,10 @@
                     document.getElementById('confirmAddress').textContent = address;
                     
                     // Show/hide special instructions
-                    console.log('Special instructions:', specialInstructions);
-                    if (specialInstructions) {
-                        console.log('Showing special instructions');
-                        document.getElementById('confirmInstructions').textContent = specialInstructions;
+                    if (notes) {
+                        document.getElementById('confirmInstructions').textContent = notes;
                         document.getElementById('instructionsBox').classList.remove('hidden');
                     } else {
-                        console.log('No special instructions, hiding box');
                         document.getElementById('instructionsBox').classList.add('hidden');
                     }
 
@@ -942,21 +981,24 @@
                     window.scrollTo(0, 0);
 
                     console.log('Order submitted successfully');
-                } else {
-                    console.log('Form validation failed');
+                    
+                } catch (err) {
+                    console.error('Error placing order:', err);
+                    alert('An error occurred. Please try again.');
+                    btn.disabled = false;
+                    btn.textContent = 'Place Order';
                 }
             });
 
             // New order button
             document.getElementById('newOrderBtn').addEventListener('click', function(e) {
                 e.preventDefault();
-                console.log('New order clicked');
                 
                 // Clear form
                 document.getElementById('name').value = '';
                 document.getElementById('phone').value = '';
                 document.getElementById('address').value = '';
-                document.getElementById('productType').value = 'standard';
+                document.getElementById('containerSize').value = '5gal';
                 document.getElementById('quantity').value = '';
                 document.getElementById('deliveryDate').value = '';
                 document.getElementById('specialInstructions').value = '';
@@ -981,13 +1023,15 @@
                     inputs[i].classList.remove('error');
                 }
                 
-                // Reset date error message to default
                 document.getElementById('dateError').textContent = 'Please select delivery date';
-                
-                // Hide cutoff warning and remove disabled states
                 document.getElementById('cutoffWarning').classList.remove('show');
                 document.getElementById('radioAM').classList.remove('disabled');
                 document.getElementById('radioPM').classList.remove('disabled');
+                
+                // Reset button
+                var btn = document.getElementById('placeOrderBtn');
+                btn.disabled = false;
+                btn.textContent = 'Place Order';
                 
                 // Update total
                 updateTotal();
