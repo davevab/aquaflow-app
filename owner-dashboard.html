@@ -221,6 +221,21 @@
             background: #dbeafe;
             color: #1e40af;
         }
+
+        .badge-household {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-reseller {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-company {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
         
         .order-details {
             display: grid;
@@ -461,6 +476,9 @@
                 <button class="filter-tab" data-filter="pending">Pending</button>
                 <button class="filter-tab" data-filter="paid">Paid</button>
                 <button class="filter-tab" data-filter="today">Today</button>
+                <button class="filter-tab" data-filter="household">🏠 Regular</button>
+                <button class="filter-tab" data-filter="reseller">🏪 Reseller</button>
+                <button class="filter-tab" data-filter="company">🏢 Premium</button>
             </div>
         </div>
 
@@ -493,6 +511,13 @@
 
         let allOrders = [];
         let currentFilter = 'all';
+
+        // Customer type display labels
+        const CUSTOMER_TYPE_BADGES = {
+            'household': { emoji: '🏠', label: 'Regular', class: 'badge-household' },
+            'reseller': { emoji: '🏪', label: 'Reseller', class: 'badge-reseller' },
+            'company': { emoji: '🏢', label: 'Premium', class: 'badge-company' }
+        };
 
         // Load orders from Supabase
         async function loadOrders() {
@@ -562,6 +587,12 @@
                 case 'today':
                     const today = new Date().toISOString().split('T')[0];
                     return allOrders.filter(order => order.delivery_date === today);
+                case 'household':
+                    return allOrders.filter(order => order.customer_type === 'household');
+                case 'reseller':
+                    return allOrders.filter(order => order.customer_type === 'reseller');
+                case 'company':
+                    return allOrders.filter(order => order.customer_type === 'company');
                 default:
                     return allOrders;
             }
@@ -582,7 +613,14 @@
                 return;
             }
             
-            container.innerHTML = filteredOrders.map(order => `
+            container.innerHTML = filteredOrders.map(order => {
+                const customerTypeBadge = order.customer_type && CUSTOMER_TYPE_BADGES[order.customer_type] 
+                    ? `<span class="badge ${CUSTOMER_TYPE_BADGES[order.customer_type].class}">
+                        ${CUSTOMER_TYPE_BADGES[order.customer_type].emoji} ${CUSTOMER_TYPE_BADGES[order.customer_type].label}
+                       </span>`
+                    : '';
+                
+                return `
                 <div class="order-card" onclick="showOrderDetail('${order.id}')">
                     <div class="order-header">
                         <div class="order-customer">
@@ -590,6 +628,7 @@
                             <div class="customer-phone">${order.customer_phone}</div>
                         </div>
                         <div class="order-badges">
+                            ${customerTypeBadge}
                             <span class="badge ${order.payment_status === 'paid' ? 'badge-paid' : 'badge-pending'}">
                                 ${order.payment_status === 'paid' ? '✓ Paid' : '⏳ Pending'}
                             </span>
@@ -610,7 +649,7 @@
                         </div>
                         <div class="detail-item">
                             <span class="detail-icon">📦</span>
-                            <span class="detail-text">${order.quantity}× ${order.container_size === '5gal' ? '5 Gal' : 'Round'}</span>
+                            <span class="detail-text">${order.quantity} Gallons</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-icon">💰</span>
@@ -622,7 +661,7 @@
                     
                     ${order.notes ? `<div class="order-notes">📝 ${order.notes}</div>` : ''}
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         // Format date
@@ -640,6 +679,12 @@
             const order = allOrders.find(o => o.id === orderId);
             if (!order) return;
             
+            const customerTypeBadge = order.customer_type && CUSTOMER_TYPE_BADGES[order.customer_type]
+                ? `<span class="badge ${CUSTOMER_TYPE_BADGES[order.customer_type].class}">
+                    ${CUSTOMER_TYPE_BADGES[order.customer_type].emoji} ${CUSTOMER_TYPE_BADGES[order.customer_type].label}
+                   </span>`
+                : 'Not specified';
+            
             const modalBody = document.getElementById('modalBody');
             modalBody.innerHTML = `
                 <div class="info-section">
@@ -652,6 +697,11 @@
                     <div class="info-value">${order.customer_name}</div>
                     <div class="info-value" style="color: #6b7280; font-size: 0.875rem;">${order.customer_phone}</div>
                     <div class="info-value" style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">📍 ${order.customer_address}</div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">Customer Type</div>
+                    <div class="info-value">${customerTypeBadge}</div>
                 </div>
                 
                 <div class="info-section">
@@ -668,16 +718,8 @@
                 </div>
                 
                 <div class="info-section">
-                    <div class="info-grid">
-                        <div>
-                            <div class="info-title">Container Type</div>
-                            <div class="info-value">${order.container_size === '5gal' ? '5 Gallon' : 'Round'}</div>
-                        </div>
-                        <div>
-                            <div class="info-title">Quantity</div>
-                            <div class="info-value">${order.quantity}</div>
-                        </div>
-                    </div>
+                    <div class="info-title">Quantity</div>
+                    <div class="info-value">${order.quantity} Gallons</div>
                 </div>
                 
                 <div class="info-section">
