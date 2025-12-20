@@ -618,6 +618,7 @@
                     <label>Phone Number <span class="required">*</span></label>
                     <input type="tel" id="phoneInput" placeholder="0912 345 6789" autofocus>
                     <p class="error-text" id="phoneInputError">Please enter a valid Philippine mobile number</p>
+                    <p class="hint-text" id="phoneAutoFillHint" style="display: none; color: #059669;">✓ We remembered your number from last time</p>
                 </div>
 
                 <button class="btn btn-primary" id="checkPhoneBtn">Continue</button>
@@ -879,11 +880,24 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('App loaded successfully');
 
+            // Auto-fill phone number from localStorage if available
+            var savedPhone = localStorage.getItem('aquaflow_phone');
+            if (savedPhone) {
+                console.log('Found saved phone number, auto-filling...');
+                document.getElementById('phoneInput').value = savedPhone;
+                document.getElementById('phoneAutoFillHint').style.display = 'block';
+            }
+
             // Set minimum date to today
             var today = new Date().toISOString().split('T')[0];
             document.getElementById('deliveryDate').setAttribute('min', today);
 
             // ===== PHONE LOOKUP SECTION =====
+
+            // Hide auto-fill hint when user starts typing
+            document.getElementById('phoneInput').addEventListener('input', function() {
+                document.getElementById('phoneAutoFillHint').style.display = 'none';
+            });
 
             // Check phone button
             document.getElementById('checkPhoneBtn').addEventListener('click', async function() {
@@ -894,6 +908,7 @@
                 if (!phoneInput || !phoneRegex.test(phoneInput.replace(/\s/g, ''))) {
                     document.getElementById('phoneInput').classList.add('error');
                     document.getElementById('phoneInputError').classList.add('show');
+                    document.getElementById('phoneAutoFillHint').style.display = 'none';
                     return;
                 }
 
@@ -1368,6 +1383,10 @@
                     }
 
                     console.log('Order saved successfully:', orderData);
+                    
+                    // Save phone number to localStorage for next visit
+                    localStorage.setItem('aquaflow_phone', customerPhone);
+                    console.log('Saved phone number to localStorage');
                     
                     // Get the order ID from response
                     var orderId = orderData.id;
