@@ -1457,8 +1457,17 @@
                 currentCustomer = null;
                 isReturningCustomer = false;
                 
-                // Clear all forms
+                // Clear phone input first
                 document.getElementById('phoneInput').value = '';
+                
+                // Re-populate from localStorage if available
+                var savedPhone = localStorage.getItem('aquaflow_phone');
+                if (savedPhone) {
+                    document.getElementById('phoneInput').value = savedPhone;
+                    document.getElementById('phoneAutoFillHint').style.display = 'block';
+                }
+                
+                // Clear order form fields
                 document.getElementById('quantity').value = '';
                 document.getElementById('deliveryDate').value = '';
                 document.getElementById('specialInstructions').value = '';
