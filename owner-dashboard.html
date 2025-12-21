@@ -378,6 +378,91 @@
             cursor: pointer;
             padding: 0.25rem;
         }
+
+        .payment-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-mark-paid {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-mark-paid:hover {
+            background: #059669;
+        }
+
+        .btn-mark-paid:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .btn-mark-pending {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-mark-pending:hover {
+            background: #d97706;
+        }
+
+        .btn-mark-pending:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .btn-cancel {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-cancel:hover {
+            background: #d1d5db;
+        }
+
+        .success-toast {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: #10b981;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .success-toast.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
         
         .modal-body {
             padding: 1.5rem;
@@ -503,6 +588,11 @@
         </div>
     </div>
 
+    <!-- Success Toast Notification -->
+    <div class="success-toast" id="successToast">
+        <span id="toastMessage">✓ Payment status updated!</span>
+    </div>
+
     <script>
         // Initialize Supabase
         const SUPABASE_URL = 'https://objfqhffofsrttjxswkx.supabase.co';
@@ -511,6 +601,7 @@
 
         let allOrders = [];
         let currentFilter = 'all';
+        let currentOrderId = null; // Track current order being viewed
 
         // Customer type display labels
         const CUSTOMER_TYPE_BADGES = {
@@ -518,6 +609,66 @@
             'reseller': { emoji: '🏪', label: 'Reseller', class: 'badge-reseller' },
             'company': { emoji: '🏢', label: 'Premium', class: 'badge-company' }
         };
+
+        // Show success toast notification
+        function showToast(message) {
+            const toast = document.getElementById('successToast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Update payment status
+        async function updatePaymentStatus(orderId, newStatus) {
+            try {
+                console.log(`Updating order ${orderId} to status: ${newStatus}`);
+                
+                const { data, error } = await supabaseClient
+                    .from('orders')
+                    .update({ payment_status: newStatus })
+                    .eq('id', orderId)
+                    .select()
+                    .single();
+
+                if (error) {
+                    console.error('Error updating payment status:', error);
+                    alert('Failed to update payment status. Please try again.');
+                    return false;
+                }
+
+                console.log('Payment status updated successfully:', data);
+                
+                // Update local data
+                const orderIndex = allOrders.findIndex(o => o.id === orderId);
+                if (orderIndex !== -1) {
+                    allOrders[orderIndex].payment_status = newStatus;
+                }
+
+                // Refresh display
+                updateStats();
+                displayOrders(currentFilter);
+                
+                // Show success message
+                const statusText = newStatus === 'paid' ? 'Marked as Paid' : 'Marked as Pending';
+                showToast(`✓ ${statusText} successfully!`);
+                
+                // If modal is open with this order, refresh it
+                if (currentOrderId === orderId) {
+                    showOrderDetail(orderId);
+                }
+                
+                return true;
+
+            } catch (err) {
+                console.error('Error updating payment status:', err);
+                alert('An error occurred. Please try again.');
+                return false;
+            }
+        }
 
         // Load orders from Supabase
         async function loadOrders() {
@@ -679,6 +830,8 @@
             const order = allOrders.find(o => o.id === orderId);
             if (!order) return;
             
+            currentOrderId = orderId; // Track current order
+            
             const customerTypeBadge = order.customer_type && CUSTOMER_TYPE_BADGES[order.customer_type]
                 ? `<span class="badge ${CUSTOMER_TYPE_BADGES[order.customer_type].class}">
                     ${CUSTOMER_TYPE_BADGES[order.customer_type].emoji} ${CUSTOMER_TYPE_BADGES[order.customer_type].label}
@@ -768,9 +921,51 @@
                         })}
                     </div>
                 </div>
+
+                <div class="payment-actions">
+                    ${order.payment_status === 'pending' ? `
+                        <button class="btn-action btn-mark-paid" onclick="confirmPaymentUpdate('${order.id}', 'paid')">
+                            ✓ Mark as Paid
+                        </button>
+                    ` : `
+                        <button class="btn-action btn-mark-pending" onclick="confirmPaymentUpdate('${order.id}', 'pending')">
+                            ⏳ Mark as Pending
+                        </button>
+                    `}
+                    <button class="btn-action btn-cancel" onclick="closeOrderModal()">
+                        Close
+                    </button>
+                </div>
             `;
             
             document.getElementById('orderModal').classList.add('show');
+        }
+
+        // Confirm payment status update
+        function confirmPaymentUpdate(orderId, newStatus) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) return;
+
+            const statusText = newStatus === 'paid' ? 'PAID' : 'PENDING';
+            const actionText = newStatus === 'paid' ? 'mark this order as paid' : 'mark this order as pending';
+            
+            const confirmed = confirm(
+                `Are you sure you want to ${actionText}?\n\n` +
+                `Order: #AQF-${order.id.slice(0, 8).toUpperCase()}\n` +
+                `Customer: ${order.customer_name}\n` +
+                `Amount: ₱${parseFloat(order.total_amount).toFixed(2)}\n` +
+                `Payment: ${order.payment_method === 'cod' ? 'Cash on Delivery' : 'GCash'}`
+            );
+
+            if (confirmed) {
+                updatePaymentStatus(orderId, newStatus);
+            }
+        }
+
+        // Close order modal
+        function closeOrderModal() {
+            document.getElementById('orderModal').classList.remove('show');
+            currentOrderId = null;
         }
 
         // Event Listeners
