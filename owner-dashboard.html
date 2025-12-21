@@ -687,7 +687,10 @@
                 
                 const { data, error } = await supabaseClient
                     .from('orders')
-                    .update({ payment_status: newStatus })
+                    .update({ 
+                        payment_status: newStatus,
+                        updated_at: new Date().toISOString()  // ✅ This is the fix!
+                    })
                     .eq('id', orderId)
                     .select()
                     .single();
@@ -700,10 +703,11 @@
 
                 console.log('Payment status updated successfully:', data);
                 
-                // Update local data
+                // Update local data with new updated_at
                 const orderIndex = allOrders.findIndex(o => o.id === orderId);
                 if (orderIndex !== -1) {
                     allOrders[orderIndex].payment_status = newStatus;
+                    allOrders[orderIndex].updated_at = data.updated_at;  // ✅ Update local data too
                 }
 
                 // Refresh display
@@ -798,6 +802,21 @@
             const todayCollections = todayCollected.reduce((sum, order) => 
                 sum + parseFloat(order.total_amount || 0), 0
             );
+            
+            // Debug logging for Today's Collections
+            console.log('📊 Today\'s Collections Debug:');
+            console.log('  Today\'s date:', today);
+            console.log('  Total paid orders:', paidOrders.length);
+            console.log('  Orders marked paid TODAY:', todayCollected.length);
+            if (todayCollected.length > 0) {
+                console.log('  Today\'s collected orders:', todayCollected.map(o => ({
+                    id: o.id.slice(0, 8),
+                    customer: o.customer_name,
+                    amount: o.total_amount,
+                    updated_at: o.updated_at
+                })));
+            }
+            console.log('  Today\'s Collections Total: ₱' + todayCollections);
             
             document.getElementById('todayOrders').textContent = todayOrders.length;
             document.getElementById('pendingPayments').textContent = pendingPayments.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
