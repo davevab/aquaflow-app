@@ -685,11 +685,15 @@
             try {
                 console.log(`Updating order ${orderId} to status: ${newStatus}`);
                 
+                // Get current timestamp for manual tracking
+                const now = new Date().toISOString();
+                console.log('Current timestamp:', now);
+                
                 const { data, error } = await supabaseClient
                     .from('orders')
                     .update({ 
-                        payment_status: newStatus,
-                        updated_at: new Date().toISOString()  // ✅ This is the fix!
+                        payment_status: newStatus
+                        // Note: updated_at will be set automatically by Supabase if the column exists
                     })
                     .eq('id', orderId)
                     .select()
@@ -697,17 +701,19 @@
 
                 if (error) {
                     console.error('Error updating payment status:', error);
+                    console.error('Full error details:', JSON.stringify(error, null, 2));
                     alert('Failed to update payment status. Please try again.');
                     return false;
                 }
 
                 console.log('Payment status updated successfully:', data);
+                console.log('Updated_at from database:', data.updated_at);
                 
                 // Update local data with new updated_at
                 const orderIndex = allOrders.findIndex(o => o.id === orderId);
                 if (orderIndex !== -1) {
                     allOrders[orderIndex].payment_status = newStatus;
-                    allOrders[orderIndex].updated_at = data.updated_at;  // ✅ Update local data too
+                    allOrders[orderIndex].updated_at = data.updated_at || now;
                 }
 
                 // Refresh display
