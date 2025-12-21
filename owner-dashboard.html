@@ -685,19 +685,37 @@
             try {
                 console.log(`Updating order ${orderId} to status: ${newStatus}`);
                 
-                // Get current timestamp for manual tracking
                 const now = new Date().toISOString();
                 console.log('Current timestamp:', now);
                 
-                const { data, error } = await supabaseClient
+                // First, try to update WITH updated_at
+                let updateData = { 
+                    payment_status: newStatus,
+                    updated_at: now
+                };
+                
+                let { data, error } = await supabaseClient
                     .from('orders')
-                    .update({ 
-                        payment_status: newStatus
-                        // Note: updated_at will be set automatically by Supabase if the column exists
-                    })
+                    .update(updateData)
                     .eq('id', orderId)
                     .select()
                     .single();
+
+                // If error about unknown column, retry without updated_at
+                if (error && error.message && error.message.includes('updated_at')) {
+                    console.warn('updated_at column does not exist, updating without it');
+                    updateData = { payment_status: newStatus };
+                    
+                    const retry = await supabaseClient
+                        .from('orders')
+                        .update(updateData)
+                        .eq('id', orderId)
+                        .select()
+                        .single();
+                    
+                    data = retry.data;
+                    error = retry.error;
+                }
 
                 if (error) {
                     console.error('Error updating payment status:', error);
@@ -709,11 +727,13 @@
                 console.log('Payment status updated successfully:', data);
                 console.log('Updated_at from database:', data.updated_at);
                 
-                // Update local data with new updated_at
+                // Update local data - use database value if exists, otherwise use our timestamp
                 const orderIndex = allOrders.findIndex(o => o.id === orderId);
                 if (orderIndex !== -1) {
                     allOrders[orderIndex].payment_status = newStatus;
+                    // CRITICAL: Use database value if it exists, otherwise force our timestamp
                     allOrders[orderIndex].updated_at = data.updated_at || now;
+                    console.log('Local order updated_at set to:', allOrders[orderIndex].updated_at);
                 }
 
                 // Refresh display
