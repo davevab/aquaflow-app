@@ -697,6 +697,8 @@
             }
 
             try {
+                console.log('Marking order as complete:', orderId);
+                
                 const { data, error} = await supabaseClient
                     .from('orders')
                     .update({ 
@@ -708,18 +710,27 @@
                     .single();
 
                 if (error) {
-                    console.error('Error updating order:', error);
-                    alert('Failed to mark as complete. Please try again.');
+                    console.error('Supabase error:', error);
+                    console.error('Error details:', JSON.stringify(error));
+                    alert(`Failed to mark as complete. Error: ${error.message || 'Unknown error'}`);
                     return;
                 }
 
                 console.log('Order marked as complete:', data);
                 showToast('✓ Delivery completed!');
-                loadDeliveries();
+                
+                // Update local data
+                const index = allDeliveries.findIndex(d => d.id === orderId);
+                if (index !== -1) {
+                    allDeliveries[index].order_status = 'completed';
+                }
+                
+                updateStats();
+                renderDeliveries();
 
             } catch (err) {
-                console.error('Error marking as complete:', err);
-                alert('An error occurred. Please try again.');
+                console.error('Catch error:', err);
+                alert(`An error occurred: ${err.message || 'Please try again'}`);
             }
         }
 
