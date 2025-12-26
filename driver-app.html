@@ -517,29 +517,43 @@
         // Get driver from URL parameter or localStorage
         function getDriverInfo() {
             const urlParams = new URLSearchParams(window.location.search);
-            const driverParam = urlParams.get('driver');
+            const driverId = urlParams.get('driver_id');
+            const driverName = urlParams.get('driver_name');
             
-            if (driverParam) {
-                localStorage.setItem('aquaflow_driver', driverParam);
-                currentDriver = driverParam;
+            if (driverId && driverName) {
+                const driverData = { id: driverId, name: driverName };
+                localStorage.setItem('aquaflow_driver', JSON.stringify(driverData));
+                currentDriver = driverData;
             } else {
-                currentDriver = localStorage.getItem('aquaflow_driver') || 'Driver';
+                const savedDriver = localStorage.getItem('aquaflow_driver');
+                if (savedDriver) {
+                    currentDriver = JSON.parse(savedDriver);
+                } else {
+                    currentDriver = { id: null, name: 'Driver' };
+                }
             }
             
-            document.getElementById('driverName').textContent = currentDriver;
+            document.getElementById('driverName').textContent = currentDriver.name;
         }
 
-        // Load today's deliveries
+        // Load today's deliveries assigned to this driver
         async function loadDeliveries() {
             try {
-                console.log('Loading deliveries...');
+                console.log('Loading deliveries for driver:', currentDriver);
                 
                 const today = new Date().toISOString().split('T')[0];
                 
-                const { data, error } = await supabaseClient
+                let query = supabaseClient
                     .from('orders')
                     .select('*')
-                    .eq('delivery_date', today)
+                    .eq('delivery_date', today);
+                
+                // Filter by driver_id if driver is logged in
+                if (currentDriver && currentDriver.id) {
+                    query = query.eq('driver_id', currentDriver.id);
+                }
+                
+                const { data, error } = await query
                     .order('delivery_time', { ascending: true })
                     .order('created_at', { ascending: true });
 
@@ -549,7 +563,7 @@
                     return;
                 }
 
-                console.log('Deliveries loaded:', data.length);
+                console.log('Deliveries loaded:', data ? data.length : 0);
                 allDeliveries = data || [];
                 
                 updateStats();
