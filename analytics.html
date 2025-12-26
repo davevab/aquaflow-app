@@ -25,7 +25,7 @@
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 1.5rem;
+            padding: 1rem 1.5rem;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
@@ -35,50 +35,115 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 0.75rem;
         }
         
         .header-title {
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            flex: 1;
+            min-width: 0;
         }
         
         .logo {
-            font-size: 2rem;
+            font-size: 1.75rem;
+            flex-shrink: 0;
         }
         
         h1 {
-            font-size: 1.5rem;
+            font-size: 1.125rem;
             font-weight: bold;
+            line-height: 1.2;
         }
         
         .subtitle {
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             opacity: 0.9;
-            margin-top: 0.25rem;
+            margin-top: 0.125rem;
         }
         
         .header-actions {
             display: flex;
-            gap: 0.75rem;
+            gap: 0.5rem;
+            flex-shrink: 0;
         }
 
         .btn-header {
             background: rgba(255, 255, 255, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: white;
-            padding: 0.5rem 1rem;
+            padding: 0.5rem;
             border-radius: 0.5rem;
             cursor: pointer;
-            font-size: 0.875rem;
+            font-size: 1.25rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: center;
             text-decoration: none;
+            white-space: nowrap;
+            transition: all 0.2s;
+            width: 2.5rem;
+            height: 2.5rem;
         }
         
         .btn-header:hover {
             background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .btn-header:active {
+            transform: scale(0.95);
+        }
+
+        .btn-header.refreshing {
+            animation: spin 0.6s linear infinite;
+            opacity: 0.7;
+            cursor: wait;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .last-updated {
+            font-size: 0.6875rem;
+            opacity: 0.8;
+            margin-left: 0.5rem;
+            display: none;
+        }
+
+        @media (min-width: 640px) {
+            .header {
+                padding: 1.5rem;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .subtitle {
+                font-size: 0.875rem;
+                margin-top: 0.25rem;
+            }
+
+            .header-actions {
+                gap: 0.75rem;
+            }
+
+            .btn-header {
+                width: 2.75rem;
+                height: 2.75rem;
+            }
+
+            .last-updated {
+                display: inline;
+            }
         }
         
         .container {
@@ -112,12 +177,20 @@
             font-size: 2rem;
             font-weight: bold;
             color: #111827;
+            line-height: 1.2;
         }
 
         .metric-value.currency::before {
             content: '₱';
             font-size: 1.5rem;
             margin-right: 0.25rem;
+        }
+
+        .metric-value-dual {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         .metric-change {
@@ -207,6 +280,7 @@
             cursor: pointer;
             font-size: 0.875rem;
             font-weight: 600;
+            flex: 1;
         }
 
         .btn-filter:hover {
@@ -222,10 +296,17 @@
             cursor: pointer;
             font-size: 0.875rem;
             font-weight: 600;
+            flex: 1;
         }
 
         .btn-export:hover {
             background: #059669;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 0.75rem;
+            width: 100%;
         }
 
         /* Data Table */
@@ -339,46 +420,18 @@
                 </div>
             </div>
             <div class="header-actions">
-                <a href="owner-dashboard.html" class="btn-header">
-                    <span>←</span>
-                    <span>Back to Dashboard</span>
+                <a href="owner-dashboard.html" class="btn-header" title="Back to Dashboard">
+                    ←
                 </a>
-                <button class="btn-header" id="refreshBtn">
-                    <span>🔄</span>
-                    <span>Refresh</span>
+                <span class="last-updated" id="lastUpdated">Just now</span>
+                <button class="btn-header" id="refreshBtn" title="Refresh analytics">
+                    🔄
                 </button>
             </div>
         </div>
     </div>
 
     <div class="container">
-        <!-- Filters -->
-        <div class="filters">
-            <div class="filter-group">
-                <label class="filter-label">From Date</label>
-                <input type="date" class="filter-input" id="fromDate">
-            </div>
-            <div class="filter-group">
-                <label class="filter-label">To Date</label>
-                <input type="date" class="filter-input" id="toDate">
-            </div>
-            <div class="filter-group">
-                <label class="filter-label">Customer Type</label>
-                <select class="filter-input" id="customerTypeFilter">
-                    <option value="all">All Types</option>
-                    <option value="household">Household</option>
-                    <option value="reseller">Reseller</option>
-                    <option value="company">Company</option>
-                </select>
-            </div>
-            <div>
-                <button class="btn-filter" id="applyFilters">Apply Filters</button>
-            </div>
-            <div>
-                <button class="btn-export" id="exportBtn">📥 Export Excel</button>
-            </div>
-        </div>
-
         <!-- Key Metrics -->
         <div class="metrics-grid">
             <div class="metric-card">
@@ -469,6 +522,31 @@
                 </table>
             </div>
         </div>
+
+        <!-- Filters (moved to bottom) -->
+        <div class="filters">
+            <div class="filter-group">
+                <label class="filter-label">From Date</label>
+                <input type="date" class="filter-input" id="fromDate">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">To Date</label>
+                <input type="date" class="filter-input" id="toDate">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Customer Type</label>
+                <select class="filter-input" id="customerTypeFilter">
+                    <option value="all">All Types</option>
+                    <option value="household">Household</option>
+                    <option value="reseller">Reseller</option>
+                    <option value="company">Company</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button class="btn-filter" id="applyFilters">Apply Filters</button>
+                <button class="btn-export" id="exportBtn">📥 Export Excel</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -520,6 +598,7 @@
             // Total Revenue (all paid orders)
             const paidOrders = allOrders.filter(o => o.payment_status === 'paid');
             const totalRevenue = paidOrders.reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0);
+            const totalGallons = paidOrders.reduce((sum, o) => sum + parseInt(o.quantity || 0), 0);
 
             // This Month's Revenue
             const thisMonthOrders = paidOrders.filter(o => {
@@ -527,6 +606,7 @@
                 return orderDate.getFullYear() === currentYear && orderDate.getMonth() === currentMonth;
             });
             const monthRevenue = thisMonthOrders.reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0);
+            const monthGallons = thisMonthOrders.reduce((sum, o) => sum + parseInt(o.quantity || 0), 0);
 
             // Last Month's Revenue (for growth calculation)
             const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
@@ -549,14 +629,27 @@
                 return orderDate.getFullYear() === currentYear;
             });
             const yearRevenue = thisYearOrders.reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0);
+            const yearGallons = thisYearOrders.reduce((sum, o) => sum + parseInt(o.quantity || 0), 0);
 
             // Average Order Value
             const avgOrder = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0;
 
-            // Update UI
-            document.getElementById('totalRevenue').textContent = totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-            document.getElementById('monthRevenue').textContent = monthRevenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-            document.getElementById('yearRevenue').textContent = yearRevenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            // Update UI with revenue and gallons
+            document.getElementById('totalRevenue').innerHTML = `
+                ₱${totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}
+                <span style="font-size: 1rem; font-weight: normal; color: #6b7280; margin-left: 0.5rem;">| ${totalGallons.toLocaleString()} gal</span>
+            `;
+            
+            document.getElementById('monthRevenue').innerHTML = `
+                ₱${monthRevenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}
+                <span style="font-size: 1rem; font-weight: normal; color: #6b7280; margin-left: 0.5rem;">| ${monthGallons.toLocaleString()} gal</span>
+            `;
+            
+            document.getElementById('yearRevenue').innerHTML = `
+                ₱${yearRevenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}
+                <span style="font-size: 1rem; font-weight: normal; color: #6b7280; margin-left: 0.5rem;">| ${yearGallons.toLocaleString()} gal</span>
+            `;
+            
             document.getElementById('avgOrder').textContent = avgOrder.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
             document.getElementById('totalOrders').textContent = allOrders.length;
             document.getElementById('paidOrders').textContent = paidOrders.length;
@@ -847,8 +940,42 @@
 
             // Refresh button
             document.getElementById('refreshBtn').addEventListener('click', function() {
+                this.disabled = true;
+                this.classList.add('refreshing');
                 loadOrders();
+                setTimeout(() => {
+                    this.disabled = false;
+                    this.classList.remove('refreshing');
+                    updateLastUpdatedTime();
+                }, 1000);
             });
+
+            // Update last updated time
+            function updateLastUpdatedTime() {
+                const lastUpdated = document.getElementById('lastUpdated');
+                lastUpdated.textContent = 'Just now';
+                
+                // After 1 minute, start showing "X min ago"
+                let seconds = 0;
+                const interval = setInterval(() => {
+                    seconds += 30;
+                    const minutes = Math.floor(seconds / 60);
+                    
+                    if (minutes === 0) {
+                        lastUpdated.textContent = 'Just now';
+                    } else if (minutes === 1) {
+                        lastUpdated.textContent = '1 min ago';
+                    } else if (minutes < 60) {
+                        lastUpdated.textContent = minutes + ' mins ago';
+                    } else {
+                        clearInterval(interval);
+                        lastUpdated.textContent = 'Over 1 hour ago';
+                    }
+                }, 30000); // Update every 30 seconds
+            }
+            
+            // Initialize last updated time
+            updateLastUpdatedTime();
 
             // Export button
             document.getElementById('exportBtn').addEventListener('click', function() {

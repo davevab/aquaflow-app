@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaFlow - Settings</title>
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+            color: #111827;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .logo {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        
+        h1 {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        
+        .subtitle {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            margin-top: 0.125rem;
+        }
+        
+        .btn-header {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: all 0.2s;
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+        
+        .btn-header:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* Section Cards */
+        .section-card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-body {
+            padding: 1.5rem;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-input:disabled {
+            background: #f3f4f6;
+            cursor: not-allowed;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        @media (min-width: 640px) {
+            .header {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .subtitle {
+                font-size: 0.875rem;
+                margin-top: 0.25rem;
+            }
+
+            .btn-header {
+                width: 2.75rem;
+                height: 2.75rem;
+            }
+
+            .form-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .form-row.three-col {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-small {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8125rem;
+        }
+
+        /* Personnel List */
+        .personnel-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .personnel-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .personnel-card:hover {
+            border-color: #2563eb;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .personnel-info {
+            flex: 1;
+        }
+
+        .personnel-name {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 0.25rem;
+        }
+
+        .personnel-details {
+            font-size: 0.8125rem;
+            color: #6b7280;
+        }
+
+        .personnel-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 0.75rem;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.375rem;
+        }
+
+        .modal-close:hover {
+            background: #f3f4f6;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #10b981;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+            opacity: 0;
+            transform: translateY(1rem);
+            transition: all 0.3s;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid #e5e7eb;
+            border-top-color: #2563eb;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            color: #1e40af;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-blue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-green {
+            background: #d1fae5;
+            color: #065f46;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="header-title">
+                <span class="logo">💧</span>
+                <div>
+                    <h1>Settings</h1>
+                    <p class="subtitle">Configure AquaFlow</p>
+                </div>
+            </div>
+            <a href="owner-dashboard.html" class="btn-header" title="Back to Dashboard">
+                ←
+            </a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Pricing Settings -->
+        <div class="section-card">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span>💰</span>
+                    <span>Pricing</span>
+                </h2>
+            </div>
+            <div class="section-body">
+                <div class="info-box">
+                    💡 Changing the price will affect all new orders. Existing orders keep their original price.
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Price per Gallon (₱)</label>
+                    <input type="number" class="form-input" id="pricePerGallon" placeholder="20" step="1" min="1">
+                </div>
+                <button class="btn btn-primary" id="savePricing">
+                    <span>💾</span>
+                    <span>Save Pricing</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Personnel Management -->
+        <div class="section-card">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span>👥</span>
+                    <span>Personnel</span>
+                </h2>
+                <button class="btn btn-success btn-small" id="addPersonnelBtn">
+                    <span>+</span>
+                    <span>Add Driver</span>
+                </button>
+            </div>
+            <div class="section-body">
+                <div id="personnelList" class="personnel-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 1rem;">Loading personnel...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Business Information -->
+        <div class="section-card">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span>🏢</span>
+                    <span>Business Information</span>
+                </h2>
+            </div>
+            <div class="section-body">
+                <div class="form-group">
+                    <label class="form-label">Business Name</label>
+                    <input type="text" class="form-input" id="businessName" placeholder="AquaFlow Water Delivery">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Contact Number</label>
+                        <input type="tel" class="form-input" id="contactNumber" placeholder="09XX XXX XXXX">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-input" id="emailAddress" placeholder="info@aquaflow.com">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Main Office Address</label>
+                    <input type="text" class="form-input" id="officeAddress" placeholder="123 Main St, General Santos City">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Operating Hours</label>
+                        <input type="text" class="form-input" id="operatingHours" placeholder="8:00 AM - 6:00 PM">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Order Cutoff Time</label>
+                        <input type="time" class="form-input" id="cutoffTime" value="17:00">
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="saveBusinessInfo">
+                    <span>💾</span>
+                    <span>Save Business Info</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Personnel Modal -->
+    <div class="modal" id="personnelModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Add Driver</h3>
+                <button class="modal-close" id="closeModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Full Name <span style="color: #ef4444;">*</span></label>
+                    <input type="text" class="form-input" id="personnelName" placeholder="Juan Dela Cruz" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number <span style="color: #ef4444;">*</span></label>
+                    <input type="tel" class="form-input" id="personnelPhone" placeholder="09XX XXX XXXX" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Role</label>
+                    <select class="form-input" id="personnelRole">
+                        <option value="driver">Driver</option>
+                        <option value="cashier">Cashier</option>
+                        <option value="refiller">Refilling Staff</option>
+                        <option value="manager">Manager</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Vehicle / Notes (Optional)</label>
+                    <input type="text" class="form-input" id="personnelVehicle" placeholder="Motorcycle - Blue">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelPersonnel">Cancel</button>
+                <button class="btn btn-success" id="savePersonnel">
+                    <span>💾</span>
+                    <span>Save</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://objfqhffofsrttjxswkx.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_8kUVR1zO703wEgv1je_wtQ_88YK988G';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentSettings = {};
+        let currentPersonnel = [];
+        let editingPersonnelId = null;
+
+        // Load all settings
+        async function loadSettings() {
+            try {
+                // Load general settings
+                const { data: settings, error: settingsError } = await supabaseClient
+                    .from('settings')
+                    .select('*')
+                    .single();
+
+                if (settingsError && settingsError.code !== 'PGRST116') {
+                    console.error('Error loading settings:', settingsError);
+                }
+
+                if (settings) {
+                    currentSettings = settings;
+                    populateSettings(settings);
+                } else {
+                    // Set defaults
+                    document.getElementById('pricePerGallon').value = 20;
+                }
+
+                // Load personnel
+                await loadPersonnel();
+
+            } catch (err) {
+                console.error('Error loading settings:', err);
+            }
+        }
+
+        // Populate settings form
+        function populateSettings(settings) {
+            document.getElementById('pricePerGallon').value = settings.price_per_gallon || 20;
+            document.getElementById('businessName').value = settings.business_name || '';
+            document.getElementById('contactNumber').value = settings.contact_number || '';
+            document.getElementById('emailAddress').value = settings.email_address || '';
+            document.getElementById('officeAddress').value = settings.office_address || '';
+            document.getElementById('operatingHours').value = settings.operating_hours || '';
+            document.getElementById('cutoffTime').value = settings.cutoff_time || '17:00';
+        }
+
+        // Load personnel
+        async function loadPersonnel() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('personnel')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error('Error loading personnel:', error);
+                    document.getElementById('personnelList').innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">⚠️</div>
+                            <p>Error loading personnel</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                currentPersonnel = data || [];
+                renderPersonnel();
+
+            } catch (err) {
+                console.error('Error loading personnel:', err);
+            }
+        }
+
+        // Render personnel list
+        function renderPersonnel() {
+            const container = document.getElementById('personnelList');
+
+            if (currentPersonnel.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">👥</div>
+                        <p>No personnel added yet</p>
+                        <p style="font-size: 0.875rem; margin-top: 0.5rem;">Click "Add Driver" to add your first team member</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = currentPersonnel.map(person => {
+                const roleColors = {
+                    driver: 'blue',
+                    cashier: 'green',
+                    refiller: 'blue',
+                    manager: 'green'
+                };
+                const roleColor = roleColors[person.role] || 'blue';
+
+                return `
+                    <div class="personnel-card">
+                        <div class="personnel-info">
+                            <div class="personnel-name">${person.name}</div>
+                            <div class="personnel-details">
+                                <span class="badge badge-${roleColor}">${person.role.charAt(0).toUpperCase() + person.role.slice(1)}</span>
+                                <span style="margin-left: 0.5rem;">📱 ${person.phone}</span>
+                                ${person.vehicle ? `<span style="margin-left: 0.5rem;">🚗 ${person.vehicle}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="personnel-actions">
+                            <button class="btn btn-secondary btn-small" onclick="editPersonnel('${person.id}')">
+                                Edit
+                            </button>
+                            <button class="btn btn-danger btn-small" onclick="deletePersonnel('${person.id}', '${person.name}')">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Save pricing
+        async function savePricing() {
+            const pricePerGallon = parseFloat(document.getElementById('pricePerGallon').value);
+
+            if (!pricePerGallon || pricePerGallon <= 0) {
+                alert('Please enter a valid price per gallon');
+                return;
+            }
+
+            try {
+                const settingsData = {
+                    price_per_gallon: pricePerGallon,
+                    updated_at: new Date().toISOString()
+                };
+
+                let result;
+                if (currentSettings.id) {
+                    // Update existing
+                    result = await supabaseClient
+                        .from('settings')
+                        .update(settingsData)
+                        .eq('id', currentSettings.id)
+                        .select()
+                        .single();
+                } else {
+                    // Create new
+                    result = await supabaseClient
+                        .from('settings')
+                        .insert([settingsData])
+                        .select()
+                        .single();
+                }
+
+                if (result.error) {
+                    console.error('Error saving pricing:', result.error);
+                    alert('Failed to save pricing. Please try again.');
+                    return;
+                }
+
+                currentSettings = result.data;
+                showToast('✓ Pricing saved successfully!');
+
+            } catch (err) {
+                console.error('Error saving pricing:', err);
+                alert('An error occurred. Please try again.');
+            }
+        }
+
+        // Save business info
+        async function saveBusinessInfo() {
+            try {
+                const businessData = {
+                    business_name: document.getElementById('businessName').value,
+                    contact_number: document.getElementById('contactNumber').value,
+                    email_address: document.getElementById('emailAddress').value,
+                    office_address: document.getElementById('officeAddress').value,
+                    operating_hours: document.getElementById('operatingHours').value,
+                    cutoff_time: document.getElementById('cutoffTime').value,
+                    updated_at: new Date().toISOString()
+                };
+
+                let result;
+                if (currentSettings.id) {
+                    // Update existing
+                    result = await supabaseClient
+                        .from('settings')
+                        .update(businessData)
+                        .eq('id', currentSettings.id)
+                        .select()
+                        .single();
+                } else {
+                    // Create new
+                    businessData.price_per_gallon = 20; // Default price
+                    result = await supabaseClient
+                        .from('settings')
+                        .insert([businessData])
+                        .select()
+                        .single();
+                }
+
+                if (result.error) {
+                    console.error('Error saving business info:', result.error);
+                    alert('Failed to save business information. Please try again.');
+                    return;
+                }
+
+                currentSettings = result.data;
+                showToast('✓ Business information saved successfully!');
+
+            } catch (err) {
+                console.error('Error saving business info:', err);
+                alert('An error occurred. Please try again.');
+            }
+        }
+
+        // Open add personnel modal
+        function openAddPersonnelModal() {
+            editingPersonnelId = null;
+            document.getElementById('modalTitle').textContent = 'Add Driver';
+            document.getElementById('personnelName').value = '';
+            document.getElementById('personnelPhone').value = '';
+            document.getElementById('personnelRole').value = 'driver';
+            document.getElementById('personnelVehicle').value = '';
+            document.getElementById('personnelModal').classList.add('show');
+        }
+
+        // Edit personnel
+        function editPersonnel(id) {
+            const person = currentPersonnel.find(p => p.id === id);
+            if (!person) return;
+
+            editingPersonnelId = id;
+            document.getElementById('modalTitle').textContent = 'Edit Personnel';
+            document.getElementById('personnelName').value = person.name;
+            document.getElementById('personnelPhone').value = person.phone;
+            document.getElementById('personnelRole').value = person.role;
+            document.getElementById('personnelVehicle').value = person.vehicle || '';
+            document.getElementById('personnelModal').classList.add('show');
+        }
+
+        // Delete personnel
+        async function deletePersonnel(id, name) {
+            if (!confirm(`Are you sure you want to delete ${name}?`)) {
+                return;
+            }
+
+            try {
+                const { error } = await supabaseClient
+                    .from('personnel')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) {
+                    console.error('Error deleting personnel:', error);
+                    alert('Failed to delete personnel. Please try again.');
+                    return;
+                }
+
+                showToast('✓ Personnel deleted successfully!');
+                loadPersonnel();
+
+            } catch (err) {
+                console.error('Error deleting personnel:', err);
+                alert('An error occurred. Please try again.');
+            }
+        }
+
+        // Save personnel
+        async function savePersonnel() {
+            const name = document.getElementById('personnelName').value.trim();
+            const phone = document.getElementById('personnelPhone').value.trim();
+            const role = document.getElementById('personnelRole').value;
+            const vehicle = document.getElementById('personnelVehicle').value.trim();
+
+            if (!name || !phone) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            try {
+                const personnelData = {
+                    name: name,
+                    phone: phone,
+                    role: role,
+                    vehicle: vehicle || null,
+                    updated_at: new Date().toISOString()
+                };
+
+                let result;
+                if (editingPersonnelId) {
+                    // Update existing
+                    result = await supabaseClient
+                        .from('personnel')
+                        .update(personnelData)
+                        .eq('id', editingPersonnelId)
+                        .select()
+                        .single();
+                } else {
+                    // Create new
+                    personnelData.created_at = new Date().toISOString();
+                    result = await supabaseClient
+                        .from('personnel')
+                        .insert([personnelData])
+                        .select()
+                        .single();
+                }
+
+                if (result.error) {
+                    console.error('Error saving personnel:', result.error);
+                    alert('Failed to save personnel. Please try again.');
+                    return;
+                }
+
+                showToast(editingPersonnelId ? '✓ Personnel updated successfully!' : '✓ Personnel added successfully!');
+                document.getElementById('personnelModal').classList.remove('show');
+                loadPersonnel();
+
+            } catch (err) {
+                console.error('Error saving personnel:', err);
+                alert('An error occurred. Please try again.');
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('personnelModal').classList.remove('show');
+        }
+
+        // Show toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Settings page loaded');
+
+            // Load settings
+            loadSettings();
+
+            // Save pricing button
+            document.getElementById('savePricing').addEventListener('click', savePricing);
+
+            // Save business info button
+            document.getElementById('saveBusinessInfo').addEventListener('click', saveBusinessInfo);
+
+            // Add personnel button
+            document.getElementById('addPersonnelBtn').addEventListener('click', openAddPersonnelModal);
+
+            // Save personnel button
+            document.getElementById('savePersonnel').addEventListener('click', savePersonnel);
+
+            // Cancel personnel button
+            document.getElementById('cancelPersonnel').addEventListener('click', closeModal);
+
+            // Close modal button
+            document.getElementById('closeModal').addEventListener('click', closeModal);
+
+            // Close modal on background click
+            document.getElementById('personnelModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
