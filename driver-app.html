@@ -4,266 +4,756 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AquaFlow - Driver App</title>
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: #f3f4f6; color: #111827; padding-bottom: 2rem; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
-        .header { background: white; border-bottom: 1px solid #e5e7eb; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .header-left { display: flex; align-items: center; gap: 0.75rem; }
-        .logo { font-size: 1.5rem; }
-        .driver-name { font-size: 1.25rem; font-weight: bold; color: #111827; }
-        .logout-btn { padding: 0.5rem 1rem; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem; cursor: pointer; color: #374151; }
-        .logout-btn:hover { background: #e5e7eb; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+            padding-bottom: 2rem;
+        }
         
-        .container { max-width: 800px; margin: 0 auto; padding: 1.5rem; }
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
         
-        .summary-card { background: white; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
-        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
-        .summary-item { text-align: center; }
-        .summary-label { font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem; }
-        .summary-value { font-size: 2rem; font-weight: bold; color: #111827; }
-        .summary-item.completed .summary-value { color: #059669; }
-        .summary-item.pending .summary-value { color: #dc2626; }
+        .header-content {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         
-        .section { background: white; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb; }
-        .section-title { font-size: 1.25rem; font-weight: 600; color: #111827; display: flex; align-items: center; gap: 0.5rem; }
-        .section-count { background: #2563eb; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.875rem; font-weight: 600; }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: 1;
+            min-width: 0;
+        }
         
-        .priority-divider { display: flex; align-items: center; gap: 0.5rem; margin: 0 0 1rem 0; padding: 0.75rem; background: #fef2f2; border-radius: 0.5rem; border-left: 4px solid #dc2626; }
-        .priority-divider-text { font-weight: 600; color: #dc2626; font-size: 0.875rem; }
-        .today-divider { display: flex; align-items: center; gap: 0.5rem; margin: 1.5rem 0 1rem 0; padding: 0.75rem; background: #f0f9ff; border-radius: 0.5rem; border-left: 4px solid #2563eb; }
-        .today-divider-text { font-weight: 600; color: #2563eb; font-size: 0.875rem; }
+        .logo {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
         
-        .delivery-card { border: 1px solid #e5e7eb; border-radius: 0.5rem; margin-bottom: 0.75rem; overflow: hidden; transition: all 0.2s; background: white; }
-        .delivery-card.expanded { background: #f0f9ff; border-color: #3b82f6; }
-        .delivery-card.priority-order { border-left: 4px solid #dc2626; }
+        .driver-info h1 {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
         
-        .card-header { padding: 1rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; background: white; }
-        .card-header:hover { background: #f9fafb; }
-        .delivery-card.expanded .card-header { background: #dbeafe; }
-        .card-header-left { display: flex; align-items: center; gap: 0.75rem; flex: 1; }
-        .card-header-right { display: flex; align-items: center; gap: 0.75rem; }
+        .driver-role {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            margin-top: 0.125rem;
+        }
         
-        .order-number { font-weight: 600; color: #2563eb; font-size: 1rem; }
-        .customer-name { font-weight: 500; color: #111827; font-size: 1rem; }
-        .status-badge { padding: 0.25rem 0.75rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 500; white-space: nowrap; }
-        .badge-priority { background: #fee2e2; color: #991b1b; }
-        .badge-pending { background: #fef3c7; color: #92400e; }
-        .badge-delivering { background: #dbeafe; color: #1e40af; }
-        .badge-completed { background: #d1fae5; color: #065f46; }
+        .refresh-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            width: 2.5rem;
+            height: 2.5rem;
+        }
         
-        .expand-icon { color: #6b7280; font-size: 1.25rem; transition: transform 0.2s; }
-        .delivery-card.expanded .expand-icon { transform: rotate(180deg); }
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .refresh-btn.refreshing {
+            animation: spin 0.6s linear infinite;
+            opacity: 0.7;
+            cursor: wait;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
         
-        .card-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
-        .delivery-card.expanded .card-body { max-height: 1000px; }
-        .card-content { padding: 0 1rem 1rem 1rem; border-top: 1px solid #e5e7eb; }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
         
-        .card-detail { display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.75rem; font-size: 0.875rem; }
-        .detail-icon { font-size: 1rem; min-width: 1.25rem; }
-        .detail-content { flex: 1; }
-        .detail-label { color: #6b7280; font-size: 0.75rem; margin-bottom: 0.25rem; }
-        .detail-value { color: #111827; font-weight: 500; }
-        .phone-link { color: #2563eb; text-decoration: none; font-weight: 600; }
-        .phone-link:hover { text-decoration: underline; }
-        .payment-info { display: flex; gap: 0.5rem; align-items: center; }
-        .payment-amount { font-weight: 700; color: #059669; font-size: 1rem; }
-        .special-instructions { background: #fef3c7; padding: 0.75rem; border-radius: 0.375rem; margin: 0.75rem 0; font-size: 0.875rem; color: #92400e; border-left: 3px solid #f59e0b; }
+        .summary-card {
+            background: white;
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
         
-        .card-actions { display: flex; gap: 0.5rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; flex-wrap: wrap; }
-        .btn { padding: 0.625rem 1rem; border: none; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s; }
-        .btn-primary { background: #2563eb; color: white; flex: 1; }
-        .btn-primary:hover { background: #1d4ed8; }
-        .btn-success { background: #059669; color: white; flex: 1; }
-        .btn-success:hover { background: #047857; }
-        .btn-call { background: #10b981; color: white; }
-        .btn-call:hover { background: #059669; }
-        .btn-issue { background: #f59e0b; color: white; }
-        .btn-issue:hover { background: #d97706; }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
         
-        .empty-state { text-align: center; padding: 3rem 1rem; color: #6b7280; }
-        .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .summary-item {
+            text-align: center;
+            padding: 0.75rem;
+            background: #f9fafb;
+            border-radius: 0.5rem;
+        }
         
-        .section.collapsible .section-header { cursor: pointer; }
-        .section.collapsible .section-header:hover { background: #f9fafb; margin: -0.5rem -1rem 1.5rem -1rem; padding: 0.5rem 1rem 1rem 1rem; border-radius: 0.5rem; }
-        .section-body { max-height: 5000px; overflow: hidden; transition: max-height 0.3s ease-out; }
-        .section.collapsed .section-body { max-height: 0; }
-        .toggle-icon { transition: transform 0.2s; }
-        .section.collapsed .toggle-icon { transform: rotate(-90deg); }
+        .summary-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-bottom: 0.375rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .summary-value {
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: #111827;
+        }
+        
+        .summary-item.total .summary-value {
+            color: #2563eb;
+        }
+        
+        .summary-item.completed .summary-value {
+            color: #059669;
+        }
+        
+        .summary-item.pending .summary-value {
+            color: #dc2626;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .section-count {
+            background: #2563eb;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.8125rem;
+            font-weight: 600;
+        }
+        
+        .delivery-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.625rem;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        .delivery-card.completed {
+            opacity: 0.7;
+            background: #f9fafb;
+        }
+        
+        .card-header {
+            padding: 1rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .card-main {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .customer-name {
+            font-weight: 600;
+            color: #111827;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .delivery-time {
+            font-size: 0.8125rem;
+            color: #6b7280;
+        }
+        
+        .card-amount {
+            text-align: right;
+            flex-shrink: 0;
+        }
+        
+        .amount-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-bottom: 0.125rem;
+        }
+        
+        .amount-value {
+            font-size: 1.125rem;
+            font-weight: bold;
+            color: #059669;
+        }
+        
+        .card-body {
+            padding: 0 1.25rem 1.25rem 1.25rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .card-detail {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.625rem;
+            margin-top: 0.875rem;
+            font-size: 0.875rem;
+        }
+        
+        .detail-icon {
+            font-size: 1rem;
+            min-width: 1.25rem;
+            color: #6b7280;
+        }
+        
+        .detail-content {
+            flex: 1;
+        }
+        
+        .detail-label {
+            color: #6b7280;
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .detail-value {
+            color: #111827;
+            font-weight: 500;
+        }
+        
+        .phone-link {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .phone-link:hover {
+            text-decoration: underline;
+        }
+        
+        .payment-status {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .payment-paid {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .payment-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .payment-cod {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .special-instructions {
+            background: #fef3c7;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-top: 0.875rem;
+            font-size: 0.8125rem;
+            color: #92400e;
+            border-left: 3px solid #f59e0b;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 0.625rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .btn {
+            padding: 0.625rem 1.125rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            flex: 1;
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-call {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-call:hover {
+            background: #059669;
+        }
+        
+        .btn-complete {
+            background: #2563eb;
+            color: white;
+        }
+        
+        .btn-complete:hover {
+            background: #1d4ed8;
+        }
+        
+        .btn-completed {
+            background: #059669;
+            color: white;
+            cursor: default;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6b7280;
+        }
+        
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.5;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid #e5e7eb;
+            border-top-color: #10b981;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #10b981;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+            opacity: 0;
+            transform: translateY(1rem);
+            transition: all 0.3s;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (min-width: 640px) {
+            .header-content {
+                padding: 0;
+            }
+
+            .driver-info h1 {
+                font-size: 1.5rem;
+            }
+
+            .driver-role {
+                font-size: 0.875rem;
+                margin-top: 0.25rem;
+            }
+
+            .refresh-btn {
+                width: 2.75rem;
+                height: 2.75rem;
+            }
+        }
         
         @media (max-width: 768px) {
-            .container { padding: 1rem; }
-            .summary-grid { grid-template-columns: 1fr; gap: 1rem; }
-            .summary-value { font-size: 1.5rem; }
-            .card-actions { flex-direction: column; }
-            .btn { width: 100%; }
+            .container {
+                padding: 1rem;
+            }
+            
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .summary-value {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="header-left">
-            <span class="logo">🚚</span>
-            <span class="driver-name" id="driverName">Mang Jose</span>
+        <div class="header-content">
+            <div class="header-left">
+                <span class="logo">🚗</span>
+                <div class="driver-info">
+                    <h1 id="driverName">Driver Dashboard</h1>
+                    <p class="driver-role">Delivery Personnel</p>
+                </div>
+            </div>
+            <button class="refresh-btn" id="refreshBtn" title="Refresh deliveries">
+                🔄
+            </button>
         </div>
-        <button class="logout-btn">Logout</button>
     </div>
 
     <div class="container">
+        <!-- Summary Stats -->
         <div class="summary-card">
             <div class="summary-grid">
-                <div class="summary-item">
-                    <div class="summary-label">Total Deliveries</div>
-                    <div class="summary-value" id="totalDeliveries">5</div>
+                <div class="summary-item total">
+                    <div class="summary-label">Today's Total</div>
+                    <div class="summary-value" id="totalDeliveries">0</div>
                 </div>
                 <div class="summary-item completed">
                     <div class="summary-label">Completed</div>
-                    <div class="summary-value" id="completedCount">0</div>
+                    <div class="summary-value" id="completedDeliveries">0</div>
                 </div>
                 <div class="summary-item pending">
-                    <div class="summary-label">Remaining</div>
-                    <div class="summary-value" id="remainingCount">5</div>
+                    <div class="summary-label">Pending</div>
+                    <div class="summary-value" id="pendingDeliveries">0</div>
                 </div>
             </div>
         </div>
 
-        <div class="section" id="pendingSection">
+        <!-- Today's Deliveries -->
+        <div class="section">
             <div class="section-header">
-                <h2 class="section-title"><span>📋</span><span>Pending Deliveries</span></h2>
-                <span class="section-count" id="pendingCount">5</span>
+                <h2 class="section-title">
+                    <span>📦</span>
+                    <span>Today's Deliveries</span>
+                </h2>
+                <span class="section-count" id="deliveryCount">0</span>
             </div>
-            <div class="section-body" id="pendingList"></div>
-        </div>
-
-        <div class="section" id="deliveringSection">
-            <div class="section-header">
-                <h2 class="section-title"><span>🚚</span><span>Out for Delivery</span></h2>
-                <span class="section-count" id="deliveringCount">0</span>
-            </div>
-            <div class="section-body" id="deliveringList"></div>
-        </div>
-
-        <div class="section collapsible collapsed" id="completedSection">
-            <div class="section-header" onclick="toggleCompleted()">
-                <h2 class="section-title"><span>✅</span><span>Completed Today</span></h2>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <span class="section-count" id="completedSectionCount">0</span>
-                    <span class="toggle-icon">▼</span>
+            <div id="deliveriesList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 1rem;">Loading deliveries...</p>
                 </div>
             </div>
-            <div class="section-body" id="completedList"></div>
         </div>
     </div>
 
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
     <script>
-        var driverData = {
-            driverName: 'Mang Jose',
-            deliveries: [
-                { id: 'ORD179100', customer: 'Maria Santos', phone: '0918 765 4321', address: 'Purok 2, Brgy. Lapasan, CDO City', quantity: 2, productType: 'Standard Container', payment: 'COD', amount: 40, instructions: 'From yesterday - please prioritize', status: 'pending', isPriority: true, deliveryWindow: 'AM' },
-                { id: 'ORD179101', customer: 'Pedro Garcia', phone: '0919 876 5432', address: 'Purok 4, Brgy. Kauswagan, CDO City', quantity: 3, productType: 'Standard Container', payment: 'GCash', amount: 60, instructions: 'Pending from yesterday', status: 'pending', isPriority: true, deliveryWindow: 'PM' },
-                { id: 'ORD179135', customer: 'Juan Cruz', phone: '0912 345 6789', address: 'Purok 3, Brgy. Carmen, CDO City', quantity: 5, productType: 'Standard Container', payment: 'COD', amount: 100, instructions: null, status: 'pending', isPriority: false, deliveryWindow: 'AM' },
-                { id: 'ORD179136', customer: 'Ana Lopez', phone: '0917 234 5678', address: 'Purok 5, Brgy. Carmen, CDO City', quantity: 3, productType: 'Standard Container', payment: 'GCash', amount: 60, instructions: 'Please call before arriving', status: 'pending', isPriority: false, deliveryWindow: 'AM' },
-                { id: 'ORD179137', customer: 'Rico Tan', phone: '0923 456 7890', address: 'Purok 7, Brgy. Nazareth, CDO City', quantity: 4, productType: 'Container with Faucet', payment: 'COD', amount: 120, instructions: 'Gate is locked, please call', status: 'pending', isPriority: false, deliveryWindow: 'AM' }
-            ]
-        };
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://objfqhffofsrttjxswkx.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_8kUVR1zO703wEgv1je_wtQ_88YK988G';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        function renderDeliveryCard(delivery) {
-            var badgeClass = delivery.isPriority ? 'badge-priority' : delivery.status === 'pending' ? 'badge-pending' : delivery.status === 'delivering' ? 'badge-delivering' : 'badge-completed';
-            var badgeText = delivery.isPriority ? 'YESTERDAY' : delivery.status === 'pending' ? delivery.deliveryWindow : delivery.status === 'delivering' ? 'OUT FOR DELIVERY' : 'COMPLETED';
-            var priorityClass = delivery.isPriority ? ' priority-order' : '';
+        let allDeliveries = [];
+        let currentDriver = null;
+
+        // Get driver from URL parameter or localStorage
+        function getDriverInfo() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const driverParam = urlParams.get('driver');
             
-            var html = '<div class="delivery-card' + priorityClass + '" id="card-' + delivery.id + '">';
-            html += '<div class="card-header" onclick="toggleCard(\'' + delivery.id + '\')">';
-            html += '<div class="card-header-left"><span class="order-number">#' + delivery.id + '</span><span class="customer-name">' + delivery.customer + '</span></div>';
-            html += '<div class="card-header-right"><span class="status-badge ' + badgeClass + '">' + badgeText + '</span><span class="expand-icon">▼</span></div>';
-            html += '</div>';
-            html += '<div class="card-body"><div class="card-content">';
-            html += '<div class="card-detail"><span class="detail-icon">📞</span><div class="detail-content"><div class="detail-label">Phone</div><a href="tel:' + delivery.phone + '" class="phone-link">' + delivery.phone + '</a></div></div>';
-            html += '<div class="card-detail"><span class="detail-icon">📍</span><div class="detail-content"><div class="detail-label">Address</div><div class="detail-value">' + delivery.address + '</div></div></div>';
-            html += '<div class="card-detail"><span class="detail-icon">📦</span><div class="detail-content"><div class="detail-label">Order</div><div class="detail-value">' + delivery.quantity + ' gallons (' + delivery.productType + ')</div></div></div>';
-            html += '<div class="card-detail"><span class="detail-icon">💰</span><div class="detail-content"><div class="detail-label">Payment</div><div class="payment-info"><span class="detail-value">' + delivery.payment + '</span><span class="payment-amount">₱' + delivery.amount + '</span></div></div></div>';
-            if (delivery.instructions) html += '<div class="special-instructions">💬 <strong>Note:</strong> ' + delivery.instructions + '</div>';
-            html += '<div class="card-actions">';
-            if (delivery.status === 'pending') html += '<button class="btn btn-primary" onclick="startDelivery(\'' + delivery.id + '\')">🚚 Start Delivery</button>';
-            else if (delivery.status === 'delivering') html += '<button class="btn btn-success" onclick="completeDelivery(\'' + delivery.id + '\')">✓ Mark as Completed</button>';
-            if (delivery.status !== 'completed') {
-                html += '<a href="tel:' + delivery.phone + '" class="btn btn-call">📞 Call</a>';
-                html += '<button class="btn btn-issue" onclick="alert(\'Report Issue feature\')">⚠️ Report Issue</button>';
+            if (driverParam) {
+                localStorage.setItem('aquaflow_driver', driverParam);
+                currentDriver = driverParam;
+            } else {
+                currentDriver = localStorage.getItem('aquaflow_driver') || 'Driver';
             }
-            html += '</div></div></div></div>';
-            return html;
+            
+            document.getElementById('driverName').textContent = currentDriver;
         }
 
-        function toggleCard(orderId) {
-            document.getElementById('card-' + orderId).classList.toggle('expanded');
-        }
+        // Load today's deliveries
+        async function loadDeliveries() {
+            try {
+                console.log('Loading deliveries...');
+                
+                const today = new Date().toISOString().split('T')[0];
+                
+                const { data, error } = await supabaseClient
+                    .from('orders')
+                    .select('*')
+                    .eq('delivery_date', today)
+                    .order('delivery_time', { ascending: true })
+                    .order('created_at', { ascending: true });
 
-        function renderDeliveries() {
-            var pendingHtml = '', deliveringHtml = '', completedHtml = '';
-            var pendingCount = 0, deliveringCount = 0, completedCount = 0;
-            var hasPriority = false, hasToday = false;
-            
-            var sorted = driverData.deliveries.slice().sort(function(a, b) {
-                return (b.isPriority ? 1 : 0) - (a.isPriority ? 1 : 0);
-            });
-            
-            sorted.forEach(function(d) {
-                var card = renderDeliveryCard(d);
-                if (d.status === 'pending') {
-                    if (d.isPriority && !hasPriority) {
-                        pendingHtml += '<div class="priority-divider"><span>🔴</span><span class="priority-divider-text">YESTERDAY\'S PENDING (Priority)</span></div>';
-                        hasPriority = true;
-                    } else if (!d.isPriority && !hasToday && hasPriority) {
-                        pendingHtml += '<div class="today-divider"><span>📅</span><span class="today-divider-text">TODAY\'S PENDING</span></div>';
-                        hasToday = true;
-                    }
-                    pendingHtml += card;
-                    pendingCount++;
-                } else if (d.status === 'delivering') {
-                    deliveringHtml += card;
-                    deliveringCount++;
-                } else {
-                    completedHtml += card;
-                    completedCount++;
+                if (error) {
+                    console.error('Supabase error:', error);
+                    showError();
+                    return;
                 }
+
+                console.log('Deliveries loaded:', data.length);
+                allDeliveries = data || [];
+                
+                updateStats();
+                renderDeliveries();
+                
+            } catch (err) {
+                console.error('Error loading deliveries:', err);
+                showError();
+            }
+        }
+
+        // Update summary stats
+        function updateStats() {
+            const total = allDeliveries.length;
+            const completed = allDeliveries.filter(d => d.order_status === 'completed').length;
+            const pending = total - completed;
+            
+            document.getElementById('totalDeliveries').textContent = total;
+            document.getElementById('completedDeliveries').textContent = completed;
+            document.getElementById('pendingDeliveries').textContent = pending;
+            document.getElementById('deliveryCount').textContent = total;
+        }
+
+        // Render deliveries list
+        function renderDeliveries() {
+            const container = document.getElementById('deliveriesList');
+            
+            if (allDeliveries.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <p><strong>No deliveries today</strong></p>
+                        <p style="font-size: 0.875rem; margin-top: 0.5rem;">Check back later for new assignments</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = allDeliveries.map(delivery => {
+                const isCompleted = delivery.order_status === 'completed';
+                const paymentStatus = delivery.payment_status === 'paid' ? 'Paid' : 
+                                     delivery.payment_method === 'cod' ? 'COD' : 'Pending';
+                const paymentClass = delivery.payment_status === 'paid' ? 'payment-paid' : 
+                                    delivery.payment_method === 'cod' ? 'payment-cod' : 'payment-pending';
+                
+                return `
+                    <div class="delivery-card ${isCompleted ? 'completed' : ''}">
+                        <div class="card-header">
+                            <div class="card-main">
+                                <div class="customer-name">${delivery.customer_name}</div>
+                                <div class="delivery-time">
+                                    📅 ${formatDate(delivery.delivery_date)} • 
+                                    ⏰ ${delivery.delivery_time === 'am' ? 'Morning (8AM-12PM)' : 'Afternoon (3PM-5PM)'}
+                                </div>
+                            </div>
+                            <div class="card-amount">
+                                <div class="amount-label">${delivery.quantity} gal</div>
+                                <div class="amount-value">₱${parseFloat(delivery.total_amount).toFixed(0)}</div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-detail">
+                                <span class="detail-icon">📱</span>
+                                <div class="detail-content">
+                                    <div class="detail-label">Phone Number</div>
+                                    <a href="tel:${delivery.customer_phone}" class="phone-link">${delivery.customer_phone}</a>
+                                </div>
+                            </div>
+                            <div class="card-detail">
+                                <span class="detail-icon">📍</span>
+                                <div class="detail-content">
+                                    <div class="detail-label">Delivery Address</div>
+                                    <div class="detail-value">${delivery.customer_address}</div>
+                                </div>
+                            </div>
+                            <div class="card-detail">
+                                <span class="detail-icon">💳</span>
+                                <div class="detail-content">
+                                    <div class="detail-label">Payment</div>
+                                    <div class="detail-value">
+                                        <span class="payment-status ${paymentClass}">${paymentStatus}</span>
+                                        ${delivery.payment_method === 'gcash' ? ' via GCash' : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            ${delivery.notes ? `
+                                <div class="special-instructions">
+                                    <strong>📋 Special Instructions:</strong><br>
+                                    ${delivery.notes}
+                                </div>
+                            ` : ''}
+                            <div class="card-actions">
+                                <button class="btn btn-call" onclick="callCustomer('${delivery.customer_phone}')">
+                                    <span>📞</span>
+                                    <span>Call</span>
+                                </button>
+                                ${isCompleted ? `
+                                    <button class="btn btn-completed" disabled>
+                                        <span>✓</span>
+                                        <span>Completed</span>
+                                    </button>
+                                ` : `
+                                    <button class="btn btn-complete" onclick="markAsComplete('${delivery.id}', '${delivery.customer_name}')">
+                                        <span>✓</span>
+                                        <span>Mark Complete</span>
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Format date for display
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        // Call customer
+        function callCustomer(phone) {
+            window.location.href = `tel:${phone}`;
+        }
+
+        // Mark delivery as complete
+        async function markAsComplete(orderId, customerName) {
+            if (!confirm(`Mark delivery to ${customerName} as complete?`)) {
+                return;
+            }
+
+            try {
+                const { data, error} = await supabaseClient
+                    .from('orders')
+                    .update({ 
+                        order_status: 'completed',
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', orderId)
+                    .select()
+                    .single();
+
+                if (error) {
+                    console.error('Error updating order:', error);
+                    alert('Failed to mark as complete. Please try again.');
+                    return;
+                }
+
+                console.log('Order marked as complete:', data);
+                showToast('✓ Delivery completed!');
+                loadDeliveries();
+
+            } catch (err) {
+                console.error('Error marking as complete:', err);
+                alert('An error occurred. Please try again.');
+            }
+        }
+
+        // Show error state
+        function showError() {
+            const container = document.getElementById('deliveriesList');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">⚠️</div>
+                    <p><strong>Error loading deliveries</strong></p>
+                    <p style="font-size: 0.875rem; margin-top: 0.5rem;">Please try refreshing the page</p>
+                </div>
+            `;
+        }
+
+        // Show toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Driver app loaded');
+            
+            // Get driver info
+            getDriverInfo();
+            
+            // Load deliveries
+            loadDeliveries();
+            
+            // Refresh button
+            document.getElementById('refreshBtn').addEventListener('click', function() {
+                this.disabled = true;
+                this.classList.add('refreshing');
+                loadDeliveries();
+                setTimeout(() => {
+                    this.disabled = false;
+                    this.classList.remove('refreshing');
+                }, 1000);
             });
             
-            document.getElementById('pendingList').innerHTML = pendingCount ? pendingHtml : '<div class="empty-state"><div class="empty-icon">✓</div><p>No pending deliveries</p></div>';
-            document.getElementById('pendingCount').textContent = pendingCount;
-            document.getElementById('deliveringList').innerHTML = deliveringCount ? deliveringHtml : '<div class="empty-state"><div class="empty-icon">🚚</div><p>No deliveries in progress</p></div>';
-            document.getElementById('deliveringCount').textContent = deliveringCount;
-            document.getElementById('completedList').innerHTML = completedCount ? completedHtml : '<div class="empty-state"><div class="empty-icon">📦</div><p>No completed deliveries yet</p></div>';
-            document.getElementById('completedSectionCount').textContent = completedCount;
-            
-            document.getElementById('totalDeliveries').textContent = driverData.deliveries.length;
-            document.getElementById('completedCount').textContent = completedCount;
-            document.getElementById('remainingCount').textContent = driverData.deliveries.length - completedCount;
-        }
-
-        function startDelivery(orderId) {
-            event.stopPropagation();
-            if (confirm('Start delivery for #' + orderId + '?')) {
-                var d = driverData.deliveries.find(function(x) { return x.id === orderId; });
-                if (d) { d.status = 'delivering'; renderDeliveries(); alert('✓ Started delivery for #' + orderId); }
-            }
-        }
-
-        function completeDelivery(orderId) {
-            event.stopPropagation();
-            if (confirm('Mark #' + orderId + ' as completed?')) {
-                var d = driverData.deliveries.find(function(x) { return x.id === orderId; });
-                if (d) { d.status = 'completed'; renderDeliveries(); alert('✓ Order #' + orderId + ' completed!'); }
-            }
-        }
-
-        function toggleCompleted() {
-            document.getElementById('completedSection').classList.toggle('collapsed');
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('driverName').textContent = driverData.driverName;
-            renderDeliveries();
+            // Auto-refresh every 60 seconds
+            setInterval(loadDeliveries, 60000);
         });
     </script>
 </body>
