@@ -460,7 +460,7 @@
             <!-- Monthly Revenue Trend -->
             <div class="chart-card">
                 <div class="chart-header">
-                    <h2 class="chart-title">Monthly Revenue Trend (2024)</h2>
+                    <h2 class="chart-title" id="monthlyChartTitle">Monthly Revenue Trend</h2>
                 </div>
                 <div class="chart-container">
                     <canvas id="monthlyRevenueChart"></canvas>
@@ -671,6 +671,9 @@
         function renderMonthlyRevenueChart() {
             const ctx = document.getElementById('monthlyRevenueChart');
             const currentYear = new Date().getFullYear();
+
+            // Update chart title with current year
+            document.getElementById('monthlyChartTitle').textContent = `Monthly Revenue Trend (${currentYear})`;
 
             // Group orders by month
             const monthlyData = Array(12).fill(0);
