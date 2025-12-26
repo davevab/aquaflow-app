@@ -195,6 +195,113 @@
             opacity: 0.7;
             background: #f9fafb;
         }
+
+        /* Compact Card Styles */
+        .delivery-card-compact {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            background: white;
+            padding: 0.875rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .delivery-card-compact:active {
+            transform: scale(0.98);
+            background: #f9fafb;
+        }
+
+        .delivery-card-compact.completed {
+            opacity: 0.6;
+            background: #f9fafb;
+        }
+
+        .card-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .card-left {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .card-right {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .customer-name-compact {
+            font-weight: 600;
+            color: #111827;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .address-compact {
+            font-size: 0.8125rem;
+            color: #6b7280;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .amount-compact {
+            font-size: 1.125rem;
+            font-weight: bold;
+            color: #059669;
+            margin-bottom: 0.125rem;
+        }
+
+        .quantity-compact {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .card-actions-compact {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-compact {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-call-compact {
+            background: #10b981;
+            color: white;
+            flex: 0 0 3rem;
+        }
+
+        .btn-call-compact:active {
+            background: #059669;
+        }
+
+        .btn-complete-compact {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-complete-compact:active {
+            background: #1d4ed8;
+        }
+
+        .btn-done-compact {
+            background: #d1d5db;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
         
         .card-header {
             padding: 1rem 1.25rem;
@@ -394,6 +501,163 @@
             animation: spin 0.8s linear infinite;
         }
         
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 0.75rem;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.375rem;
+            line-height: 1;
+        }
+
+        .modal-close:active {
+            background: #f3f4f6;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-detail {
+            margin-bottom: 1.25rem;
+        }
+
+        .modal-detail-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.375rem;
+        }
+
+        .modal-detail-value {
+            font-size: 0.9375rem;
+            color: #111827;
+        }
+
+        .modal-detail-value a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            position: sticky;
+            bottom: 0;
+            background: white;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .modal-btn-call {
+            background: #10b981;
+            color: white;
+        }
+
+        .modal-btn-navigate {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .modal-btn-complete {
+            background: #2563eb;
+            color: white;
+        }
+
+        .modal-btn:active {
+            opacity: 0.8;
+        }
+
+        .modal-notes {
+            background: #fef3c7;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid #f59e0b;
+            margin-bottom: 1.25rem;
+        }
+
+        .modal-notes-title {
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-notes-content {
+            color: #78350f;
+            font-size: 0.9375rem;
+        }
+
         .toast {
             position: fixed;
             bottom: 2rem;
@@ -502,6 +766,19 @@
         </div>
     </div>
 
+    <!-- Delivery Details Modal -->
+    <div class="modal" id="deliveryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalCustomerName">Delivery Details</h3>
+                <button class="modal-close" onclick="closeDeliveryModal()">×</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div class="toast" id="toast"></div>
 
@@ -604,74 +881,32 @@
 
             container.innerHTML = allDeliveries.map(delivery => {
                 const isCompleted = delivery.order_status === 'completed';
-                const paymentStatus = delivery.payment_status === 'paid' ? 'Paid' : 
-                                     delivery.payment_method === 'cod' ? 'COD' : 'Pending';
-                const paymentClass = delivery.payment_status === 'paid' ? 'payment-paid' : 
-                                    delivery.payment_method === 'cod' ? 'payment-cod' : 'payment-pending';
                 
                 return `
-                    <div class="delivery-card ${isCompleted ? 'completed' : ''}">
-                        <div class="card-header">
-                            <div class="card-main">
-                                <div class="customer-name">${delivery.customer_name}</div>
-                                <div class="delivery-time">
-                                    📅 ${formatDate(delivery.delivery_date)} • 
-                                    ⏰ ${delivery.delivery_time === 'am' ? 'Morning (8AM-12PM)' : 'Afternoon (3PM-5PM)'}
-                                </div>
+                    <div class="delivery-card-compact ${isCompleted ? 'completed' : ''}" onclick="openDeliveryModal('${delivery.id}')">
+                        <div class="card-row">
+                            <div class="card-left">
+                                <div class="customer-name-compact">${delivery.customer_name}</div>
+                                <div class="address-compact">📍 ${delivery.customer_address.length > 35 ? delivery.customer_address.substring(0, 35) + '...' : delivery.customer_address}</div>
                             </div>
-                            <div class="card-amount">
-                                <div class="amount-label">${delivery.quantity} gal</div>
-                                <div class="amount-value">₱${parseFloat(delivery.total_amount).toFixed(0)}</div>
+                            <div class="card-right">
+                                <div class="amount-compact">₱${parseFloat(delivery.total_amount).toFixed(0)}</div>
+                                <div class="quantity-compact">${delivery.quantity} gal</div>
                             </div>
                         </div>
-                        <div class="card-body">
-                            <div class="card-detail">
-                                <span class="detail-icon">📱</span>
-                                <div class="detail-content">
-                                    <div class="detail-label">Phone Number</div>
-                                    <a href="tel:${delivery.customer_phone}" class="phone-link">${delivery.customer_phone}</a>
-                                </div>
-                            </div>
-                            <div class="card-detail">
-                                <span class="detail-icon">📍</span>
-                                <div class="detail-content">
-                                    <div class="detail-label">Delivery Address</div>
-                                    <div class="detail-value">${delivery.customer_address}</div>
-                                </div>
-                            </div>
-                            <div class="card-detail">
-                                <span class="detail-icon">💳</span>
-                                <div class="detail-content">
-                                    <div class="detail-label">Payment</div>
-                                    <div class="detail-value">
-                                        <span class="payment-status ${paymentClass}">${paymentStatus}</span>
-                                        ${delivery.payment_method === 'gcash' ? ' via GCash' : ''}
-                                    </div>
-                                </div>
-                            </div>
-                            ${delivery.notes ? `
-                                <div class="special-instructions">
-                                    <strong>📋 Special Instructions:</strong><br>
-                                    ${delivery.notes}
-                                </div>
-                            ` : ''}
-                            <div class="card-actions">
-                                <button class="btn btn-call" onclick="callCustomer('${delivery.customer_phone}')">
-                                    <span>📞</span>
-                                    <span>Call</span>
+                        <div class="card-actions-compact" onclick="event.stopPropagation()">
+                            <button class="btn-compact btn-call-compact" onclick="callCustomer('${delivery.customer_phone}')">
+                                📞
+                            </button>
+                            ${isCompleted ? `
+                                <button class="btn-compact btn-done-compact" disabled>
+                                    ✓ Done
                                 </button>
-                                ${isCompleted ? `
-                                    <button class="btn btn-completed" disabled>
-                                        <span>✓</span>
-                                        <span>Completed</span>
-                                    </button>
-                                ` : `
-                                    <button class="btn btn-complete" onclick="markAsComplete('${delivery.id}', '${delivery.customer_name}')">
-                                        <span>✓</span>
-                                        <span>Mark Complete</span>
-                                    </button>
-                                `}
-                            </div>
+                            ` : `
+                                <button class="btn-compact btn-complete-compact" onclick="markAsComplete('${delivery.id}', '${delivery.customer_name}')">
+                                    ✓ Complete
+                                </button>
+                            `}
                         </div>
                     </div>
                 `;
@@ -691,6 +926,76 @@
         }
 
         // Mark delivery as complete
+        // Modal functions
+        function openDeliveryModal(orderId) {
+            const delivery = allDeliveries.find(d => d.id === orderId);
+            if (!delivery) return;
+
+            const isCompleted = delivery.order_status === 'completed';
+            const paymentStatus = delivery.payment_status === 'paid' ? 'Paid ✓' : 
+                                 delivery.payment_method === 'cod' ? 'Cash on Delivery' : 'Pending Payment';
+            const paymentColor = delivery.payment_status === 'paid' ? '#059669' : 
+                                delivery.payment_method === 'cod' ? '#2563eb' : '#d97706';
+
+            document.getElementById('modalCustomerName').textContent = delivery.customer_name;
+            document.getElementById('modalBody').innerHTML = `
+                <div class="modal-detail">
+                    <div class="modal-detail-label">📱 Phone Number</div>
+                    <div class="modal-detail-value">
+                        <a href="tel:${delivery.customer_phone}">${delivery.customer_phone}</a>
+                    </div>
+                </div>
+
+                <div class="modal-detail">
+                    <div class="modal-detail-label">📍 Delivery Address</div>
+                    <div class="modal-detail-value">${delivery.customer_address}</div>
+                </div>
+
+                <div class="modal-detail">
+                    <div class="modal-detail-label">📦 Order Details</div>
+                    <div class="modal-detail-value">${delivery.quantity} gallons - ₱${parseFloat(delivery.total_amount).toFixed(0)}</div>
+                </div>
+
+                <div class="modal-detail">
+                    <div class="modal-detail-label">⏰ Delivery Time</div>
+                    <div class="modal-detail-value">${delivery.delivery_time === 'am' ? 'Morning (8AM-12PM)' : 'Afternoon (3PM-5PM)'}</div>
+                </div>
+
+                <div class="modal-detail">
+                    <div class="modal-detail-label">💳 Payment</div>
+                    <div class="modal-detail-value" style="color: ${paymentColor}; font-weight: 600;">${paymentStatus}</div>
+                </div>
+
+                ${delivery.notes ? `
+                    <div class="modal-notes">
+                        <div class="modal-notes-title">📋 Special Instructions</div>
+                        <div class="modal-notes-content">${delivery.notes}</div>
+                    </div>
+                ` : ''}
+
+                <div class="modal-actions">
+                    <a href="tel:${delivery.customer_phone}" class="modal-btn modal-btn-call">
+                        📞 Call
+                    </a>
+                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(delivery.customer_address)}" 
+                       target="_blank" class="modal-btn modal-btn-navigate">
+                        🗺️ Navigate
+                    </a>
+                    ${!isCompleted ? `
+                        <button class="modal-btn modal-btn-complete" onclick="markAsComplete('${delivery.id}', '${delivery.customer_name}'); closeDeliveryModal();">
+                            ✓ Complete
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+
+            document.getElementById('deliveryModal').classList.add('show');
+        }
+
+        function closeDeliveryModal() {
+            document.getElementById('deliveryModal').classList.remove('show');
+        }
+
         async function markAsComplete(orderId, customerName) {
             if (!confirm(`Mark delivery to ${customerName} as complete?`)) {
                 return;
@@ -779,6 +1084,13 @@
             
             // Auto-refresh every 60 seconds
             setInterval(loadDeliveries, 60000);
+
+            // Close modal on background click
+            document.getElementById('deliveryModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeDeliveryModal();
+                }
+            });
         });
     </script>
 </body>
