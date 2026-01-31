@@ -1250,8 +1250,7 @@
                             name: name,
                             phone: phone,
                             address: address,
-                            customer_type: customerType,
-                            updated_at: new Date().toISOString()
+                            customer_type: customerType
                         })
                         .eq('id', currentCustomer.id)
                         .select()
