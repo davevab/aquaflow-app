@@ -1259,7 +1259,19 @@
                     
                     if (error) {
                         console.error('Error updating customer:', error);
-                        alert('Failed to save changes. Please try again.');
+                        
+                        // Show detailed error message
+                        let errorMessage = 'Failed to save changes.\n\n';
+                        errorMessage += 'Error: ' + (error.message || error.toString());
+                        
+                        // Check for common issues
+                        if (error.message && error.message.includes('unique')) {
+                            errorMessage += '\n\nThis phone number might already be registered to another customer.';
+                        } else if (error.code === 'PGRST301') {
+                            errorMessage += '\n\nPermission denied. Please contact support.';
+                        }
+                        
+                        alert(errorMessage);
                         return;
                     }
                     
