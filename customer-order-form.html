@@ -372,6 +372,50 @@
             text-decoration: underline;
             padding: 0.5rem;
         }
+
+        /* Action Buttons */
+        .action-btn {
+            flex: 1;
+            padding: 0.875rem 1rem;
+            background: #f3f4f6;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.625rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .action-btn-active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .action-btn-active:hover {
+            background: #1d4ed8;
+        }
+
+        .content-section {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
         
         .terms {
             text-align: center;
@@ -723,18 +767,20 @@
             </div>
 
             <div class="card">
-                <!-- Profile Summary for Returning Customers -->
+                <!-- Action Buttons for Returning Customers -->
                 <div id="profileSummary" class="hidden">
-                    <!-- Compact Header -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <h3 class="section-title" style="margin: 0;">Re-order</h3>
-                        <button class="btn-link" id="toggleProfileBtn" onclick="toggleProfileView()">
-                            <span id="profileToggleIcon">👁️</span> <span id="profileToggleText">View Profile</span>
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem;">
+                        <button id="btnReorder" class="action-btn action-btn-active">
+                            📦 Re-order
+                        </button>
+                        <button id="btnProfile" class="action-btn">
+                            👤 Profile
                         </button>
                     </div>
                     
-                    <!-- Collapsible Profile Details -->
-                    <div id="profileDetailsView" class="profile-details-hidden">
+                    <!-- Profile Details Section (Initially Hidden) -->
+                    <div id="profileDetailsView" class="content-section" style="display: none;">
                         <div class="profile-summary">
                             <div class="profile-row">
                                 <span class="profile-label">Name:</span>
@@ -749,7 +795,7 @@
                                 <span class="profile-value" id="profileAddress"></span>
                             </div>
                             <div style="margin-top: 1rem;">
-                                <button class="btn-link" id="editProfileBtn" style="color: #2563eb; font-weight: 600;">
+                                <button id="editProfileBtn" style="width: 100%; padding: 0.75rem; background: #2563eb; color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer;">
                                     ✏️ Edit Profile
                                 </button>
                             </div>
@@ -1111,29 +1157,38 @@
             }
 
             // Edit profile button
-            // Track profile view state
-            let profileViewExpanded = false;
+            // Track active view (reorder or profile)
+            let activeView = 'reorder'; // Default to reorder
 
-            // Toggle profile details view
-            function toggleProfileView() {
-                const detailsDiv = document.getElementById('profileDetailsView');
-                const toggleIcon = document.getElementById('profileToggleIcon');
-                const toggleText = document.getElementById('profileToggleText');
+            // Handle Re-order button click
+            document.getElementById('btnReorder').addEventListener('click', function() {
+                if (activeView === 'reorder') return; // Already active
                 
-                profileViewExpanded = !profileViewExpanded;
+                activeView = 'reorder';
                 
-                if (profileViewExpanded) {
-                    detailsDiv.classList.remove('profile-details-hidden');
-                    detailsDiv.classList.add('profile-details-visible');
-                    toggleIcon.textContent = '✕';
-                    toggleText.textContent = 'Hide Profile';
-                } else {
-                    detailsDiv.classList.remove('profile-details-visible');
-                    detailsDiv.classList.add('profile-details-hidden');
-                    toggleIcon.textContent = '👁️';
-                    toggleText.textContent = 'View Profile';
-                }
-            }
+                // Update button styles
+                this.classList.add('action-btn-active');
+                document.getElementById('btnProfile').classList.remove('action-btn-active');
+                
+                // Show order details, hide profile details
+                document.getElementById('orderDetailsSection').style.display = 'block';
+                document.getElementById('profileDetailsView').style.display = 'none';
+            });
+
+            // Handle Profile button click
+            document.getElementById('btnProfile').addEventListener('click', function() {
+                if (activeView === 'profile') return; // Already active
+                
+                activeView = 'profile';
+                
+                // Update button styles
+                this.classList.add('action-btn-active');
+                document.getElementById('btnReorder').classList.remove('action-btn-active');
+                
+                // Show profile details, hide order details
+                document.getElementById('profileDetailsView').style.display = 'block';
+                document.getElementById('orderDetailsSection').style.display = 'none';
+            });
 
             // Track if we're in edit mode
             let isEditingProfile = false;
@@ -1143,17 +1198,12 @@
                 
                 isEditingProfile = true;
                 
-                // Collapse profile view if expanded
-                if (profileViewExpanded) {
-                    toggleProfileView();
-                }
-                
-                // Hide profile summary, show registration form
+                // Hide profile summary (with buttons), show registration form
                 document.getElementById('profileSummary').classList.add('hidden');
                 document.getElementById('registrationForm').classList.remove('hidden');
                 
                 // Hide order details section
-                document.getElementById('orderDetailsSection').classList.add('hidden');
+                document.getElementById('orderDetailsSection').style.display = 'none';
                 
                 // Show save/cancel buttons
                 document.getElementById('editModeButtons').classList.remove('hidden');
@@ -1227,12 +1277,16 @@
                     document.getElementById('customerTypeBadge').innerHTML = badge;
                     document.getElementById('customerTypeBadge').className = `customer-badge badge-${data.customer_type}`;
                     
-                    // Hide registration form, show profile summary
+                    // Hide registration form, show profile summary (with buttons)
                     document.getElementById('registrationForm').classList.add('hidden');
                     document.getElementById('profileSummary').classList.remove('hidden');
                     
-                    // Show order details section again
-                    document.getElementById('orderDetailsSection').classList.remove('hidden');
+                    // Reset to Re-order view (default)
+                    activeView = 'reorder';
+                    document.getElementById('btnReorder').classList.add('action-btn-active');
+                    document.getElementById('btnProfile').classList.remove('action-btn-active');
+                    document.getElementById('orderDetailsSection').style.display = 'block';
+                    document.getElementById('profileDetailsView').style.display = 'none';
                     
                     // Hide save/cancel buttons
                     document.getElementById('editModeButtons').classList.add('hidden');
@@ -1252,12 +1306,16 @@
             document.getElementById('cancelEditBtn').addEventListener('click', function(e) {
                 e.preventDefault();
                 
-                // Hide registration form, show profile summary
+                // Hide registration form, show profile summary (with buttons)
                 document.getElementById('registrationForm').classList.add('hidden');
                 document.getElementById('profileSummary').classList.remove('hidden');
                 
-                // Show order details section again
-                document.getElementById('orderDetailsSection').classList.remove('hidden');
+                // Reset to Re-order view (default)
+                activeView = 'reorder';
+                document.getElementById('btnReorder').classList.add('action-btn-active');
+                document.getElementById('btnProfile').classList.remove('action-btn-active');
+                document.getElementById('orderDetailsSection').style.display = 'block';
+                document.getElementById('profileDetailsView').style.display = 'none';
                 
                 // Hide save/cancel buttons
                 document.getElementById('editModeButtons').classList.add('hidden');
