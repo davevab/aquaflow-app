@@ -1282,9 +1282,11 @@
                     document.getElementById('profilePhone').textContent = data.phone;
                     document.getElementById('profileAddress').textContent = data.address;
                     
-                    // Update welcome message
+                    // Update welcome message (FIX: Use correct ID 'welcomeName' not 'welcomeMessage')
+                    document.getElementById('welcomeName').textContent = data.name;
+                    
+                    // Update customer type badge
                     const badge = CUSTOMER_TYPE_BADGES[data.customer_type] || '';
-                    document.getElementById('welcomeMessage').innerHTML = `👋 Welcome back, ${data.name}!`;
                     document.getElementById('customerTypeBadge').innerHTML = badge;
                     document.getElementById('customerTypeBadge').className = `customer-badge badge-${data.customer_type}`;
                     
@@ -1302,14 +1304,17 @@
                     // Hide save/cancel buttons
                     document.getElementById('editModeButtons').classList.add('hidden');
                     
+                    // Disable phone field again
+                    document.getElementById('phone').disabled = true;
+                    
                     isEditingProfile = false;
                     
-                    // Show success message
-                    alert('✓ Profile updated successfully!');
+                    // Show success confirmation
+                    alert('✅ Success!\n\nYour profile has been updated.');
                     
                 } catch (err) {
                     console.error('Error:', err);
-                    alert('An error occurred. Please try again.');
+                    alert('❌ An error occurred while updating your profile.\n\nPlease try again or contact support if the problem persists.');
                 }
             });
 
