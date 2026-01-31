@@ -1294,12 +1294,12 @@
                     document.getElementById('registrationForm').classList.add('hidden');
                     document.getElementById('profileSummary').classList.remove('hidden');
                     
-                    // Reset to Re-order view (default)
-                    activeView = 'reorder';
-                    document.getElementById('btnReorder').classList.add('action-btn-active');
-                    document.getElementById('btnProfile').classList.remove('action-btn-active');
-                    document.getElementById('orderDetailsSection').style.display = 'block';
-                    document.getElementById('profileDetailsView').style.display = 'none';
+                    // Switch to Profile view (not Re-order) so user can verify changes
+                    activeView = 'profile';
+                    document.getElementById('btnProfile').classList.add('action-btn-active');
+                    document.getElementById('btnReorder').classList.remove('action-btn-active');
+                    document.getElementById('profileDetailsView').style.display = 'block';
+                    document.getElementById('orderDetailsSection').style.display = 'none';
                     
                     // Hide save/cancel buttons
                     document.getElementById('editModeButtons').classList.add('hidden');
