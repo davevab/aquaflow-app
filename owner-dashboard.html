@@ -398,6 +398,16 @@
             background: #e0e7ff;
             color: #3730a3;
         }
+
+        .badge-assigned {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-not-assigned {
+            background: #fef3c7;
+            color: #92400e;
+        }
         
         .empty-state {
             text-align: center;
@@ -942,7 +952,10 @@
                 
                 let query = supabaseClient
                     .from('orders')
-                    .select('*');
+                    .select(`
+                        *,
+                        driver:personnel(name)
+                    `);
                 
                 // Filter by date based on viewMode
                 if (viewMode === 'recent') {
@@ -1129,6 +1142,12 @@
                        </span>`
                     : '';
                 
+                // Assignment status badge
+                const driverName = order.driver?.name || null;
+                const assignmentBadge = driverName
+                    ? `<span class="badge badge-assigned">✓ ${driverName}</span>`
+                    : `<span class="badge badge-not-assigned">⚠️ Not Assigned</span>`;
+                
                 return `
                 <div class="order-card" onclick="showOrderDetail('${order.id}')">
                     <div class="order-header">
@@ -1146,6 +1165,7 @@
                             <span class="badge ${order.payment_method === 'cod' ? 'badge-cod' : 'badge-gcash'}">
                                 ${order.payment_method === 'cod' ? 'COD' : 'GCash'}
                             </span>
+                            ${assignmentBadge}
                         </div>
                         <div class="order-datetime">
                             <span>${formatDateCompact(order.delivery_date)} • ${order.delivery_time}</span>
