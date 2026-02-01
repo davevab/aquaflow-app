@@ -711,10 +711,184 @@
                 font-size: 1.5rem;
             }
         }
+
+        /* Login Screen Styles */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .login-logo {
+            font-size: 4rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .login-title {
+            font-size: 1.875rem;
+            font-weight: bold;
+            text-align: center;
+            color: #111827;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-subtitle {
+            text-align: center;
+            color: #6b7280;
+            margin-bottom: 2rem;
+            font-size: 0.9375rem;
+        }
+
+        .pin-display {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .pin-dot {
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid #d1d5db;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .pin-dot.filled {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .pin-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .pin-btn {
+            aspect-ratio: 1;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #111827;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pin-btn:hover {
+            background: #f9fafb;
+            border-color: #10b981;
+        }
+
+        .pin-btn:active {
+            transform: scale(0.95);
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        .pin-btn-clear {
+            background: #fef3c7;
+            border-color: #fde68a;
+            color: #92400e;
+        }
+
+        .pin-btn-clear:hover {
+            background: #fde68a;
+        }
+
+        .pin-btn-backspace {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .error-message {
+            text-align: center;
+            color: #dc2626;
+            font-size: 0.875rem;
+            min-height: 1.25rem;
+            font-weight: 500;
+        }
+
+        .logout-link {
+            width: 100%;
+            padding: 0.75rem;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 0.5rem;
+            color: #6b7280;
+            font-size: 0.875rem;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        .logout-link:hover {
+            background: #e5e7eb;
+        }
     </style>
 </head>
 <body>
-    <div class="header">
+    <!-- Login Screen -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-card">
+            <div class="login-logo">🚗</div>
+            <h1 class="login-title">Driver Login</h1>
+            <p class="login-subtitle">Enter your 6-digit PIN</p>
+            
+            <div class="pin-display" id="pinDisplay">
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+            </div>
+            
+            <div class="pin-pad">
+                <button class="pin-btn" onclick="addPinDigit('1')">1</button>
+                <button class="pin-btn" onclick="addPinDigit('2')">2</button>
+                <button class="pin-btn" onclick="addPinDigit('3')">3</button>
+                <button class="pin-btn" onclick="addPinDigit('4')">4</button>
+                <button class="pin-btn" onclick="addPinDigit('5')">5</button>
+                <button class="pin-btn" onclick="addPinDigit('6')">6</button>
+                <button class="pin-btn" onclick="addPinDigit('7')">7</button>
+                <button class="pin-btn" onclick="addPinDigit('8')">8</button>
+                <button class="pin-btn" onclick="addPinDigit('9')">9</button>
+                <button class="pin-btn pin-btn-clear" onclick="clearPin()">✕</button>
+                <button class="pin-btn" onclick="addPinDigit('0')">0</button>
+                <button class="pin-btn pin-btn-backspace" onclick="backspacePin()">⌫</button>
+            </div>
+            
+            <div class="error-message" id="errorMessage"></div>
+            
+            <button class="logout-link" onclick="logout()" style="display: none;" id="logoutBtn">
+                Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Dashboard (Hidden until logged in) -->
+    <div class="dashboard-container" id="dashboardContainer" style="display: none;">
+        <div class="header">
         <div class="header-content">
             <div class="header-left">
                 <span class="logo">🚗</span>
@@ -723,9 +897,14 @@
                     <p class="driver-role">Delivery Personnel</p>
                 </div>
             </div>
-            <button class="refresh-btn" id="refreshBtn" title="Refresh deliveries">
-                🔄
-            </button>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button class="refresh-btn" id="refreshBtn" title="Refresh deliveries">
+                    🔄
+                </button>
+                <button class="refresh-btn" onclick="logout()" title="Logout">
+                    🚪
+                </button>
+            </div>
         </div>
     </div>
 
@@ -765,6 +944,7 @@
             </div>
         </div>
     </div>
+    </div> <!-- Close dashboard-container -->
 
     <!-- Delivery Details Modal -->
     <div class="modal" id="deliveryModal">
@@ -790,28 +970,149 @@
 
         let allDeliveries = [];
         let currentDriver = null;
+        let currentPin = '';
 
-        // Get driver from URL parameter or localStorage
-        function getDriverInfo() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const driverId = urlParams.get('driver_id');
-            const driverName = urlParams.get('driver_name');
-            
-            if (driverId && driverName) {
-                const driverData = { id: driverId, name: driverName };
-                localStorage.setItem('aquaflow_driver', JSON.stringify(driverData));
-                currentDriver = driverData;
-            } else {
-                const savedDriver = localStorage.getItem('aquaflow_driver');
-                if (savedDriver) {
-                    currentDriver = JSON.parse(savedDriver);
-                } else {
-                    currentDriver = { id: null, name: 'Driver' };
+        // ============ PIN LOGIN FUNCTIONS ============
+        
+        function addPinDigit(digit) {
+            if (currentPin.length < 6) {
+                currentPin += digit;
+                updatePinDisplay();
+                
+                // Auto-submit when 6 digits entered
+                if (currentPin.length === 6) {
+                    setTimeout(verifyPin, 300);
                 }
             }
-            
-            document.getElementById('driverName').textContent = currentDriver.name;
         }
+        
+        function backspacePin() {
+            if (currentPin.length > 0) {
+                currentPin = currentPin.slice(0, -1);
+                updatePinDisplay();
+                clearError();
+            }
+        }
+        
+        function clearPin() {
+            currentPin = '';
+            updatePinDisplay();
+            clearError();
+        }
+        
+        function updatePinDisplay() {
+            const dots = document.querySelectorAll('.pin-dot');
+            dots.forEach((dot, index) => {
+                if (index < currentPin.length) {
+                    dot.classList.add('filled');
+                } else {
+                    dot.classList.remove('filled');
+                }
+            });
+        }
+        
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+        }
+        
+        function clearError() {
+            document.getElementById('errorMessage').textContent = '';
+        }
+        
+        async function verifyPin() {
+            if (currentPin.length !== 6) {
+                showError('Please enter a 6-digit PIN');
+                return;
+            }
+            
+            try {
+                console.log('Verifying PIN:', currentPin);
+                
+                // Query drivers table for matching PIN
+                const { data, error } = await supabaseClient
+                    .from('drivers')
+                    .select('*')
+                    .eq('pin', currentPin)
+                    .eq('is_active', true)
+                    .single();
+                
+                if (error || !data) {
+                    console.error('Login error:', error);
+                    showError('Invalid PIN. Please try again.');
+                    
+                    // Shake animation
+                    const pinDisplay = document.getElementById('pinDisplay');
+                    pinDisplay.style.animation = 'shake 0.5s';
+                    setTimeout(() => {
+                        pinDisplay.style.animation = '';
+                        clearPin();
+                    }, 500);
+                    return;
+                }
+                
+                // Login successful
+                console.log('Login successful:', data);
+                currentDriver = {
+                    id: data.id,
+                    name: data.name,
+                    pin: data.pin,
+                    station_id: data.station_id
+                };
+                
+                // Save to localStorage
+                localStorage.setItem('aquaflow_driver', JSON.stringify(currentDriver));
+                
+                // Show dashboard
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('dashboardContainer').style.display = 'block';
+                document.getElementById('driverName').textContent = currentDriver.name;
+                
+                // Load deliveries
+                loadDeliveries();
+                
+            } catch (err) {
+                console.error('Login error:', err);
+                showError('An error occurred. Please try again.');
+                clearPin();
+            }
+        }
+        
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('aquaflow_driver');
+                currentDriver = null;
+                currentPin = '';
+                
+                document.getElementById('dashboardContainer').style.display = 'none';
+                document.getElementById('loginContainer').style.display = 'flex';
+                updatePinDisplay();
+                clearError();
+            }
+        }
+        
+        function checkExistingSession() {
+            const savedDriver = localStorage.getItem('aquaflow_driver');
+            if (savedDriver) {
+                currentDriver = JSON.parse(savedDriver);
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('dashboardContainer').style.display = 'block';
+                document.getElementById('driverName').textContent = currentDriver.name;
+                loadDeliveries();
+            }
+        }
+        
+        // Add shake animation CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+                20%, 40%, 60%, 80% { transform: translateX(10px); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // ============ END PIN LOGIN FUNCTIONS ============
 
         // Load today's deliveries assigned to this driver
         async function loadDeliveries() {
@@ -1065,11 +1366,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Driver app loaded');
             
-            // Get driver info
-            getDriverInfo();
+            // Check for existing session first
+            checkExistingSession();
             
-            // Load deliveries
-            loadDeliveries();
+            // If no session, show login screen (default state)
+            // Otherwise dashboard is already showing from checkExistingSession()
             
             // Refresh button
             document.getElementById('refreshBtn').addEventListener('click', function() {
