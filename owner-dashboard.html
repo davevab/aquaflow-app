@@ -834,6 +834,8 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let allOrders = [];
+        let driverNames = {}; // Lookup for driver_id -> name
+
         let currentFilter = 'all';
         let currentOrderId = null;
 
@@ -946,16 +948,34 @@
         // Load orders from Supabase
         let viewMode = 'recent'; // 'recent' or 'all'
 
+        // Fetch all driver names from personnel table
+        async function fetchAllDriverNames() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('personnel')
+                    .select('id, name')
+                    .eq('role', 'driver');
+                
+                if (data) {
+                    // Create lookup object: { driver_id: driver_name }
+                    driverNames = {};
+                    data.forEach(driver => {
+                        driverNames[driver.id] = driver.name;
+                    });
+                    console.log('Driver names loaded:', driverNames);
+                }
+            } catch (err) {
+                console.error('Error fetching driver names:', err);
+            }
+        }
+
         async function loadOrders() {
             try {
                 console.log('Loading orders from Supabase...');
                 
                 let query = supabaseClient
                     .from('orders')
-                    .select(`
-                        *,
-                        personnel!driver_id(name)
-                    `);
+                    .select('*');
                 
                 // Filter by date based on viewMode
                 if (viewMode === 'recent') {
@@ -977,6 +997,9 @@
 
                 console.log('Orders loaded:', data);
                 allOrders = data || [];
+                
+                // Fetch driver names for assigned orders
+                await fetchAllDriverNames();
                 
                 // Update view mode indicator
                 updateViewModeIndicator();
@@ -1143,7 +1166,7 @@
                     : '';
                 
                 // Assignment status badge
-                const driverName = order.personnel?.name || null;
+                const driverName = order.driver_id ? driverNames[order.driver_id] : null;
                 const assignmentBadge = driverName
                     ? `<span class="badge badge-assigned">✓ ${driverName}</span>`
                     : `<span class="badge badge-not-assigned">⚠️ Not Assigned</span>`;
