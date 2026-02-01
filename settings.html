@@ -696,6 +696,7 @@
                             <div class="personnel-details">
                                 <span class="badge badge-${roleColor}">${person.role.charAt(0).toUpperCase() + person.role.slice(1)}</span>
                                 <span style="margin-left: 0.5rem;">📱 ${person.phone}</span>
+                                ${person.pin ? `<span style="margin-left: 0.5rem; font-weight: 600; color: #2563eb;">🔑 PIN: ${person.pin}</span>` : ''}
                                 ${person.vehicle ? `<span style="margin-left: 0.5rem;">🚗 ${person.vehicle}</span>` : ''}
                             </div>
                         </div>
@@ -839,6 +840,21 @@
             }
 
             try {
+                // First, delete from drivers table if they're a driver
+                const person = currentPersonnel.find(p => p.id === id);
+                if (person && person.role === 'driver') {
+                    const { error: driverError } = await supabaseClient
+                        .from('drivers')
+                        .delete()
+                        .eq('personnel_id', id);
+                    
+                    if (driverError) {
+                        console.error('Error deleting driver account:', driverError);
+                        // Continue anyway - we still want to delete from personnel
+                    }
+                }
+                
+                // Then delete from personnel table
                 const { error } = await supabaseClient
                     .from('personnel')
                     .delete()
@@ -881,6 +897,8 @@
                 };
 
                 let result;
+                let generatedPin = null;
+                
                 if (editingPersonnelId) {
                     // Update existing
                     result = await supabaseClient
@@ -889,6 +907,25 @@
                         .eq('id', editingPersonnelId)
                         .select()
                         .single();
+                    
+                    // Update driver table if role is driver
+                    if (role === 'driver') {
+                        const existingDriver = await supabaseClient
+                            .from('drivers')
+                            .select('*')
+                            .eq('personnel_id', editingPersonnelId)
+                            .single();
+                        
+                        if (existingDriver.data) {
+                            await supabaseClient
+                                .from('drivers')
+                                .update({
+                                    name: name,
+                                    phone: phone
+                                })
+                                .eq('personnel_id', editingPersonnelId);
+                        }
+                    }
                 } else {
                     // Create new
                     personnelData.created_at = new Date().toISOString();
@@ -897,6 +934,43 @@
                         .insert([personnelData])
                         .select()
                         .single();
+                    
+                    // If role is driver, generate PIN and create driver entry
+                    if (role === 'driver' && result.data) {
+                        // Get next available PIN using the function
+                        const { data: pinData, error: pinError } = await supabaseClient
+                            .rpc('get_next_driver_pin', { p_station_id: 'gensan-station-1' });
+                        
+                        if (pinError) {
+                            console.error('Error generating PIN:', pinError);
+                        } else {
+                            generatedPin = pinData;
+                            
+                            // Create driver entry
+                            const driverData = {
+                                station_id: 'gensan-station-1',
+                                name: name,
+                                pin: generatedPin,
+                                phone: phone,
+                                personnel_id: result.data.id,
+                                is_active: true
+                            };
+                            
+                            const { error: driverError } = await supabaseClient
+                                .from('drivers')
+                                .insert([driverData]);
+                            
+                            if (driverError) {
+                                console.error('Error creating driver:', driverError);
+                            } else {
+                                // Update personnel record with PIN
+                                await supabaseClient
+                                    .from('personnel')
+                                    .update({ pin: generatedPin })
+                                    .eq('id', result.data.id);
+                            }
+                        }
+                    }
                 }
 
                 if (result.error) {
@@ -905,7 +979,14 @@
                     return;
                 }
 
-                showToast(editingPersonnelId ? '✓ Personnel updated successfully!' : '✓ Personnel added successfully!');
+                if (generatedPin) {
+                    showToast(`✓ Driver added! PIN: ${generatedPin}`);
+                    // Show alert with PIN so Jennifer can write it down
+                    alert(`Driver added successfully!\n\nDriver PIN: ${generatedPin}\n\nPlease share this PIN with ${name}. They will use it to log into the Driver App.`);
+                } else {
+                    showToast(editingPersonnelId ? '✓ Personnel updated successfully!' : '✓ Personnel added successfully!');
+                }
+                
                 document.getElementById('personnelModal').classList.remove('show');
                 loadPersonnel();
 
