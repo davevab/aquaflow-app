@@ -297,6 +297,22 @@
             background: #059669;
         }
 
+        .btn-reset {
+            padding: 0.5rem 1.5rem;
+            background: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            flex: 0.6;
+        }
+
+        .btn-reset:hover {
+            background: #4b5563;
+        }
+
         .filter-actions {
             display: flex;
             gap: 0.75rem;
@@ -426,6 +442,32 @@
     </div>
 
     <div class="container">
+        <!-- Filters (top) -->
+        <div class="filters">
+            <div class="filter-group">
+                <label class="filter-label">From Date</label>
+                <input type="date" class="filter-input" id="fromDate">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">To Date</label>
+                <input type="date" class="filter-input" id="toDate">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Customer Type</label>
+                <select class="filter-input" id="customerTypeFilter">
+                    <option value="all">All Types</option>
+                    <option value="household">Household</option>
+                    <option value="reseller">Reseller</option>
+                    <option value="company">Company</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button class="btn-filter" id="applyFilters">Apply Filters</button>
+                <button class="btn-reset" id="resetFilters">Reset</button>
+                <button class="btn-export" id="exportBtn">📥 Export CSV</button>
+            </div>
+        </div>
+
         <!-- Key Metrics -->
         <div class="metrics-grid">
             <div class="metric-card">
@@ -517,30 +559,7 @@
             </div>
         </div>
 
-        <!-- Filters (moved to bottom) -->
-        <div class="filters">
-            <div class="filter-group">
-                <label class="filter-label">From Date</label>
-                <input type="date" class="filter-input" id="fromDate">
-            </div>
-            <div class="filter-group">
-                <label class="filter-label">To Date</label>
-                <input type="date" class="filter-input" id="toDate">
-            </div>
-            <div class="filter-group">
-                <label class="filter-label">Customer Type</label>
-                <select class="filter-input" id="customerTypeFilter">
-                    <option value="all">All Types</option>
-                    <option value="household">Household</option>
-                    <option value="reseller">Reseller</option>
-                    <option value="company">Company</option>
-                </select>
-            </div>
-            <div class="filter-actions">
-                <button class="btn-filter" id="applyFilters">Apply Filters</button>
-                <button class="btn-export" id="exportBtn">📥 Export Excel</button>
-            </div>
-        </div>
+
     </div>
 
     <script>
@@ -550,6 +569,7 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let allOrders = [];
+        let filteredOrders = [];
         let charts = {};
 
         // Month names
@@ -573,29 +593,64 @@
                 console.log('Orders loaded:', data.length);
                 allOrders = data || [];
                 
-                // Calculate and display analytics
-                calculateMetrics();
-                renderCharts();
-                renderMonthlyTable();
+                // Apply current filters
+                applyFilters();
                 
             } catch (err) {
                 console.error('Error loading orders:', err);
             }
         }
 
-        // Calculate key metrics
+        // Apply filters and refresh all displays
+        function applyFilters() {
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+            const customerType = document.getElementById('customerTypeFilter').value;
+
+            filteredOrders = allOrders.filter(order => {
+                const orderDate = (order.created_at || '').split('T')[0];
+
+                // Date range filter
+                if (fromDate && orderDate < fromDate) return false;
+                if (toDate && orderDate > toDate) return false;
+
+                // Customer type filter
+                if (customerType !== 'all' && order.customer_type !== customerType) return false;
+
+                return true;
+            });
+
+            // Refresh all displays with filtered data
+            calculateMetrics();
+            renderCharts();
+            renderMonthlyTable();
+        }
+
+        // Reset filters to defaults
+        function resetFilters() {
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            document.getElementById('fromDate').value = firstDay.toISOString().split('T')[0];
+            document.getElementById('toDate').value = lastDay.toISOString().split('T')[0];
+            document.getElementById('customerTypeFilter').value = 'all';
+            applyFilters();
+        }
+
+        // Calculate key metrics — uses filteredOrders
         function calculateMetrics() {
             const now = new Date();
             const currentYear = now.getFullYear();
             const currentMonth = now.getMonth();
 
-            // Total Revenue (all paid orders)
-            const paidOrders = allOrders.filter(o => o.payment_status === 'paid');
+            // Total Revenue (all paid orders in filtered set)
+            const paidOrders = filteredOrders.filter(o => o.payment_status === 'paid');
             const totalRevenue = paidOrders.reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0);
             const totalGallons = paidOrders.reduce((sum, o) => sum + parseInt(o.quantity || 0), 0);
 
-            // This Month's Revenue
-            const thisMonthOrders = paidOrders.filter(o => {
+            // This Month's Revenue (from ALL orders, not filtered — for the month card)
+            const allPaid = allOrders.filter(o => o.payment_status === 'paid');
+            const thisMonthOrders = allPaid.filter(o => {
                 const orderDate = new Date(o.updated_at || o.created_at);
                 return orderDate.getFullYear() === currentYear && orderDate.getMonth() === currentMonth;
             });
@@ -605,7 +660,7 @@
             // Last Month's Revenue (for growth calculation)
             const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
             const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-            const lastMonthOrders = paidOrders.filter(o => {
+            const lastMonthOrders = allPaid.filter(o => {
                 const orderDate = new Date(o.updated_at || o.created_at);
                 return orderDate.getFullYear() === lastMonthYear && orderDate.getMonth() === lastMonth;
             });
@@ -618,17 +673,17 @@
             }
 
             // This Year's Revenue
-            const thisYearOrders = paidOrders.filter(o => {
+            const thisYearOrders = allPaid.filter(o => {
                 const orderDate = new Date(o.updated_at || o.created_at);
                 return orderDate.getFullYear() === currentYear;
             });
             const yearRevenue = thisYearOrders.reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0);
             const yearGallons = thisYearOrders.reduce((sum, o) => sum + parseInt(o.quantity || 0), 0);
 
-            // Average Order Value
+            // Average Order Value (filtered)
             const avgOrder = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0;
 
-            // Update UI with revenue and gallons
+            // Update UI
             document.getElementById('totalRevenue').innerHTML = `
                 ₱${totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}
                 <span style="font-size: 1rem; font-weight: normal; color: #6b7280; margin-left: 0.5rem;">| ${totalGallons.toLocaleString()} gal</span>
@@ -644,8 +699,8 @@
                 <span style="font-size: 1rem; font-weight: normal; color: #6b7280; margin-left: 0.5rem;">| ${yearGallons.toLocaleString()} gal</span>
             `;
             
-            document.getElementById('avgOrder').textContent = avgOrder.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-            document.getElementById('totalOrders').textContent = allOrders.length;
+            document.getElementById('avgOrder').textContent = `₱${avgOrder.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+            document.getElementById('totalOrders').textContent = filteredOrders.length;
             document.getElementById('paidOrders').textContent = paidOrders.length;
 
             // Growth indicator
@@ -675,9 +730,9 @@
             // Update chart title with current year
             document.getElementById('monthlyChartTitle').textContent = `Monthly Revenue Trend (${currentYear})`;
 
-            // Group orders by month
+            // Group orders by month — uses filteredOrders
             const monthlyData = Array(12).fill(0);
-            const paidOrders = allOrders.filter(o => o.payment_status === 'paid');
+            const paidOrders = filteredOrders.filter(o => o.payment_status === 'paid');
             
             paidOrders.forEach(order => {
                 const orderDate = new Date(order.updated_at || order.created_at);
@@ -730,7 +785,7 @@
         // Customer Type Chart
         function renderCustomerTypeChart() {
             const ctx = document.getElementById('customerTypeChart');
-            const paidOrders = allOrders.filter(o => o.payment_status === 'paid');
+            const paidOrders = filteredOrders.filter(o => o.payment_status === 'paid');
 
             // Group by customer type
             const typeData = {
@@ -780,7 +835,7 @@
         // Payment Method Chart
         function renderPaymentMethodChart() {
             const ctx = document.getElementById('paymentMethodChart');
-            const paidOrders = allOrders.filter(o => o.payment_status === 'paid');
+            const paidOrders = filteredOrders.filter(o => o.payment_status === 'paid');
 
             // Group by payment method
             const methodData = {
@@ -825,7 +880,7 @@
             });
         }
 
-        // Render monthly breakdown table
+        // Render monthly breakdown table — uses filteredOrders
         function renderMonthlyTable() {
             const tbody = document.getElementById('monthlyTableBody');
             const currentYear = new Date().getFullYear();
@@ -834,7 +889,7 @@
             const monthlyStats = [];
             
             for (let month = 0; month < 12; month++) {
-                const monthOrders = allOrders.filter(o => {
+                const monthOrders = filteredOrders.filter(o => {
                     const orderDate = new Date(o.created_at);
                     return orderDate.getFullYear() === currentYear && orderDate.getMonth() === month;
                 });
@@ -981,8 +1036,12 @@
 
             // Apply filters button
             document.getElementById('applyFilters').addEventListener('click', function() {
-                // TODO: Implement filtering
-                alert('Filter functionality coming soon!');
+                applyFilters();
+            });
+
+            // Reset filters button
+            document.getElementById('resetFilters').addEventListener('click', function() {
+                resetFilters();
             });
         });
     </script>
