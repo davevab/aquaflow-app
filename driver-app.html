@@ -1053,7 +1053,7 @@
                 // Login successful
                 console.log('Login successful:', data);
                 currentDriver = {
-                    id: data.id,
+                    id: data.personnel_id,  // Use personnel_id to match orders.driver_id
                     name: data.name,
                     pin: data.pin,
                     station_id: data.station_id
