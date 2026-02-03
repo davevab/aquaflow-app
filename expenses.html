@@ -103,9 +103,93 @@
         }
 
         .summary-card.highlight-red { border-top: 3px solid #ef4444; }
-        .summary-card.highlight-orange { border-top: 3px solid #f59e0b; }
+        .summary-card.highlight-orange { border-top: 3px solid #f59e0b; cursor: pointer; transition: all 0.2s; position: relative; }
+        .summary-card.highlight-orange:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(245,158,11,0.25); }
+        .summary-card.highlight-orange.active { border-top-color: #d97706; background: #fffbeb; box-shadow: 0 2px 8px rgba(245,158,11,0.3); }
+        .summary-card.highlight-orange .click-hint { font-size: 0.6875rem; color: #f59e0b; margin-top: 0.25rem; }
         .summary-card.highlight-green { border-top: 3px solid #10b981; }
         .summary-card.highlight-blue { border-top: 3px solid #3b82f6; }
+
+        /* Yearly Breakdown Panel */
+        .yearly-panel {
+            display: none;
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 2px solid #f59e0b;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            animation: slideDown 0.25s ease;
+        }
+        .yearly-panel.show { display: block; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .yearly-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.875rem 1.25rem;
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-bottom: 1px solid #fcd34d;
+        }
+
+        .yearly-panel-header h3 { font-size: 1rem; font-weight: 600; color: #92400e; }
+
+        .btn-close-panel {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            color: #92400e;
+            cursor: pointer;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            transition: background 0.15s;
+        }
+        .btn-close-panel:hover { background: rgba(146,64,14,0.1); }
+
+        .monthly-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+        }
+
+        .month-cell {
+            padding: 0.75rem 0.875rem;
+            border-right: 1px solid #f3f4f6;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background 0.15s;
+            position: relative;
+        }
+        .month-cell:hover { background: #fffbeb; }
+        .month-cell.has-data:hover { background: #fef3c7; }
+        .month-cell.current-month { background: #fef9c3; }
+        .month-cell.current-month .month-name { color: #854d0e; font-weight: 700; }
+        .month-cell.selected { background: #f59e0b; }
+        .month-cell.selected .month-name { color: white; font-weight: 700; }
+        .month-cell.selected .month-amount { color: white; }
+        .month-cell.selected .month-count { color: rgba(255,255,255,0.85); }
+
+        /* Remove right/bottom borders on edges */
+        .month-cell:nth-child(4n)   { border-right: none; }
+        .month-cell:nth-child(n+9)  { border-bottom: none; }
+
+        .month-name { font-size: 0.8125rem; font-weight: 600; color: #374151; }
+        .month-amount { font-size: 0.9375rem; font-weight: 700; color: #ef4444; margin-top: 0.125rem; }
+        .month-amount.zero { color: #9ca3af; font-weight: 500; }
+        .month-count { font-size: 0.6875rem; color: #9ca3af; margin-top: 0.125rem; }
+
+        @media (max-width: 640px) {
+            .monthly-grid { grid-template-columns: repeat(3, 1fr); }
+            .month-cell:nth-child(3n)  { border-right: none; }
+            .month-cell:nth-child(4n)  { border-right: 1px solid #f3f4f6; }
+            .month-cell:nth-child(n+10) { border-bottom: none; }
+            .month-cell:nth-child(n+9)  { border-bottom: 1px solid #f3f4f6; }
+        }
 
         .summary-label { font-size: 0.8125rem; color: #6b7280; margin-bottom: 0.375rem; }
 
@@ -537,10 +621,11 @@
             <div class="summary-value" id="monthExpense">₱0</div>
             <div class="summary-sub" id="monthExpenseCount">0 entries</div>
         </div>
-        <div class="summary-card highlight-orange">
+        <div class="summary-card highlight-orange" id="yearCard" onclick="toggleYearlyPanel()">
             <div class="summary-label">This Year's Expenses</div>
             <div class="summary-value" id="yearExpense">₱0</div>
             <div class="summary-sub" id="yearExpenseCount">0 entries</div>
+            <div class="click-hint" id="yearClickHint">📊 Tap to see monthly breakdown</div>
         </div>
         <div class="summary-card highlight-green">
             <div class="summary-label">This Month's Profit</div>
@@ -551,6 +636,17 @@
             <div class="summary-label">Top Category</div>
             <div class="summary-value" id="topCategory">—</div>
             <div class="summary-sub" id="topCategoryAmount">this month</div>
+        </div>
+    </div>
+
+    <!-- Yearly Breakdown Panel -->
+    <div class="yearly-panel" id="yearlyPanel">
+        <div class="yearly-panel-header">
+            <h3 id="yearlyPanelTitle">📊 2026 Monthly Breakdown</h3>
+            <button class="btn-close-panel" onclick="toggleYearlyPanel()">✕</button>
+        </div>
+        <div class="monthly-grid" id="monthlyGrid">
+            <!-- populated by JS -->
         </div>
     </div>
 
@@ -675,6 +771,8 @@ let allExpenses = [];
 let filteredExpenses = [];
 let editingId = null;
 let deleteTargetId = null;
+let yearlyPanelOpen = false;
+let selectedMonth = null; // 0–11 or null
 
 // ─── Category helpers ─────────────────────────────
 const CAT_LABELS = {
@@ -736,6 +834,8 @@ function applyFilters() {
 function resetFilters() {
     setDefaultDates();
     document.getElementById('filterCategory').value = 'all';
+    selectedMonth = null;
+    if (yearlyPanelOpen) renderMonthlyGrid();
     applyFilters();
 }
 
@@ -803,6 +903,94 @@ async function calculateSummary() {
 
     document.getElementById('topCategory').textContent       = topCat !== '—' ? CAT_LABELS[topCat] : '—';
     document.getElementById('topCategoryAmount').textContent  = topCat !== '—' ? '₱' + topAmt.toLocaleString('en-US', { minimumFractionDigits: 0 }) + ' this month' : 'this month';
+
+    // Refresh monthly grid if panel is open
+    if (yearlyPanelOpen) renderMonthlyGrid();
+}
+
+// ─── Yearly Panel ─────────────────────────────────
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function toggleYearlyPanel() {
+    yearlyPanelOpen = !yearlyPanelOpen;
+    const panel  = document.getElementById('yearlyPanel');
+    const card   = document.getElementById('yearCard');
+    const hint   = document.getElementById('yearClickHint');
+
+    if (yearlyPanelOpen) {
+        panel.classList.add('show');
+        card.classList.add('active');
+        hint.textContent = '✕ Tap to close';
+        renderMonthlyGrid();
+    } else {
+        panel.classList.remove('show');
+        card.classList.remove('active');
+        hint.textContent = '📊 Tap to see monthly breakdown';
+        // If a month was selected, clear it and reset filters
+        if (selectedMonth !== null) {
+            selectedMonth = null;
+            resetFilters();
+        }
+    }
+}
+
+function renderMonthlyGrid() {
+    const curYear  = new Date().getFullYear();
+    const curMonth = new Date().getMonth();
+
+    // Build per-month totals & counts
+    const months = Array.from({ length: 12 }, () => ({ total: 0, count: 0 }));
+    allExpenses.forEach(e => {
+        const d = new Date(e.expense_date + 'T00:00:00');
+        if (d.getFullYear() === curYear) {
+            months[d.getMonth()].total += parseFloat(e.amount || 0);
+            months[d.getMonth()].count++;
+        }
+    });
+
+    document.getElementById('yearlyPanelTitle').textContent = '📊 ' + curYear + ' Monthly Breakdown';
+
+    document.getElementById('monthlyGrid').innerHTML = months.map((m, i) => {
+        const isCur  = (i === curMonth);
+        const isSel  = (selectedMonth === i);
+        const hasDat = (m.count > 0);
+        let cls = 'month-cell';
+        if (isSel)  cls += ' selected';
+        else if (isCur) cls += ' current-month';
+        if (hasDat) cls += ' has-data';
+
+        return `
+            <div class="${cls}" onclick="selectMonth(${i})">
+                <div class="month-name">${MONTH_NAMES[i]}${isCur ? ' ●' : ''}</div>
+                <div class="month-amount ${m.total === 0 ? 'zero' : ''}">₱${m.total.toLocaleString('en-US', { minimumFractionDigits: 0 })}</div>
+                <div class="month-count">${m.count} ${m.count === 1 ? 'entry' : 'entries'}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function selectMonth(monthIndex) {
+    const curYear = new Date().getFullYear();
+
+    // Toggle off if same month tapped again
+    if (selectedMonth === monthIndex) {
+        selectedMonth = null;
+        resetFilters();
+        renderMonthlyGrid();
+        return;
+    }
+
+    selectedMonth = monthIndex;
+
+    // Set filter dates to that month's range
+    const first = new Date(curYear, monthIndex, 1);
+    const last  = new Date(curYear, monthIndex + 1, 0);
+    document.getElementById('filterFrom').value = first.toISOString().split('T')[0];
+    document.getElementById('filterTo').value   = last.toISOString().split('T')[0];
+    document.getElementById('filterCategory').value = 'all';
+
+    applyFilters();
+    renderMonthlyGrid();
 }
 
 // ─── Render table ─────────────────────────────────
