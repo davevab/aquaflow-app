@@ -229,11 +229,30 @@
             display: none;
             background: white;
             border-radius: 0.75rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            padding: 1.25rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 2px solid #f59e0b;
             margin-bottom: 1.5rem;
+            overflow: hidden;
         }
         .form-card.active { display: block; }
+
+        .form-header {
+            padding: 0.875rem 1.25rem;
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-bottom: 1px solid #fcd34d;
+            margin-bottom: 1rem;
+        }
+
+        .form-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #92400e;
+            margin: 0;
+        }
+
+        .form-content {
+            padding: 0 1.25rem 1.25rem 1.25rem;
+        }
 
         .form-grid {
             display: grid;
@@ -300,15 +319,35 @@
         .filters {
             display: none;
             background: white;
-            padding: 1rem 1.25rem;
             border-radius: 0.75rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 2px solid #f59e0b;
             margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        .filters.active { display: block; }
+
+        .filters-header {
+            padding: 0.875rem 1.25rem;
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-bottom: 1px solid #fcd34d;
+            margin-bottom: 1rem;
+        }
+
+        .filters-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #92400e;
+            margin: 0;
+        }
+
+        .filters-content {
+            padding: 0 1.25rem 1.25rem 1.25rem;
+            display: flex;
             gap: 0.75rem;
             flex-wrap: wrap;
             align-items: end;
         }
-        .filters.active { display: flex; }
 
         .filter-group { flex: 1; min-width: 140px; }
 
@@ -586,7 +625,7 @@
             .form-grid { grid-template-columns: 1fr; }
             .action-tabs { gap: 0.5rem; }
             .tab-btn { padding: 0.625rem 1rem; font-size: 0.875rem; }
-            .filters.active { flex-direction: column; }
+            .filters-content { flex-direction: column; }
             .filter-group { width: 100%; min-width: unset; }
             .filter-actions { width: 100%; }
             .btn-filter, .btn-reset, .btn-export { flex: 1; }
@@ -673,6 +712,10 @@
 
     <!-- Add Expense Form -->
     <div class="form-card active" id="formCard">
+        <div class="form-header">
+            <h3>➕ New Expense Entry</h3>
+        </div>
+        <div class="form-content">
             <div class="form-grid">
                 <div class="form-group">
                     <label class="form-label">Date</label>
@@ -713,10 +756,15 @@
                 <button class="btn-save" id="btnSaveExpense">Save Expense</button>
                 <button class="btn-cancel" id="btnClearForm">Clear</button>
             </div>
+        </div>
     </div>
 
     <!-- Filters -->
     <div class="filters" id="filtersCard">
+        <div class="filters-header">
+            <h3>🔍 Filter & Export</h3>
+        </div>
+        <div class="filters-content">
         <div class="filter-group">
             <label class="filter-label">From Date</label>
             <input type="date" class="filter-input" id="filterFrom">
@@ -742,6 +790,7 @@
             <button class="btn-filter" id="btnApplyFilter">Apply</button>
             <button class="btn-reset" id="btnResetFilter">Reset</button>
             <button class="btn-export" id="btnExport">📥 CSV</button>
+        </div>
         </div>
     </div>
 
