@@ -199,31 +199,41 @@
 
         .summary-sub { font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem; }
 
+        /* Action Tabs */
+        .action-tabs {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .tab-btn:hover { border-color: #d1d5db; background: #fafafa; }
+        .tab-btn.active { background: #f59e0b; border-color: #f59e0b; color: white; }
+        .tab-btn.active:hover { background: #d97706; border-color: #d97706; }
+
         /* Add Expense Form */
         .form-card {
+            display: none;
             background: white;
             border-radius: 0.75rem;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             padding: 1.25rem;
             margin-bottom: 1.5rem;
         }
-
-        .form-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .form-header h2 { font-size: 1.125rem; font-weight: 600; color: #111827; }
-
-        .toggle-icon { font-size: 1rem; color: #6b7280; transition: transform 0.2s; }
-        .toggle-icon.open { transform: rotate(180deg); }
-
-        .form-body { display: none; }
-        .form-body.open { display: block; }
+        .form-card.active { display: block; }
 
         .form-grid {
             display: grid;
@@ -288,16 +298,17 @@
 
         /* Filters */
         .filters {
+            display: none;
             background: white;
             padding: 1rem 1.25rem;
             border-radius: 0.75rem;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             margin-bottom: 1.5rem;
-            display: flex;
             gap: 0.75rem;
             flex-wrap: wrap;
             align-items: end;
         }
+        .filters.active { display: flex; }
 
         .filter-group { flex: 1; min-width: 140px; }
 
@@ -573,7 +584,9 @@
         @media (max-width: 640px) {
             .summary-grid { grid-template-columns: repeat(2, 1fr); }
             .form-grid { grid-template-columns: 1fr; }
-            .filters { flex-direction: column; }
+            .action-tabs { gap: 0.5rem; }
+            .tab-btn { padding: 0.625rem 1rem; font-size: 0.875rem; }
+            .filters.active { flex-direction: column; }
             .filter-group { width: 100%; min-width: unset; }
             .filter-actions { width: 100%; }
             .btn-filter, .btn-reset, .btn-export { flex: 1; }
@@ -652,13 +665,14 @@
         </div>
     </div>
 
-    <!-- Add Expense Form (collapsible) -->
-    <div class="form-card">
-        <div class="form-header" id="toggleForm">
-            <h2>➕ Add New Expense</h2>
-            <span class="toggle-icon open" id="toggleIcon">▼</span>
-        </div>
-        <div class="form-body open" id="formBody">
+    <!-- Action Tabs -->
+    <div class="action-tabs">
+        <button class="tab-btn active" id="tabAddExpense" onclick="switchTab('add')">➕ Add New Expense</button>
+        <button class="tab-btn" id="tabFilters" onclick="switchTab('filters')">🔍 Filters</button>
+    </div>
+
+    <!-- Add Expense Form -->
+    <div class="form-card active" id="formCard">
             <div class="form-grid">
                 <div class="form-group">
                     <label class="form-label">Date</label>
@@ -699,11 +713,10 @@
                 <button class="btn-save" id="btnSaveExpense">Save Expense</button>
                 <button class="btn-cancel" id="btnClearForm">Clear</button>
             </div>
-        </div>
     </div>
 
     <!-- Filters -->
-    <div class="filters">
+    <div class="filters" id="filtersCard">
         <div class="filter-group">
             <label class="filter-label">From Date</label>
             <input type="date" class="filter-input" id="filterFrom">
@@ -1210,12 +1223,24 @@ function exportCSV() {
     URL.revokeObjectURL(url);
 }
 
-// ─── Toggle form collapse ─────────────────────────
-function toggleForm() {
-    const body = document.getElementById('formBody');
-    const icon = document.getElementById('toggleIcon');
-    body.classList.toggle('open');
-    icon.classList.toggle('open');
+// ─── Tab switching ────────────────────────────────
+function switchTab(tab) {
+    const tabAdd = document.getElementById('tabAddExpense');
+    const tabFilters = document.getElementById('tabFilters');
+    const formCard = document.getElementById('formCard');
+    const filtersCard = document.getElementById('filtersCard');
+
+    if (tab === 'add') {
+        tabAdd.classList.add('active');
+        tabFilters.classList.remove('active');
+        formCard.classList.add('active');
+        filtersCard.classList.remove('active');
+    } else {
+        tabAdd.classList.remove('active');
+        tabFilters.classList.add('active');
+        formCard.classList.remove('active');
+        filtersCard.classList.add('active');
+    }
 }
 
 // ─── Init ─────────────────────────────────────────
@@ -1229,7 +1254,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadExpenses();
 
     // Bindings
-    document.getElementById('toggleForm').addEventListener('click', toggleForm);
     document.getElementById('btnSaveExpense').addEventListener('click', saveExpense);
     document.getElementById('btnClearForm').addEventListener('click', clearForm);
     document.getElementById('btnApplyFilter').addEventListener('click', applyFilters);
