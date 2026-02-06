@@ -1,0 +1,35 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Define gradient -->
+  <defs>
+    <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Shine effect -->
+    <radialGradient id="shine" cx="35%" cy="35%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.6" />
+      <stop offset="50%" style="stop-color:#ffffff;stop-opacity:0.2" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  
+  <!-- White background circle for QR code center -->
+  <circle cx="100" cy="100" r="95" fill="white"/>
+  
+  <!-- Water droplet shape -->
+  <path d="M 100 40 
+           C 100 40, 70 70, 70 105 
+           C 70 130, 83 145, 100 145 
+           C 117 145, 130 130, 130 105 
+           C 130 70, 100 40, 100 40 Z" 
+        fill="url(#waterGradient)"
+        stroke="#5a67d8"
+        stroke-width="2"/>
+  
+  <!-- Shine effect on droplet -->
+  <ellipse cx="85" cy="75" rx="20" ry="30" fill="url(#shine)" opacity="0.7"/>
+  
+  <!-- Small highlight -->
+  <circle cx="90" cy="70" r="8" fill="white" opacity="0.8"/>
+</svg>

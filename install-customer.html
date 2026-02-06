@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Install AquaFlow - Customer App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .container {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 480px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            padding: 2rem;
+            text-align: center;
+            color: white;
+        }
+
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 0.9375rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        .features {
+            background: #eff6ff;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .features h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 1rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            color: #1e3a8a;
+            font-size: 0.9375rem;
+        }
+
+        .feature-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .feature-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .step {
+            margin-bottom: 2rem;
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .step-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .step-content {
+            margin-left: 2.75rem;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .btn-open {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-open:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59,130,246,0.4);
+        }
+
+        .platform {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .platform-title {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .platform-icon {
+            font-size: 1.25rem;
+        }
+
+        .platform-steps {
+            color: #6b7280;
+            font-size: 0.9375rem;
+            line-height: 1.8;
+        }
+
+        .platform-steps li {
+            margin-left: 1.25rem;
+        }
+
+        .help {
+            background: #dbeafe;
+            border: 2px solid #93c5fd;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        .help-title {
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+        }
+
+        .help-text {
+            color: #1e3a8a;
+            font-size: 0.9375rem;
+        }
+
+        .help-link {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">💧</div>
+            <h1>AquaFlow Customer</h1>
+            <p>Order water delivery instantly</p>
+        </div>
+
+        <div class="content">
+            <div class="features">
+                <h3>What You Can Do:</h3>
+                <div class="feature-item">
+                    <span class="feature-icon">📱</span>
+                    <span>Quick phone number lookup</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🔄</span>
+                    <span>Easy reordering with one tap</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🚚</span>
+                    <span>Track your deliveries in real-time</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">⚡</span>
+                    <span>No app download required</span>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">1</span>
+                    Start Ordering
+                </div>
+                <div class="step-content">
+                    <a href="customer-order-form.html" class="btn-open">🚀 Open Order Form</a>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">2</span>
+                    Add to Home Screen
+                </div>
+                <div class="step-content">
+                    <p style="margin-bottom: 1rem; color: #111827;">Follow these steps based on your device:</p>
+
+                    <div class="platform">
+                        <div class="platform-title">
+                            <span class="platform-icon">📱</span>
+                            iPhone / iPad
+                        </div>
+                        <ol class="platform-steps">
+                            <li>Tap the <strong>Share button</strong> (□ with arrow)</li>
+                            <li>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
+                            <li>Tap <strong>"Add"</strong> in the top right</li>
+                            <li>Done! Find the AquaFlow icon on your home screen</li>
+                        </ol>
+                    </div>
+
+                    <div class="platform">
+                        <div class="platform-title">
+                            <span class="platform-icon">📱</span>
+                            Android Phone
+                        </div>
+                        <ol class="platform-steps">
+                            <li>Tap the <strong>Menu</strong> (3 dots ⋮ in corner)</li>
+                            <li>Tap <strong>"Add to Home Screen"</strong> or <strong>"Install"</strong></li>
+                            <li>Tap <strong>"Add"</strong> or <strong>"Install"</strong></li>
+                            <li>Done! Find the AquaFlow icon on your home screen</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">3</span>
+                    Place Your First Order
+                </div>
+                <div class="step-content">
+                    <p>Tap the AquaFlow icon on your home screen anytime to order fresh water delivery. Fast, easy, and convenient!</p>
+                </div>
+            </div>
+
+            <div class="help">
+                <div class="help-title">Need Help Ordering?</div>
+                <div class="help-text">
+                    Contact the station directly or reach us at:
+                    <br>
+                    <a href="https://wa.me/639123456789" class="help-link">+63 912 345 6789</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
