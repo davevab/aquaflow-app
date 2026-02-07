@@ -1,6 +1,6 @@
 {
-  "name": "AquaFlow",
-  "short_name": "MySite",
+  "name": "AquaFlow Water Refiling Station Management System",
+  "short_name": "AquaFlow",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
