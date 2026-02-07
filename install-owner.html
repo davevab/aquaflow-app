@@ -326,5 +326,14 @@
             </div>
         </div>
     </div>
+    
+    <script>
+    // Detect if running as installed PWA
+    if (window.matchMedia('(display-mode: standalone)').matches || 
+        window.navigator.standalone === true) {
+        // Already installed - redirect to actual app
+        window.location.href = '/owner-dashboard.html';
+    }
+    </script>
 </body>
 </html>
