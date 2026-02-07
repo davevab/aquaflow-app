@@ -1859,20 +1859,29 @@
                 window.scrollTo(0, 0);
             });
 
-            // Done button - closes the browser tab/window
+            // Done button - resets to new order (iOS PWAs can't close)
             document.getElementById('doneBtn').addEventListener('click', function(e) {
                 e.preventDefault();
                 
-                // Try to close the window
-                window.close();
+                // Check if running as standalone PWA (iOS/Android home screen app)
+                var isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                 window.navigator.standalone === true;
                 
-                // If window.close() doesn't work (most browsers block it for security), 
-                // show a friendly message
-                setTimeout(function() {
-                    if (!window.closed) {
-                        alert('Thank you for your order! You can now close this tab.');
-                    }
-                }, 100);
+                if (isStandalone) {
+                    // In PWA mode - just reset to phone lookup for new order
+                    // User can swipe up/back button to truly close the app
+                    document.getElementById('newOrderBtn').click();
+                } else {
+                    // In browser - try to close the tab
+                    window.close();
+                    
+                    // If window.close() doesn't work, show message
+                    setTimeout(function() {
+                        if (!window.closed) {
+                            alert('Thank you for your order! You can now close this tab.');
+                        }
+                    }, 100);
+                }
             });
 
             console.log('All event listeners attached');
