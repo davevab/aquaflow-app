@@ -32,6 +32,15 @@
             box-sizing: border-box;
         }
 
+        /* Hide content initially if running as installed app */
+        body {
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+        body.loaded {
+            opacity: 1;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -331,8 +340,11 @@
     // Detect if running as installed PWA
     if (window.matchMedia('(display-mode: standalone)').matches || 
         window.navigator.standalone === true) {
-        // Already installed - redirect to actual app
-        window.location.href = '/owner-dashboard.html';
+        // Already installed - redirect immediately to actual app
+        window.location.replace('/owner-dashboard.html');
+    } else {
+        // Running in browser - show install instructions
+        document.body.classList.add('loaded');
     }
     </script>
 </body>
