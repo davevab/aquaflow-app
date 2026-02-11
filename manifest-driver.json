@@ -1,0 +1,19 @@
+{
+  "name": "AquaFlow Driver",
+  "short_name": "Driver",
+  "description": "Deliver water to customers",
+  "start_url": "/driver-app.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f0fdf4",
+  "theme_color": "#16a34a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/driver-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

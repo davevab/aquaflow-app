@@ -1,0 +1,19 @@
+{
+  "name": "AquaFlow Manager",
+  "short_name": "Manager",
+  "description": "Manage water delivery business",
+  "start_url": "/owner-dashboard.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf5ff",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/owner-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaFlow Icons Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .icons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .icon-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .icon-card:hover {
+            transform: translateY(-10px);
+        }
+        
+        .icon-preview {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 1.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .icon-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .icon-description {
+            font-size: 0.875rem;
+            color: #6b7280;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+        
+        .icon-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+        
+        .badge-customer {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .badge-owner {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+        
+        .badge-driver {
+            background: #d1fae5;
+            color: #15803d;
+        }
+        
+        .features {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .features h2 {
+            font-size: 1.5rem;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+        
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .features li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e5e7eb;
+            color: #4b5563;
+            display: flex;
+            align-items: center;
+        }
+        
+        .features li:last-child {
+            border-bottom: none;
+        }
+        
+        .features li::before {
+            content: "✓";
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: #10b981;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            margin-right: 1rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 AquaFlow App Icons - New Design</h1>
+        
+        <div class="icons-grid">
+            <!-- Customer Icon -->
+            <div class="icon-card">
+                <div class="icon-preview">
+                    <img src="customer-icon.svg" alt="Customer App" style="width: 100%; height: 100%;">
+                </div>
+                <h3 class="icon-name">AquaFlow</h3>
+                <p class="icon-description">
+                    Customer app with blue water droplet and 3 people group (wider shoulders)
+                </p>
+                <span class="icon-badge badge-customer">💧 Customer App</span>
+            </div>
+            
+            <!-- Owner Icon -->
+            <div class="icon-card">
+                <div class="icon-preview">
+                    <img src="owner-icon.svg" alt="Owner App" style="width: 100%; height: 100%;">
+                </div>
+                <h3 class="icon-name">AquaFlow Manager</h3>
+                <p class="icon-description">
+                    Manager app with purple water droplet, 4 ascending bars, and large peso symbol (simplified)
+                </p>
+                <span class="icon-badge badge-owner">📊 Owner App</span>
+            </div>
+            
+            <!-- Driver Icon -->
+            <div class="icon-card">
+                <div class="icon-preview">
+                    <img src="driver-icon.svg" alt="Driver App" style="width: 100%; height: 100%;">
+                </div>
+                <h3 class="icon-name">AquaFlow Driver</h3>
+                <p class="icon-description">
+                    Driver app with green water droplet and location pin (simplified, no route)
+                </p>
+                <span class="icon-badge badge-driver">🚚 Driver App</span>
+            </div>
+        </div>
+        
+        <div class="features">
+            <h2>✨ Design Features</h2>
+            <ul>
+                <li>Unified water droplet as hero element across all apps</li>
+                <li>Secondary icons MUCH BIGGER (2x-2.2x scale) to fill space properly</li>
+                <li>Customer: 3 people group with wider shoulders for community feel</li>
+                <li>Owner: 4 ascending bars and large peso (₱) symbol (simplified, no trend line)</li>
+                <li>Driver: Location pin only (simplified, no route line)</li>
+                <li>Distinct colors: Blue (customer), Purple (owner), Green (driver)</li>
+                <li>Modern gradients and depth effects with professional polish</li>
+                <li>Optimized for all screen sizes (192px - 512px)</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

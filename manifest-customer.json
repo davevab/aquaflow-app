@@ -1,0 +1,19 @@
+{
+  "name": "AquaFlow",
+  "short_name": "AquaFlow",
+  "description": "Order pure water delivery",
+  "start_url": "/customer-order-form.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#eff6ff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/customer-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
