@@ -331,15 +331,8 @@
     </div>
     
     <script>
-    // Detect if running as installed PWA
-    if (window.matchMedia('(display-mode: standalone)').matches || 
-        window.navigator.standalone === true) {
-        // Already installed - redirect immediately to actual app
-        window.location.replace('/customer-order-form.html');
-    } else {
-        // Running in browser - show install instructions
-        document.body.classList.add('loaded');
-    }
+    // Always show install instructions - let users manually open app if already installed
+    document.body.classList.add('loaded');
     </script>
 </body>
 </html>
