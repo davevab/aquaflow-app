@@ -1,6 +1,6 @@
 {
-  "name": "AquaFlow Manager",
-  "short_name": "Manager",
+  "name": "AquaFlow",
+  "short_name": "AquaFlow",
   "description": "Manage water delivery business",
   "start_url": "/owner-dashboard.html",
   "scope": "/",

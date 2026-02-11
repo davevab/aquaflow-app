@@ -1,6 +1,6 @@
 {
-  "name": "AquaFlow Driver",
-  "short_name": "Driver",
+  "name": "AquaFlow",
+  "short_name": "AquaFlow",
   "description": "Deliver water to customers",
   "start_url": "/driver-app.html",
   "scope": "/",
