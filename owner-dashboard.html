@@ -301,10 +301,7 @@
         }
         
         .orders-container {
-            background: white;
-            border-radius: 0.75rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+            /* Now a plain wrapper — date-group cards handle their own styling */
         }
         
         /* COMPACT ORDER CARD DESIGN */
@@ -736,6 +733,64 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Collapsible Date Groups */
+        .date-group {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+        }
+        .date-group-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.875rem 1rem;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s;
+            background: white;
+        }
+        .date-group-header:hover { background: #f9fafb; }
+        .date-group-header:active { background: #f3f4f6; }
+        .date-group.today .date-group-header {
+            background: #eff6ff;
+            border-left: 4px solid #2563eb;
+        }
+        .date-group.today .date-group-header:hover { background: #dbeafe; }
+        .date-group-left {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            flex: 1;
+            min-width: 0;
+        }
+        .date-group-label {
+            font-weight: 700;
+            font-size: 0.9375rem;
+            color: #111827;
+            white-space: nowrap;
+        }
+        .date-group.today .date-group-label { color: #1e40af; }
+        .date-group-meta {
+            font-size: 0.8125rem;
+            color: #6b7280;
+            white-space: nowrap;
+        }
+        .date-group-toggle {
+            font-size: 0.875rem;
+            color: #9ca3af;
+            flex-shrink: 0;
+            margin-left: 0.5rem;
+            transition: transform 0.2s;
+        }
+        .date-group.open .date-group-toggle { transform: rotate(180deg); }
+        .date-group-body {
+            display: none;
+            border-top: 1px solid #e5e7eb;
+        }
+        .date-group.open .date-group-body { display: block; }
 
         /* Date Picker Bar */
         .date-nav-bar {
@@ -1402,51 +1457,18 @@
             });
         }
 
-        // Display orders - COMPACT VERSION
-        function displayOrders(filter) {
-            const container = document.getElementById('ordersContainer');
-            const filteredOrders = filterOrders(filter);
-            
-            // Update section title
-            document.getElementById('sectionTitle').textContent = FILTER_TITLES[filter] || 'All Orders';
-            
-            // Show/hide reset button
-            const resetBtn = document.getElementById('resetFilter');
-            if (filter === 'all') {
-                resetBtn.classList.remove('show');
-            } else {
-                resetBtn.classList.add('show');
-            }
-            
-            // Update active stat card
-            document.querySelectorAll('.stat-card').forEach(card => card.classList.remove('active'));
-            const activeCard = document.querySelector(`[data-filter="${filter}"]`);
-            if (activeCard) activeCard.classList.add('active');
-            
-            if (filteredOrders.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">📦</div>
-                        <p>No orders found</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = filteredOrders.map(order => {
-                const customerTypeBadge = order.customer_type && CUSTOMER_TYPE_BADGES[order.customer_type] 
-                    ? `<span class="badge ${CUSTOMER_TYPE_BADGES[order.customer_type].class}">
-                        ${CUSTOMER_TYPE_BADGES[order.customer_type].emoji} ${CUSTOMER_TYPE_BADGES[order.customer_type].label}
-                       </span>`
-                    : '';
-                
-                // Assignment status badge
-                const driverName = order.driver_id ? driverNames[order.driver_id] : null;
-                const assignmentBadge = driverName
-                    ? `<span class="badge badge-assigned">✓ ${driverName}</span>`
-                    : `<span class="badge badge-not-assigned">⚠️ Not Assigned</span>`;
-                
-                return `
+        // Render a single order card HTML
+        function renderOrderCard(order) {
+            const customerTypeBadge = order.customer_type && CUSTOMER_TYPE_BADGES[order.customer_type]
+                ? `<span class="badge ${CUSTOMER_TYPE_BADGES[order.customer_type].class}">
+                    ${CUSTOMER_TYPE_BADGES[order.customer_type].emoji} ${CUSTOMER_TYPE_BADGES[order.customer_type].label}
+                   </span>`
+                : '';
+            const driverName = order.driver_id ? driverNames[order.driver_id] : null;
+            const assignmentBadge = driverName
+                ? `<span class="badge badge-assigned">✓ ${driverName}</span>`
+                : `<span class="badge badge-not-assigned">⚠️ Not Assigned</span>`;
+            return `
                 <div class="order-card" onclick="showOrderDetail('${order.id}')">
                     <div class="order-header">
                         <div class="order-customer">
@@ -1470,8 +1492,76 @@
                             <span class="order-arrow">→</span>
                         </div>
                     </div>
-                </div>
-            `}).join('');
+                </div>`;
+        }
+
+        function toggleDateGroup(dateKey) {
+            const group = document.getElementById('group-' + dateKey);
+            if (group) group.classList.toggle('open');
+        }
+
+        // Display orders - COLLAPSIBLE DATE GROUPS
+        function displayOrders(filter) {
+            const container = document.getElementById('ordersContainer');
+            const filteredOrders = filterOrders(filter);
+            const todayStr = getToday();
+
+            // Update section title
+            document.getElementById('sectionTitle').textContent = FILTER_TITLES[filter] || 'All Orders';
+
+            // Show/hide reset button
+            const resetBtn = document.getElementById('resetFilter');
+            resetBtn.classList.toggle('show', filter !== 'all');
+
+            // Update active stat card
+            document.querySelectorAll('.stat-card').forEach(card => card.classList.remove('active'));
+            const activeCard = document.querySelector(`[data-filter="${filter}"]`);
+            if (activeCard) activeCard.classList.add('active');
+
+            if (filteredOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📦</div>
+                        <p>No orders found</p>
+                    </div>`;
+                return;
+            }
+
+            // Group orders by created_at date
+            const groups = {};
+            filteredOrders.forEach(order => {
+                const dateKey = order.created_at.split('T')[0];
+                if (!groups[dateKey]) groups[dateKey] = [];
+                groups[dateKey].push(order);
+            });
+
+            // Sort dates newest first
+            const sortedDates = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+
+            container.innerHTML = sortedDates.map(dateKey => {
+                const orders = groups[dateKey];
+                const isToday = dateKey === todayStr;
+                const total = orders.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);
+                const d = new Date(dateKey + 'T00:00:00');
+                const labelStr = isToday
+                    ? 'Today, ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                    : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                const safeKey = dateKey.replace(/-/g, '');
+
+                return `
+                <div class="date-group ${isToday ? 'today open' : ''}" id="group-${safeKey}">
+                    <div class="date-group-header" onclick="toggleDateGroup('${safeKey}')">
+                        <div class="date-group-left">
+                            <span class="date-group-label">${isToday ? '📅 ' : ''}${labelStr}</span>
+                            <span class="date-group-meta">${orders.length} order${orders.length !== 1 ? 's' : ''} &nbsp;·&nbsp; ₱${total.toLocaleString('en-US', {minimumFractionDigits: 0})}</span>
+                        </div>
+                        <span class="date-group-toggle">▾</span>
+                    </div>
+                    <div class="date-group-body">
+                        ${orders.map(o => renderOrderCard(o)).join('')}
+                    </div>
+                </div>`;
+            }).join('');
         }
 
         // Format date for modal
