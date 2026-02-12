@@ -4,31 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AquaFlow - Sales Analytics</title>
-    <!-- Supabase JS Library -->
+    <link rel="manifest" href="/manifest-owner.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="/owner-icon.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Chart.js for beautiful charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
             background: #f3f4f6;
             min-height: 100vh;
             color: #111827;
         }
-        
+
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 1rem 1.5rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
         .header-content {
             max-width: 1400px;
             margin: 0 auto;
@@ -37,7 +35,6 @@
             align-items: center;
             gap: 0.75rem;
         }
-        
         .header-title {
             display: flex;
             align-items: center;
@@ -45,33 +42,14 @@
             flex: 1;
             min-width: 0;
         }
-        
-        .logo {
-            font-size: 1.75rem;
-            flex-shrink: 0;
-        }
-        
-        h1 {
-            font-size: 1.125rem;
-            font-weight: bold;
-            line-height: 1.2;
-        }
-        
-        .subtitle {
-            font-size: 0.75rem;
-            opacity: 0.9;
-            margin-top: 0.125rem;
-        }
-        
-        .header-actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-shrink: 0;
-        }
+        .logo { font-size: 1.75rem; flex-shrink: 0; }
+        h1 { font-size: 1.125rem; font-weight: bold; line-height: 1.2; }
+        .subtitle { font-size: 0.75rem; opacity: 0.9; margin-top: 0.125rem; }
+        .header-actions { display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center; }
 
         .btn-header {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
             color: white;
             padding: 0.5rem;
             border-radius: 0.5rem;
@@ -80,970 +58,441 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            text-decoration: none;
-            white-space: nowrap;
-            transition: all 0.2s;
             width: 2.5rem;
             height: 2.5rem;
+            transition: all 0.2s;
+            white-space: nowrap;
         }
-        
-        .btn-header:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.05);
-        }
+        .btn-header:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
+        .btn-header:active { transform: scale(0.95); }
+        .btn-header.refreshing { animation: spin 0.6s linear infinite; opacity: 0.7; cursor: wait; }
 
-        .btn-header:active {
-            transform: scale(0.95);
+        .btn-export-header {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 0.875rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            transition: all 0.2s;
+            white-space: nowrap;
         }
+        .btn-export-header:hover { background: rgba(255,255,255,0.3); }
 
-        .btn-header.refreshing {
-            animation: spin 0.6s linear infinite;
-            opacity: 0.7;
-            cursor: wait;
-        }
+        .last-updated { font-size: 0.6875rem; opacity: 0.8; display: none; }
 
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .last-updated {
-            font-size: 0.6875rem;
-            opacity: 0.8;
-            margin-left: 0.5rem;
-            display: none;
-        }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         @media (min-width: 640px) {
-            .header {
-                padding: 1.5rem;
-            }
-
-            .logo {
-                font-size: 2rem;
-            }
-
-            h1 {
-                font-size: 1.5rem;
-            }
-
-            .subtitle {
-                font-size: 0.875rem;
-                margin-top: 0.25rem;
-            }
-
-            .header-actions {
-                gap: 0.75rem;
-            }
-
-            .btn-header {
-                width: 2.75rem;
-                height: 2.75rem;
-            }
-
-            .last-updated {
-                display: inline;
-            }
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 1.5rem;
+            .header { padding: 1.5rem; }
+            .logo { font-size: 2rem; }
+            h1 { font-size: 1.5rem; }
+            .subtitle { font-size: 0.875rem; margin-top: 0.25rem; }
+            .btn-header { width: 2.75rem; height: 2.75rem; }
+            .last-updated { display: inline; }
         }
 
-        /* Key Metrics Cards */
+        .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+
+        /* Metrics */
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 1rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
-
         .metric-card {
             background: white;
             padding: 1.25rem;
             border-radius: 0.75rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
+        .metric-label { font-size: 0.8125rem; color: #6b7280; margin-bottom: 0.375rem; }
+        .metric-value { font-size: 1.75rem; font-weight: bold; color: #111827; line-height: 1.2; }
+        .metric-sub { font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem; }
+        .metric-change { font-size: 0.8125rem; margin-top: 0.25rem; }
+        .metric-change.positive { color: #10b981; }
+        .metric-change.negative { color: #ef4444; }
 
-        .metric-label {
-            font-size: 0.875rem;
-            color: #6b7280;
-            margin-bottom: 0.5rem;
-        }
-
-        .metric-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #111827;
-            line-height: 1.2;
-        }
-
-        .metric-value-dual {
-            display: flex;
-            align-items: baseline;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
-        .metric-change {
-            font-size: 0.875rem;
-            margin-top: 0.5rem;
-        }
-
-        .metric-change.positive {
-            color: #10b981;
-        }
-
-        .metric-change.negative {
-            color: #ef4444;
-        }
-
-        /* Charts Section */
-        .charts-section {
-            margin-bottom: 2rem;
-        }
-
+        /* Charts */
         .chart-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-bottom: 1.5rem;
-        }
-
-        .chart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .chart-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #111827;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 300px;
-        }
-
-        /* Filters */
-        .filters {
             background: white;
             padding: 1.25rem;
             border-radius: 0.75rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-bottom: 1.5rem;
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            align-items: end;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1.25rem;
         }
+        .chart-title { font-size: 1rem; font-weight: 600; color: #111827; margin-bottom: 1rem; }
+        .chart-container { position: relative; height: 260px; }
 
-        .filter-group {
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .filter-label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: #374151;
-            margin-bottom: 0.5rem;
-        }
-
-        .filter-input {
-            width: 100%;
-            padding: 0.5rem 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        .btn-filter {
-            padding: 0.5rem 1.5rem;
-            background: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-            font-weight: 600;
-            flex: 1;
-        }
-
-        .btn-filter:hover {
-            background: #1d4ed8;
-        }
-
-        .btn-export {
-            padding: 0.5rem 1.5rem;
-            background: #10b981;
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-            font-weight: 600;
-            flex: 1;
-        }
-
-        .btn-export:hover {
-            background: #059669;
-        }
-
-        .btn-reset {
-            padding: 0.5rem 1.5rem;
-            background: #6b7280;
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-            font-weight: 600;
-            flex: 0.6;
-        }
-
-        .btn-reset:hover {
-            background: #4b5563;
-        }
-
-        .filter-actions {
-            display: flex;
-            gap: 0.75rem;
-            width: 100%;
-        }
-
-        /* Data Table */
+        /* Table */
         .table-card {
             background: white;
             border-radius: 0.75rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             overflow: hidden;
+            margin-bottom: 1.25rem;
         }
-
         .table-header {
-            padding: 1.5rem;
+            padding: 1rem 1.25rem;
             border-bottom: 1px solid #e5e7eb;
         }
-
-        .table-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #111827;
-        }
-
-        .table-container {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
+        .table-title { font-size: 1rem; font-weight: 600; color: #111827; }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
         th {
             background: #f9fafb;
-            padding: 0.75rem 1rem;
+            padding: 0.625rem 1rem;
             text-align: left;
-            font-size: 0.875rem;
+            font-size: 0.8125rem;
             font-weight: 600;
             color: #6b7280;
             border-bottom: 1px solid #e5e7eb;
+            white-space: nowrap;
         }
-
         td {
-            padding: 0.75rem 1rem;
+            padding: 0.625rem 1rem;
             font-size: 0.875rem;
             color: #374151;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #f3f4f6;
         }
-
-        tr:hover {
-            background: #f9fafb;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 3rem;
-            color: #6b7280;
-        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: #fafafa; }
+        .growth-pos { color: #10b981; font-weight: 600; }
+        .growth-neg { color: #ef4444; font-weight: 600; }
 
         .spinner {
             display: inline-block;
-            width: 2rem;
-            height: 2rem;
+            width: 1.75rem; height: 1.75rem;
             border: 3px solid #e5e7eb;
-            border-top-color: #2563eb;
+            border-top-color: #667eea;
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            animation: spin 0.7s linear infinite;
         }
+        .loading { text-align: center; padding: 3rem; color: #6b7280; }
+        .empty-state { text-align: center; padding: 3rem; color: #6b7280; }
+        .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.5; }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: #6b7280;
-        }
-
-        .empty-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-
-        @media (max-width: 768px) {
-            .metrics-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .filters {
-                flex-direction: column;
-            }
-
-            .filter-group {
-                width: 100%;
-            }
-
-            .chart-container {
-                height: 250px;
-            }
+        @media (max-width: 640px) {
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .chart-container { height: 220px; }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-content">
-            <div class="header-title">
-                <span class="logo">💧</span>
-                <div>
-                    <h1>Sales & Revenue Analytics</h1>
-                    <p class="subtitle">AquaFlow Business Intelligence</p>
-                </div>
+
+<div class="header">
+    <div class="header-content">
+        <div class="header-title">
+            <span class="logo">💧</span>
+            <div>
+                <h1>Sales Analytics</h1>
+                <p class="subtitle">AquaFlow Business Intelligence</p>
             </div>
-            <div class="header-actions">
-                <button class="btn-header" onclick="window.location.href='owner-dashboard.html'" title="Back to Dashboard">
-                    ←
-                </button>
-                <span class="last-updated" id="lastUpdated">Just now</span>
-                <button class="btn-header" id="refreshBtn" title="Refresh analytics">
-                    🔄
-                </button>
+        </div>
+        <div class="header-actions">
+            <span class="last-updated" id="lastUpdated">Just now</span>
+            <button class="btn-export-header" id="exportBtn">📥 CSV</button>
+            <button class="btn-header" id="refreshBtn" title="Refresh">🔄</button>
+            <button class="btn-header" onclick="window.location.href='owner-dashboard.html'" title="Back">←</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- Key Metrics -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-label">All-Time Revenue</div>
+            <div class="metric-value" id="totalRevenue">—</div>
+            <div class="metric-sub" id="totalGallons"></div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">This Month's Revenue</div>
+            <div class="metric-value" id="monthRevenue">—</div>
+            <div class="metric-change" id="monthChange"></div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">This Year's Revenue</div>
+            <div class="metric-value" id="yearRevenue">—</div>
+            <div class="metric-sub" id="yearGallons"></div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Avg Order Value</div>
+            <div class="metric-value" id="avgOrder">—</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Total Orders</div>
+            <div class="metric-value" id="totalOrders">—</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Total Gallons Sold</div>
+            <div class="metric-value" id="totalGallonsStat">—</div>
+        </div>
+    </div>
+
+    <!-- Monthly Revenue Chart -->
+    <div class="chart-card">
+        <div class="chart-title" id="monthlyChartTitle">Monthly Revenue</div>
+        <div class="chart-container">
+            <canvas id="monthlyRevenueChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Customer Type + Payment Method -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+        <div class="chart-card" style="margin-bottom: 0;">
+            <div class="chart-title">Revenue by Customer Type</div>
+            <div class="chart-container" style="height: 220px;">
+                <canvas id="customerTypeChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card" style="margin-bottom: 0;">
+            <div class="chart-title">Payment Method Split</div>
+            <div class="chart-container" style="height: 220px;">
+                <canvas id="paymentMethodChart"></canvas>
             </div>
         </div>
     </div>
 
-    <div class="container">
-        <!-- Filters (top) -->
-        <div class="filters">
-            <div class="filter-group">
-                <label class="filter-label">From Date</label>
-                <input type="date" class="filter-input" id="fromDate">
-            </div>
-            <div class="filter-group">
-                <label class="filter-label">To Date</label>
-                <input type="date" class="filter-input" id="toDate">
-            </div>
-            <div class="filter-group">
-                <label class="filter-label">Customer Type</label>
-                <select class="filter-input" id="customerTypeFilter">
-                    <option value="all">All Types</option>
-                    <option value="household">Household</option>
-                    <option value="reseller">Reseller</option>
-                    <option value="company">Company</option>
-                </select>
-            </div>
-            <div class="filter-actions">
-                <button class="btn-filter" id="applyFilters">Apply Filters</button>
-                <button class="btn-reset" id="resetFilters">Reset</button>
-                <button class="btn-export" id="exportBtn">📥 Export CSV</button>
-            </div>
+    <!-- Monthly Breakdown Table -->
+    <div class="table-card">
+        <div class="table-header">
+            <div class="table-title">📅 Monthly Breakdown</div>
         </div>
-
-        <!-- Key Metrics -->
-        <div class="metrics-grid">
-            <div class="metric-card">
-                <div class="metric-label">Total Revenue (All-Time)</div>
-                <div class="metric-value currency" id="totalRevenue">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">This Month's Revenue</div>
-                <div class="metric-value currency" id="monthRevenue">0</div>
-                <div class="metric-change" id="monthChange">-</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">This Year's Revenue</div>
-                <div class="metric-value currency" id="yearRevenue">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Average Order Value</div>
-                <div class="metric-value currency" id="avgOrder">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Total Orders</div>
-                <div class="metric-value" id="totalOrders">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Paid Orders</div>
-                <div class="metric-value" id="paidOrders">0</div>
-            </div>
-        </div>
-
-        <!-- Charts -->
-        <div class="charts-section">
-            <!-- Monthly Revenue Trend -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h2 class="chart-title" id="monthlyChartTitle">Monthly Revenue Trend</h2>
-                </div>
-                <div class="chart-container">
-                    <canvas id="monthlyRevenueChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Revenue by Customer Type -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h2 class="chart-title">Revenue by Customer Type</h2>
-                </div>
-                <div class="chart-container">
-                    <canvas id="customerTypeChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Payment Method Breakdown -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h2 class="chart-title">Payment Method Distribution</h2>
-                </div>
-                <div class="chart-container">
-                    <canvas id="paymentMethodChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Monthly Breakdown Table -->
-        <div class="table-card">
-            <div class="table-header">
-                <h2 class="table-title">Monthly Breakdown</h2>
-            </div>
-            <div class="table-container">
-                <table id="monthlyTable">
-                    <thead>
-                        <tr>
-                            <th>Month</th>
-                            <th>Total Orders</th>
-                            <th>Paid Orders</th>
-                            <th>Revenue</th>
-                            <th>Avg Order</th>
-                            <th>Growth</th>
-                        </tr>
-                    </thead>
-                    <tbody id="monthlyTableBody">
-                        <tr>
-                            <td colspan="6" class="loading">
-                                <div class="spinner"></div>
-                                <p style="margin-top: 1rem;">Loading analytics...</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-
-    </div>
-
-    <script>
-        // Initialize Supabase
-        const SUPABASE_URL = 'https://objfqhffofsrttjxswkx.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_8kUVR1zO703wEgv1je_wtQ_88YK988G';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        let allOrders = [];
-        let filteredOrders = [];
-        let charts = {};
-
-        // Month names
-        const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-        // Load all orders
-        async function loadOrders() {
-            try {
-                console.log('Loading orders from Supabase...');
-                
-                const { data, error } = await supabaseClient
-                    .from('orders')
-                    .select('*')
-                    .order('created_at', { ascending: true });
-
-                if (error) {
-                    console.error('Supabase error:', error);
-                    return;
-                }
-
-                console.log('Orders loaded:', data.length);
-                allOrders = data || [];
-                
-                // Apply current filters
-                applyFilters();
-                
-            } catch (err) {
-                console.error('Error loading orders:', err);
-            }
-        }
-
-        // Apply filters and refresh all displays
-        function applyFilters() {
-            const fromDate = document.getElementById('fromDate').value;
-            const toDate = document.getElementById('toDate').value;
-            const customerType = document.getElementById('customerTypeFilter').value;
-
-            filteredOrders = allOrders.filter(order => {
-                const orderDate = (order.created_at || '').split('T')[0];
-
-                // Date range filter
-                if (fromDate && orderDate < fromDate) return false;
-                if (toDate && orderDate > toDate) return false;
-
-                // Customer type filter
-                if (customerType !== 'all' && order.customer_type !== customerType) return false;
-
-                return true;
-            });
-
-            // Refresh all displays with filtered data
-            calculateMetrics();
-            renderCharts();
-            renderMonthlyTable();
-        }
-
-        // Reset filters to defaults
-        function resetFilters() {
-            const now = new Date();
-            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            document.getElementById('fromDate').value = firstDay.toISOString().split('T')[0];
-            document.getElementById('toDate').value = lastDay.toISOString().split('T')[0];
-            document.getElementById('customerTypeFilter').value = 'all';
-            applyFilters();
-        }
-
-        // Calculate key metrics — uses filteredOrders
-        function calculateMetrics() {
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth();
-
-            // Total Revenue (all paid orders in filtered set)
-            const paidOrders = filteredOrders.filter(o => o.payment_status === 'paid');
-            const totalRevenue = paidOrders.reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0);
-            const totalGallons = paidOrders.reduce((sum, o) => sum + parseInt(o.quantity || 0), 0);
-
-            // This Month's Revenue (from ALL orders, not filtered — for the month card)
-            const allPaid = allOrders.filter(o => o.payment_status === 'paid');
-            const thisMonthOrders = allPaid.filter(o => {
-                const orderDate = new Date(o.updated_at || o.created_at);
-                return orderDate.getFullYear() === currentYear && orderDate.getMonth() === currentMonth;
-            });
-            const monthRevenue = thisMonthOrders.reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0);
-            const monthGallons = thisMonthOrders.reduce((sum, o) => sum + parseInt(o.quantity || 0), 0);
-
-            // Last Month's Revenue (for growth calculation)
-            const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-            const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-            const lastMonthOrders = allPaid.filter(o => {
-                const orderDate = new Date(o.updated_at || o.created_at);
-                return orderDate.getFullYear() === lastMonthYear && orderDate.getMonth() === lastMonth;
-            });
-            const lastMonthRevenue = lastMonthOrders.reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0);
-
-            // Calculate growth percentage
-            let growthPercent = 0;
-            if (lastMonthRevenue > 0) {
-                growthPercent = ((monthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100;
-            }
-
-            // This Year's Revenue
-            const thisYearOrders = allPaid.filter(o => {
-                const orderDate = new Date(o.updated_at || o.created_at);
-                return orderDate.getFullYear() === currentYear;
-            });
-            const yearRevenue = thisYearOrders.reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0);
-            const yearGallons = thisYearOrders.reduce((sum, o) => sum + parseInt(o.quantity || 0), 0);
-
-            // Average Order Value (filtered)
-            const avgOrder = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0;
-
-            // Update UI
-            document.getElementById('totalRevenue').innerHTML = `
-                ₱${totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}
-                <span style="font-size: 1rem; font-weight: normal; color: #6b7280; margin-left: 0.5rem;">| ${totalGallons.toLocaleString()} gal</span>
-            `;
-            
-            document.getElementById('monthRevenue').innerHTML = `
-                ₱${monthRevenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}
-                <span style="font-size: 1rem; font-weight: normal; color: #6b7280; margin-left: 0.5rem;">| ${monthGallons.toLocaleString()} gal</span>
-            `;
-            
-            document.getElementById('yearRevenue').innerHTML = `
-                ₱${yearRevenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}
-                <span style="font-size: 1rem; font-weight: normal; color: #6b7280; margin-left: 0.5rem;">| ${yearGallons.toLocaleString()} gal</span>
-            `;
-            
-            document.getElementById('avgOrder').textContent = `₱${avgOrder.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
-            document.getElementById('totalOrders').textContent = filteredOrders.length;
-            document.getElementById('paidOrders').textContent = paidOrders.length;
-
-            // Growth indicator
-            const changeEl = document.getElementById('monthChange');
-            if (growthPercent !== 0) {
-                const sign = growthPercent > 0 ? '+' : '';
-                changeEl.textContent = `${sign}${growthPercent.toFixed(1)}% vs last month`;
-                changeEl.className = 'metric-change ' + (growthPercent > 0 ? 'positive' : 'negative');
-            } else {
-                changeEl.textContent = 'No comparison data';
-                changeEl.className = 'metric-change';
-            }
-        }
-
-        // Render all charts
-        function renderCharts() {
-            renderMonthlyRevenueChart();
-            renderCustomerTypeChart();
-            renderPaymentMethodChart();
-        }
-
-        // Monthly Revenue Trend Chart
-        function renderMonthlyRevenueChart() {
-            const ctx = document.getElementById('monthlyRevenueChart');
-            const currentYear = new Date().getFullYear();
-
-            // Update chart title with current year
-            document.getElementById('monthlyChartTitle').textContent = `Monthly Revenue Trend (${currentYear})`;
-
-            // Group orders by month — uses filteredOrders
-            const monthlyData = Array(12).fill(0);
-            const paidOrders = filteredOrders.filter(o => o.payment_status === 'paid');
-            
-            paidOrders.forEach(order => {
-                const orderDate = new Date(order.updated_at || order.created_at);
-                if (orderDate.getFullYear() === currentYear) {
-                    const month = orderDate.getMonth();
-                    monthlyData[month] += parseFloat(order.total_amount || 0);
-                }
-            });
-
-            // Destroy existing chart if it exists
-            if (charts.monthlyRevenue) {
-                charts.monthlyRevenue.destroy();
-            }
-
-            // Create chart
-            charts.monthlyRevenue = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: MONTH_NAMES,
-                    datasets: [{
-                        label: 'Revenue (₱)',
-                        data: monthlyData,
-                        backgroundColor: 'rgba(37, 99, 235, 0.8)',
-                        borderColor: 'rgba(37, 99, 235, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return '₱' + value.toLocaleString();
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Customer Type Chart
-        function renderCustomerTypeChart() {
-            const ctx = document.getElementById('customerTypeChart');
-            const paidOrders = filteredOrders.filter(o => o.payment_status === 'paid');
-
-            // Group by customer type
-            const typeData = {
-                household: 0,
-                reseller: 0,
-                company: 0
-            };
-
-            paidOrders.forEach(order => {
-                const type = order.customer_type || 'household';
-                typeData[type] += parseFloat(order.total_amount || 0);
-            });
-
-            // Destroy existing chart if it exists
-            if (charts.customerType) {
-                charts.customerType.destroy();
-            }
-
-            // Create chart
-            charts.customerType = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['🏠 Household', '🏪 Reseller', '🏢 Company'],
-                    datasets: [{
-                        data: [typeData.household, typeData.reseller, typeData.company],
-                        backgroundColor: [
-                            'rgba(59, 130, 246, 0.8)',
-                            'rgba(251, 191, 36, 0.8)',
-                            'rgba(139, 92, 246, 0.8)'
-                        ],
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-        }
-
-        // Payment Method Chart
-        function renderPaymentMethodChart() {
-            const ctx = document.getElementById('paymentMethodChart');
-            const paidOrders = filteredOrders.filter(o => o.payment_status === 'paid');
-
-            // Group by payment method
-            const methodData = {
-                cod: 0,
-                gcash: 0
-            };
-
-            paidOrders.forEach(order => {
-                const method = order.payment_method || 'cod';
-                methodData[method] += parseFloat(order.total_amount || 0);
-            });
-
-            // Destroy existing chart if it exists
-            if (charts.paymentMethod) {
-                charts.paymentMethod.destroy();
-            }
-
-            // Create chart
-            charts.paymentMethod = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['💵 Cash on Delivery', '📱 GCash'],
-                    datasets: [{
-                        data: [methodData.cod, methodData.gcash],
-                        backgroundColor: [
-                            'rgba(16, 185, 129, 0.8)',
-                            'rgba(59, 130, 246, 0.8)'
-                        ],
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-        }
-
-        // Render monthly breakdown table — uses filteredOrders
-        function renderMonthlyTable() {
-            const tbody = document.getElementById('monthlyTableBody');
-            const currentYear = new Date().getFullYear();
-
-            // Group orders by month
-            const monthlyStats = [];
-            
-            for (let month = 0; month < 12; month++) {
-                const monthOrders = filteredOrders.filter(o => {
-                    const orderDate = new Date(o.created_at);
-                    return orderDate.getFullYear() === currentYear && orderDate.getMonth() === month;
-                });
-
-                const paidOrders = monthOrders.filter(o => o.payment_status === 'paid');
-                const revenue = paidOrders.reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0);
-                const avgOrder = paidOrders.length > 0 ? revenue / paidOrders.length : 0;
-
-                monthlyStats.push({
-                    month: MONTH_NAMES[month],
-                    totalOrders: monthOrders.length,
-                    paidOrders: paidOrders.length,
-                    revenue: revenue,
-                    avgOrder: avgOrder
-                });
-            }
-
-            // Calculate growth
-            for (let i = 0; i < monthlyStats.length; i++) {
-                if (i === 0) {
-                    monthlyStats[i].growth = '-';
-                } else {
-                    const prevRevenue = monthlyStats[i - 1].revenue;
-                    if (prevRevenue > 0) {
-                        const growth = ((monthlyStats[i].revenue - prevRevenue) / prevRevenue) * 100;
-                        monthlyStats[i].growth = (growth > 0 ? '+' : '') + growth.toFixed(1) + '%';
-                    } else {
-                        monthlyStats[i].growth = '-';
-                    }
-                }
-            }
-
-            // Render table (reverse to show recent months first)
-            tbody.innerHTML = monthlyStats.reverse().map(stat => {
-                if (stat.totalOrders === 0) return ''; // Skip empty months
-                
-                return `
+        <div class="table-container">
+            <table>
+                <thead>
                     <tr>
-                        <td><strong>${stat.month} ${currentYear}</strong></td>
-                        <td>${stat.totalOrders}</td>
-                        <td>${stat.paidOrders}</td>
-                        <td><strong>₱${stat.revenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</strong></td>
-                        <td>₱${stat.avgOrder.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
-                        <td>${stat.growth}</td>
+                        <th>Month</th>
+                        <th>Orders</th>
+                        <th>Gallons</th>
+                        <th>Revenue</th>
+                        <th>Avg/Order</th>
+                        <th>vs Prev</th>
                     </tr>
-                `;
-            }).join('') || '<tr><td colspan="6" class="empty-state"><div class="empty-icon">📊</div><p>No data available</p></td></tr>';
+                </thead>
+                <tbody id="monthlyTableBody">
+                    <tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://objfqhffofsrttjxswkx.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_8kUVR1zO703wEgv1je_wtQ_88YK988G';
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let allOrders = [];
+    let charts = {};
+    const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    async function loadOrders() {
+        const { data, error } = await db.from('orders').select('*').order('created_at', { ascending: true });
+        if (error) { console.error(error); return; }
+        allOrders = data || [];
+        renderAll();
+    }
+
+    function renderAll() {
+        calculateMetrics();
+        renderMonthlyChart();
+        renderCustomerTypeChart();
+        renderPaymentMethodChart();
+        renderMonthlyTable();
+    }
+
+    function calculateMetrics() {
+        const now = new Date();
+        const curYear = now.getFullYear(), curMonth = now.getMonth();
+        const paid = allOrders.filter(o => o.payment_status === 'paid');
+
+        const totalRev  = paid.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);
+        const totalGal  = paid.reduce((s, o) => s + parseInt(o.quantity || 0), 0);
+
+        const monthPaid = paid.filter(o => {
+            const d = new Date(o.updated_at || o.created_at);
+            return d.getFullYear() === curYear && d.getMonth() === curMonth;
+        });
+        const monthRev = monthPaid.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);
+
+        const lastMonth = curMonth === 0 ? 11 : curMonth - 1;
+        const lastYear  = curMonth === 0 ? curYear - 1 : curYear;
+        const lastPaid  = paid.filter(o => {
+            const d = new Date(o.updated_at || o.created_at);
+            return d.getFullYear() === lastYear && d.getMonth() === lastMonth;
+        });
+        const lastRev = lastPaid.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);
+
+        const yearPaid = paid.filter(o => new Date(o.updated_at || o.created_at).getFullYear() === curYear);
+        const yearRev  = yearPaid.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);
+        const yearGal  = yearPaid.reduce((s, o) => s + parseInt(o.quantity || 0), 0);
+
+        const avg = paid.length > 0 ? totalRev / paid.length : 0;
+
+        document.getElementById('totalRevenue').textContent  = '₱' + totalRev.toLocaleString('en-US', {maximumFractionDigits: 0});
+        document.getElementById('totalGallons').textContent  = totalGal.toLocaleString() + ' gal total';
+        document.getElementById('totalGallonsStat').textContent = totalGal.toLocaleString() + ' gal';
+        document.getElementById('monthRevenue').textContent  = '₱' + monthRev.toLocaleString('en-US', {maximumFractionDigits: 0});
+        document.getElementById('yearRevenue').textContent   = '₱' + yearRev.toLocaleString('en-US', {maximumFractionDigits: 0});
+        document.getElementById('yearGallons').textContent   = yearGal.toLocaleString() + ' gal this year';
+        document.getElementById('avgOrder').textContent      = '₱' + avg.toLocaleString('en-US', {maximumFractionDigits: 0});
+        document.getElementById('totalOrders').textContent   = allOrders.length;
+
+        const changeEl = document.getElementById('monthChange');
+        if (lastRev > 0) {
+            const pct = ((monthRev - lastRev) / lastRev * 100).toFixed(1);
+            changeEl.textContent = (pct > 0 ? '+' : '') + pct + '% vs last month';
+            changeEl.className = 'metric-change ' + (pct >= 0 ? 'positive' : 'negative');
+        } else {
+            changeEl.textContent = '';
+        }
+    }
+
+    function renderMonthlyChart() {
+        const curYear = new Date().getFullYear();
+        document.getElementById('monthlyChartTitle').textContent = `Monthly Revenue — ${curYear}`;
+
+        const monthlyData = Array(12).fill(0);
+        allOrders.filter(o => o.payment_status === 'paid').forEach(o => {
+            const d = new Date(o.updated_at || o.created_at);
+            if (d.getFullYear() === curYear) monthlyData[d.getMonth()] += parseFloat(o.total_amount || 0);
+        });
+
+        if (charts.monthly) charts.monthly.destroy();
+        charts.monthly = new Chart(document.getElementById('monthlyRevenueChart'), {
+            type: 'bar',
+            data: {
+                labels: MONTH_NAMES,
+                datasets: [{ label: 'Revenue (₱)', data: monthlyData, backgroundColor: 'rgba(102,126,234,0.8)', borderColor: 'rgba(102,126,234,1)', borderWidth: 1 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { callback: v => '₱' + v.toLocaleString() } } }
+            }
+        });
+    }
+
+    function renderCustomerTypeChart() {
+        const paid = allOrders.filter(o => o.payment_status === 'paid');
+        const data = { household: 0, reseller: 0, company: 0 };
+        paid.forEach(o => { data[o.customer_type || 'household'] += parseFloat(o.total_amount || 0); });
+
+        if (charts.customerType) charts.customerType.destroy();
+        charts.customerType = new Chart(document.getElementById('customerTypeChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['🏠 Household', '🏪 Reseller', '🏢 Company'],
+                datasets: [{ data: [data.household, data.reseller, data.company], backgroundColor: ['rgba(59,130,246,0.8)', 'rgba(251,191,36,0.8)', 'rgba(139,92,246,0.8)'], borderWidth: 2, borderColor: '#fff' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
+    function renderPaymentMethodChart() {
+        const paid = allOrders.filter(o => o.payment_status === 'paid');
+        const data = { cod: 0, gcash: 0, maya: 0 };
+        paid.forEach(o => { const m = o.payment_method || 'cod'; data[m] = (data[m] || 0) + parseFloat(o.total_amount || 0); });
+
+        if (charts.payment) charts.payment.destroy();
+        charts.payment = new Chart(document.getElementById('paymentMethodChart'), {
+            type: 'pie',
+            data: {
+                labels: ['💵 COD', '📱 GCash', '📱 Maya'],
+                datasets: [{ data: [data.cod, data.gcash, data.maya], backgroundColor: ['rgba(16,185,129,0.8)', 'rgba(59,130,246,0.8)', 'rgba(245,158,11,0.8)'], borderWidth: 2, borderColor: '#fff' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
+    function renderMonthlyTable() {
+        const curYear = new Date().getFullYear();
+        const tbody = document.getElementById('monthlyTableBody');
+
+        const stats = MONTH_NAMES.map((name, i) => {
+            const monthOrders = allOrders.filter(o => {
+                const d = new Date(o.created_at);
+                return d.getFullYear() === curYear && d.getMonth() === i;
+            });
+            const paid = monthOrders.filter(o => o.payment_status === 'paid');
+            const rev  = paid.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);
+            const gal  = paid.reduce((s, o) => s + parseInt(o.quantity || 0), 0);
+            const avg  = paid.length > 0 ? rev / paid.length : 0;
+            return { name, orders: monthOrders.length, paid: paid.length, rev, gal, avg };
+        });
+
+        // Only show months with orders, newest first
+        const rows = stats
+            .map((s, i) => ({ ...s, index: i }))
+            .filter(s => s.orders > 0)
+            .reverse();
+
+        if (rows.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📊</div><p>No data yet</p></div></td></tr>`;
+            return;
         }
 
-        // Export to CSV
-        function exportToCSV() {
-            const currentYear = new Date().getFullYear();
-            let csv = 'Month,Total Orders,Paid Orders,Revenue,Average Order,Growth\n';
-
-            // Add data rows
-            const monthlyStats = [];
-            for (let month = 0; month < 12; month++) {
-                const monthOrders = allOrders.filter(o => {
-                    const orderDate = new Date(o.created_at);
-                    return orderDate.getFullYear() === currentYear && orderDate.getMonth() === month;
-                });
-
-                const paidOrders = monthOrders.filter(o => o.payment_status === 'paid');
-                const revenue = paidOrders.reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0);
-                const avgOrder = paidOrders.length > 0 ? revenue / paidOrders.length : 0;
-
-                if (monthOrders.length > 0) {
-                    csv += `${MONTH_NAMES[month]} ${currentYear},${monthOrders.length},${paidOrders.length},${revenue.toFixed(2)},${avgOrder.toFixed(2)},-\n`;
-                }
+        tbody.innerHTML = rows.map((s, idx) => {
+            const prev = rows[idx + 1];
+            let growth = '—';
+            let growthClass = '';
+            if (prev && prev.rev > 0) {
+                const pct = ((s.rev - prev.rev) / prev.rev * 100).toFixed(1);
+                growth = (pct > 0 ? '+' : '') + pct + '%';
+                growthClass = pct >= 0 ? 'growth-pos' : 'growth-neg';
             }
+            return `
+                <tr>
+                    <td><strong>${s.name} ${curYear}</strong></td>
+                    <td>${s.orders}</td>
+                    <td>${s.gal.toLocaleString()} gal</td>
+                    <td><strong>₱${s.rev.toLocaleString('en-US', {maximumFractionDigits: 0})}</strong></td>
+                    <td>₱${s.avg.toLocaleString('en-US', {maximumFractionDigits: 0})}</td>
+                    <td class="${growthClass}">${growth}</td>
+                </tr>`;
+        }).join('');
+    }
 
-            // Download
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `AquaFlow_Analytics_${currentYear}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
+    function exportCSV() {
+        const curYear = new Date().getFullYear();
+        let csv = 'Month,Total Orders,Gallons,Revenue,Avg Order\n';
+        MONTH_NAMES.forEach((name, i) => {
+            const mo = allOrders.filter(o => { const d = new Date(o.created_at); return d.getFullYear() === curYear && d.getMonth() === i; });
+            const paid = mo.filter(o => o.payment_status === 'paid');
+            const rev = paid.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);
+            const gal = paid.reduce((s, o) => s + parseInt(o.quantity || 0), 0);
+            if (mo.length > 0) csv += `${name} ${curYear},${mo.length},${gal},${rev.toFixed(2)},${mo.length > 0 ? (rev/mo.length).toFixed(2) : 0}\n`;
+        });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+        a.download = `AquaFlow_Analytics_${curYear}.csv`;
+        a.click();
+    }
 
-            alert('✓ Analytics exported successfully!');
-        }
+    document.addEventListener('DOMContentLoaded', () => {
+        loadOrders();
 
-        // Event Listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Analytics page loaded');
-
-            // Set default date range (this month)
-            const now = new Date();
-            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            
-            document.getElementById('fromDate').value = firstDay.toISOString().split('T')[0];
-            document.getElementById('toDate').value = lastDay.toISOString().split('T')[0];
-
-            // Load data
-            loadOrders();
-
-            // Refresh button
-            document.getElementById('refreshBtn').addEventListener('click', function() {
-                this.disabled = true;
-                this.classList.add('refreshing');
-                loadOrders();
-                setTimeout(() => {
-                    this.disabled = false;
-                    this.classList.remove('refreshing');
-                    updateLastUpdatedTime();
-                }, 1000);
-            });
-
-            // Update last updated time
-            function updateLastUpdatedTime() {
-                const lastUpdated = document.getElementById('lastUpdated');
-                lastUpdated.textContent = 'Just now';
-                
-                // After 1 minute, start showing "X min ago"
-                let seconds = 0;
-                const interval = setInterval(() => {
-                    seconds += 30;
-                    const minutes = Math.floor(seconds / 60);
-                    
-                    if (minutes === 0) {
-                        lastUpdated.textContent = 'Just now';
-                    } else if (minutes === 1) {
-                        lastUpdated.textContent = '1 min ago';
-                    } else if (minutes < 60) {
-                        lastUpdated.textContent = minutes + ' mins ago';
-                    } else {
-                        clearInterval(interval);
-                        lastUpdated.textContent = 'Over 1 hour ago';
-                    }
-                }, 30000); // Update every 30 seconds
-            }
-            
-            // Initialize last updated time
-            updateLastUpdatedTime();
-
-            // Export button
-            document.getElementById('exportBtn').addEventListener('click', function() {
-                exportToCSV();
-            });
-
-            // Apply filters button
-            document.getElementById('applyFilters').addEventListener('click', function() {
-                applyFilters();
-            });
-
-            // Reset filters button
-            document.getElementById('resetFilters').addEventListener('click', function() {
-                resetFilters();
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+            this.classList.add('refreshing');
+            this.disabled = true;
+            loadOrders().then(() => {
+                setTimeout(() => { this.classList.remove('refreshing'); this.disabled = false; }, 800);
             });
         });
-    </script>
+
+        document.getElementById('exportBtn').addEventListener('click', exportCSV);
+    });
+</script>
 </body>
 </html>
