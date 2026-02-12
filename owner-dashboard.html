@@ -1292,11 +1292,18 @@
             document.getElementById('labelCollections').textContent = isHist ? label + ' Collections' : "Today's Collections";
         }
 
+        function localDateString(d) {
+            // Always use local date parts to avoid UTC timezone shift
+            const yyyy = d.getFullYear();
+            const mm   = String(d.getMonth() + 1).padStart(2, '0');
+            const dd   = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
         function shiftDay(delta) {
             const d = new Date(statsDate + 'T00:00:00');
             d.setDate(d.getDate() + delta);
-            const newDate = d.toISOString().split('T')[0];
-            // Don't go into the future
+            const newDate = localDateString(d); // LOCAL date, not UTC
             if (newDate > getToday()) return;
             statsDate = newDate;
             updateDatePickerUI();
