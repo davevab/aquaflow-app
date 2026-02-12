@@ -1520,15 +1520,13 @@
 
             // Orders placed ON selected date
             const dayOrders = allOrders.filter(order =>
-                order.created_at.split('T')[0] === selDate
+                toLocalDateStr(order.created_at) === selDate
             );
 
             // Pending Payments on selected date
-            // For historical: orders that were still pending as-of that date
-            // Practical approach: orders with payment_status = pending AND created on or before selDate
             const pendingOrders = allOrders.filter(order => {
                 if (order.payment_status !== 'pending') return false;
-                return order.created_at.split('T')[0] <= selDate;
+                return toLocalDateStr(order.created_at) <= selDate;
             });
             const pendingPayments = pendingOrders.reduce((sum, order) =>
                 sum + parseFloat(order.total_amount || 0), 0
@@ -1547,7 +1545,7 @@
             // Collections ON selected date
             const dayCollected = allOrders.filter(order => {
                 if (order.payment_status !== 'paid' || !order.updated_at) return false;
-                return new Date(order.updated_at).toISOString().split('T')[0] === selDate;
+                return toLocalDateStr(order.updated_at) === selDate;
             });
             const dayCollections = dayCollected.reduce((sum, order) =>
                 sum + parseFloat(order.total_amount || 0), 0
@@ -1561,11 +1559,11 @@
 
         // Filter orders
         function filterOrders(filter) {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getToday(); // local date (not UTC)
             
             switch (filter) {
                 case 'today':
-                    return allOrders.filter(order => order.created_at.split('T')[0] === today);
+                    return allOrders.filter(order => toLocalDateStr(order.created_at) === today);
                 case 'pending':
                     return allOrders.filter(order => order.payment_status === 'pending');
                 case 'paid':
@@ -1573,12 +1571,20 @@
                 case 'collected':
                     return allOrders.filter(order => {
                         if (order.payment_status !== 'paid' || !order.updated_at) return false;
-                        const updatedDate = new Date(order.updated_at).toISOString().split('T')[0];
-                        return updatedDate === today;
+                        return toLocalDateStr(order.updated_at) === today;
                     });
                 default:
                     return allOrders;
             }
+        }
+
+        // Convert any timestamp to local YYYY-MM-DD string (fixes UTC+8 timezone)
+        function toLocalDateStr(timestamp) {
+            const d = new Date(timestamp);
+            const yyyy = d.getFullYear();
+            const mm   = String(d.getMonth() + 1).padStart(2, '0');
+            const dd   = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
         }
 
         // Format date compact
@@ -1660,10 +1666,10 @@
                 return;
             }
 
-            // Group orders by created_at date
+            // Group orders by LOCAL created_at date (fixes UTC+8 timezone)
             const groups = {};
             filteredOrders.forEach(order => {
-                const dateKey = order.created_at.split('T')[0];
+                const dateKey = toLocalDateStr(order.created_at);
                 if (!groups[dateKey]) groups[dateKey] = [];
                 groups[dateKey].push(order);
             });
