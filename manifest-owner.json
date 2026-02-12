@@ -4,7 +4,7 @@
   "short_name": "AquaFlow",
   "description": "Manage water delivery business",
   "start_url": "/owner-dashboard.html?pwa=owner",
-  "scope": "/owner-dashboard.html",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#faf5ff",
   "theme_color": "#7c3aed",
