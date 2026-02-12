@@ -179,6 +179,22 @@
         .empty-state { text-align: center; padding: 3rem; color: #6b7280; }
         .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.5; }
 
+        /* Segment cells */
+        .segment-cell {
+            padding: 1.25rem;
+            text-align: center;
+            border-right: 1px solid #f3f4f6;
+        }
+        .segment-cell:last-child { border-right: none; }
+        .segment-icon { font-size: 1.75rem; margin-bottom: 0.375rem; }
+        .segment-label { font-size: 0.8125rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+        .segment-count { font-size: 1.625rem; font-weight: 700; color: #111827; line-height: 1.2; }
+        .segment-sub { font-size: 0.75rem; color: #9ca3af; margin-top: 0.125rem; }
+        @media (max-width: 640px) {
+            .segment-cell { border-right: none; border-bottom: 1px solid #f3f4f6; }
+            .segment-cell:last-child { border-bottom: none; }
+        }
+
         @media (max-width: 640px) {
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
             .chart-container { height: 220px; }
@@ -207,34 +223,62 @@
 
 <div class="container">
 
-    <!-- Key Metrics -->
+    <!-- Strategic Metrics -->
     <div class="metrics-grid">
-        <div class="metric-card">
+        <div class="metric-card" style="border-top: 3px solid #667eea;">
             <div class="metric-label">All-Time Revenue</div>
             <div class="metric-value" id="totalRevenue">—</div>
             <div class="metric-sub" id="totalGallons"></div>
         </div>
-        <div class="metric-card">
-            <div class="metric-label">This Month's Revenue</div>
-            <div class="metric-value" id="monthRevenue">—</div>
-            <div class="metric-change" id="monthChange"></div>
-        </div>
-        <div class="metric-card">
+        <div class="metric-card" style="border-top: 3px solid #10b981;">
             <div class="metric-label">This Year's Revenue</div>
             <div class="metric-value" id="yearRevenue">—</div>
             <div class="metric-sub" id="yearGallons"></div>
         </div>
-        <div class="metric-card">
+        <div class="metric-card" style="border-top: 3px solid #f59e0b;">
             <div class="metric-label">Avg Order Value</div>
             <div class="metric-value" id="avgOrder">—</div>
+            <div class="metric-sub">per paid order</div>
         </div>
-        <div class="metric-card">
-            <div class="metric-label">Total Orders</div>
-            <div class="metric-value" id="totalOrders">—</div>
+        <div class="metric-card" style="border-top: 3px solid #8b5cf6;">
+            <div class="metric-label">Best Month</div>
+            <div class="metric-value" id="bestMonth">—</div>
+            <div class="metric-sub" id="bestMonthAmt"></div>
         </div>
-        <div class="metric-card">
-            <div class="metric-label">Total Gallons Sold</div>
-            <div class="metric-value" id="totalGallonsStat">—</div>
+        <div class="metric-card" style="border-top: 3px solid #ef4444;">
+            <div class="metric-label">Top Customer Segment</div>
+            <div class="metric-value" id="topSegment">—</div>
+            <div class="metric-sub" id="topSegmentAmt"></div>
+        </div>
+    </div>
+
+    <!-- Customer Segment Breakdown -->
+    <div class="table-card" style="margin-bottom: 1.25rem;">
+        <div class="table-header">
+            <div class="table-title">👥 Customer Segment Breakdown</div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0;">
+            <div class="segment-cell" style="border-top: 4px solid #3b82f6;">
+                <div class="segment-icon">🏠</div>
+                <div class="segment-label">Household</div>
+                <div class="segment-count" id="hhCount">—</div>
+                <div class="segment-sub" id="hhRevenue"></div>
+                <div class="segment-sub" id="hhGallons"></div>
+            </div>
+            <div class="segment-cell" style="border-top: 4px solid #f59e0b;">
+                <div class="segment-icon">🏪</div>
+                <div class="segment-label">Reseller</div>
+                <div class="segment-count" id="rsCount">—</div>
+                <div class="segment-sub" id="rsRevenue"></div>
+                <div class="segment-sub" id="rsGallons"></div>
+            </div>
+            <div class="segment-cell" style="border-top: 4px solid #8b5cf6;">
+                <div class="segment-icon">🏢</div>
+                <div class="segment-label">Company</div>
+                <div class="segment-count" id="coCount">—</div>
+                <div class="segment-sub" id="coRevenue"></div>
+                <div class="segment-sub" id="coGallons"></div>
+            </div>
         </div>
     </div>
 
@@ -314,49 +358,71 @@
 
     function calculateMetrics() {
         const now = new Date();
-        const curYear = now.getFullYear(), curMonth = now.getMonth();
+        const curYear = now.getFullYear();
         const paid = allOrders.filter(o => o.payment_status === 'paid');
 
-        const totalRev  = paid.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);
-        const totalGal  = paid.reduce((s, o) => s + parseInt(o.quantity || 0), 0);
+        // All-time
+        const totalRev = paid.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);
+        const totalGal = paid.reduce((s, o) => s + parseInt(o.quantity || 0), 0);
 
-        const monthPaid = paid.filter(o => {
-            const d = new Date(o.updated_at || o.created_at);
-            return d.getFullYear() === curYear && d.getMonth() === curMonth;
-        });
-        const monthRev = monthPaid.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);
-
-        const lastMonth = curMonth === 0 ? 11 : curMonth - 1;
-        const lastYear  = curMonth === 0 ? curYear - 1 : curYear;
-        const lastPaid  = paid.filter(o => {
-            const d = new Date(o.updated_at || o.created_at);
-            return d.getFullYear() === lastYear && d.getMonth() === lastMonth;
-        });
-        const lastRev = lastPaid.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);
-
+        // This year
         const yearPaid = paid.filter(o => new Date(o.updated_at || o.created_at).getFullYear() === curYear);
         const yearRev  = yearPaid.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);
         const yearGal  = yearPaid.reduce((s, o) => s + parseInt(o.quantity || 0), 0);
 
+        // Avg order value
         const avg = paid.length > 0 ? totalRev / paid.length : 0;
 
-        document.getElementById('totalRevenue').textContent  = '₱' + totalRev.toLocaleString('en-US', {maximumFractionDigits: 0});
-        document.getElementById('totalGallons').textContent  = totalGal.toLocaleString() + ' gal total';
-        document.getElementById('totalGallonsStat').textContent = totalGal.toLocaleString() + ' gal';
-        document.getElementById('monthRevenue').textContent  = '₱' + monthRev.toLocaleString('en-US', {maximumFractionDigits: 0});
-        document.getElementById('yearRevenue').textContent   = '₱' + yearRev.toLocaleString('en-US', {maximumFractionDigits: 0});
-        document.getElementById('yearGallons').textContent   = yearGal.toLocaleString() + ' gal this year';
-        document.getElementById('avgOrder').textContent      = '₱' + avg.toLocaleString('en-US', {maximumFractionDigits: 0});
-        document.getElementById('totalOrders').textContent   = allOrders.length;
+        // Best month (by payment date)
+        const monthTotals = Array(12).fill(0);
+        yearPaid.forEach(o => {
+            const m = new Date(o.updated_at || o.created_at).getMonth();
+            monthTotals[m] += parseFloat(o.total_amount || 0);
+        });
+        const bestMonthIdx = monthTotals.indexOf(Math.max(...monthTotals));
+        const bestMonthRev = monthTotals[bestMonthIdx];
 
-        const changeEl = document.getElementById('monthChange');
-        if (lastRev > 0) {
-            const pct = ((monthRev - lastRev) / lastRev * 100).toFixed(1);
-            changeEl.textContent = (pct > 0 ? '+' : '') + pct + '% vs last month';
-            changeEl.className = 'metric-change ' + (pct >= 0 ? 'positive' : 'negative');
-        } else {
-            changeEl.textContent = '';
-        }
+        // Top segment by revenue
+        const segRevenue = { household: 0, reseller: 0, company: 0 };
+        const segOrders  = { household: 0, reseller: 0, company: 0 };
+        const segGallons = { household: 0, reseller: 0, company: 0 };
+        paid.forEach(o => {
+            const t = o.customer_type || 'household';
+            segRevenue[t] = (segRevenue[t] || 0) + parseFloat(o.total_amount || 0);
+            segOrders[t]  = (segOrders[t]  || 0) + 1;
+            segGallons[t] = (segGallons[t] || 0) + parseInt(o.quantity || 0);
+        });
+        // Also count ALL orders per segment (not just paid)
+        const segAllOrders = { household: 0, reseller: 0, company: 0 };
+        allOrders.forEach(o => {
+            const t = o.customer_type || 'household';
+            segAllOrders[t] = (segAllOrders[t] || 0) + 1;
+        });
+
+        const segLabels = { household: '🏠 Household', reseller: '🏪 Reseller', company: '🏢 Company' };
+        const topSeg = Object.entries(segRevenue).sort((a,b) => b[1]-a[1])[0];
+
+        // Update DOM — strategic cards
+        document.getElementById('totalRevenue').textContent = '₱' + totalRev.toLocaleString('en-US', {maximumFractionDigits: 0});
+        document.getElementById('totalGallons').textContent = totalGal.toLocaleString() + ' gal all-time';
+        document.getElementById('yearRevenue').textContent  = '₱' + yearRev.toLocaleString('en-US', {maximumFractionDigits: 0});
+        document.getElementById('yearGallons').textContent  = yearGal.toLocaleString() + ' gal this year';
+        document.getElementById('avgOrder').textContent     = '₱' + avg.toLocaleString('en-US', {maximumFractionDigits: 0});
+
+        document.getElementById('bestMonth').textContent    = bestMonthRev > 0 ? MONTH_NAMES[bestMonthIdx] : '—';
+        document.getElementById('bestMonthAmt').textContent = bestMonthRev > 0 ? '₱' + bestMonthRev.toLocaleString('en-US', {maximumFractionDigits: 0}) + ' revenue' : 'No data yet';
+
+        document.getElementById('topSegment').textContent   = topSeg[1] > 0 ? segLabels[topSeg[0]] : '—';
+        document.getElementById('topSegmentAmt').textContent = topSeg[1] > 0 ? '₱' + topSeg[1].toLocaleString('en-US', {maximumFractionDigits: 0}) + ' revenue' : 'No data yet';
+
+        // Segment breakdown cells
+        const fmt = n => n.toLocaleString('en-US', {maximumFractionDigits: 0});
+        ['household', 'reseller', 'company'].forEach(t => {
+            const prefix = t === 'household' ? 'hh' : t === 'reseller' ? 'rs' : 'co';
+            document.getElementById(prefix + 'Count').textContent   = segAllOrders[t] + ' orders';
+            document.getElementById(prefix + 'Revenue').textContent = '₱' + fmt(segRevenue[t] || 0) + ' collected';
+            document.getElementById(prefix + 'Gallons').textContent = (segGallons[t] || 0).toLocaleString() + ' gal delivered';
+        });
     }
 
     function renderMonthlyChart() {
