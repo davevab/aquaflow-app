@@ -1688,7 +1688,7 @@
                 const safeKey = dateKey.replace(/-/g, '');
 
                 return `
-                <div class="date-group ${isToday ? 'today open' : ''}" id="group-${safeKey}">
+                <div class="date-group ${isToday ? 'today' : ''}" id="group-${safeKey}">
                     <div class="date-group-header" onclick="toggleDateGroup('${safeKey}')">
                         <div class="date-group-left">
                             <span class="date-group-label">${isToday ? '📅 ' : ''}${labelStr}</span>
