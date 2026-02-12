@@ -769,6 +769,66 @@
             border-bottom: 1px solid #e5e7eb;
         }
         
+        /* New Order Notification Banner */
+        .notif-banner {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(-120px);
+            background: #2563eb;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 8px 24px rgba(37,99,235,0.4);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            min-width: 280px;
+            max-width: 90vw;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+        }
+        .notif-banner.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        .notif-banner-icon { font-size: 1.5rem; flex-shrink: 0; }
+        .notif-banner-text { flex: 1; line-height: 1.4; }
+        .notif-banner-title { font-size: 1rem; }
+        .notif-banner-body { font-size: 0.8125rem; opacity: 0.9; font-weight: 400; margin-top: 0.125rem; }
+        .notif-banner-close { opacity: 0.7; font-size: 1.25rem; flex-shrink: 0; }
+        .notif-banner-close:hover { opacity: 1; }
+
+        /* Push notification bell button */
+        .bell-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .bell-btn:hover { background: rgba(255,255,255,0.3); }
+        .bell-btn .bell-dot {
+            position: absolute;
+            top: 4px; right: 4px;
+            width: 8px; height: 8px;
+            background: #ef4444;
+            border-radius: 50%;
+            display: none;
+        }
+        .bell-btn.subscribed .bell-dot { display: block; background: #10b981; }
+
         @media (max-width: 768px) {
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -1005,6 +1065,10 @@
             </div>
             <div class="header-actions">
                 <span class="last-updated" id="lastUpdated">Just now</span>
+                <button class="bell-btn" id="bellBtn" title="Enable push notifications">
+                    🔔
+                    <span class="bell-dot"></span>
+                </button>
                 <button class="hamburger-btn" id="hamburgerBtn" title="Menu">
                     <span></span>
                     <span></span>
@@ -1135,6 +1199,16 @@
     <!-- Success Toast Notification -->
     <div class="success-toast" id="successToast">
         <span id="toastMessage">✓ Payment status updated!</span>
+    </div>
+
+    <!-- New Order Notification Banner (Level 1) -->
+    <div class="notif-banner" id="notifBanner" onclick="dismissNotifBanner()">
+        <span class="notif-banner-icon">🔔</span>
+        <div class="notif-banner-text">
+            <div class="notif-banner-title" id="notifTitle">New Order Received!</div>
+            <div class="notif-banner-body" id="notifBody">Tap to view</div>
+        </div>
+        <span class="notif-banner-close">✕</span>
     </div>
 
     <script>
@@ -2092,7 +2166,147 @@
                 loadOrders();
                 updateLastUpdatedTime();
             }, 10000);
+
+            // ====== NOTIFICATIONS SETUP ======
+            setupRealtimeOrders();
+            setupPushNotifications();
         });
+
+        // ─── LEVEL 1: Supabase Realtime ─────────────────────
+        let notifBannerTimer = null;
+
+        function showNotifBanner(title, body) {
+            document.getElementById('notifTitle').textContent = title;
+            document.getElementById('notifBody').textContent = body;
+            const banner = document.getElementById('notifBanner');
+            banner.classList.add('show');
+            playNotifSound();
+
+            clearTimeout(notifBannerTimer);
+            notifBannerTimer = setTimeout(dismissNotifBanner, 8000);
+        }
+
+        function dismissNotifBanner() {
+            document.getElementById('notifBanner').classList.remove('show');
+        }
+
+        function playNotifSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+                oscillator.frequency.setValueAtTime(1100, ctx.currentTime + 0.15);
+                gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+                oscillator.start(ctx.currentTime);
+                oscillator.stop(ctx.currentTime + 0.5);
+            } catch(e) {
+                console.warn('Could not play sound:', e);
+            }
+        }
+
+        function setupRealtimeOrders() {
+            const channel = supabaseClient
+                .channel('new-orders')
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'orders'
+                }, (payload) => {
+                    console.log('New order received via Realtime:', payload);
+                    const order = payload.new;
+                    const qty   = order.quantity || '?';
+                    const name  = order.customer_name || 'Customer';
+                    const total = order.total_amount ? '₱' + order.total_amount : '';
+                    showNotifBanner(
+                        '🔔 New Order Received!',
+                        `${name} — ${qty} gal ${total}`
+                    );
+                    // Refresh orders list
+                    loadOrders();
+                })
+                .subscribe();
+            console.log('Realtime channel subscribed:', channel);
+        }
+
+        // ─── LEVEL 2: Web Push Notifications ────────────────
+        const VAPID_PUBLIC_KEY = 'BFBnkxf4JPxp3XGenzY7P9v0yiTwd3hudX2V3pTvyq-wMciYGDC7w108sTdav-0eS_bQCnIIl6SDrw0y1_Y9xiU';
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
+        }
+
+        async function setupPushNotifications() {
+            const bellBtn = document.getElementById('bellBtn');
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                bellBtn.style.opacity = '0.4';
+                bellBtn.title = 'Push notifications not supported on this browser';
+                return;
+            }
+
+            try {
+                // Register service worker
+                const reg = await navigator.serviceWorker.register('/sw-owner.js');
+                console.log('Service worker registered:', reg);
+
+                // Check existing subscription
+                const existingSub = await reg.pushManager.getSubscription();
+                if (existingSub) {
+                    bellBtn.classList.add('subscribed');
+                    bellBtn.title = 'Push notifications ON — tap to disable';
+                }
+
+                // Bell button click: toggle subscription
+                bellBtn.addEventListener('click', async () => {
+                    const sub = await reg.pushManager.getSubscription();
+                    if (sub) {
+                        // Unsubscribe
+                        await sub.unsubscribe();
+                        await removeSubscriptionFromDB(sub.endpoint);
+                        bellBtn.classList.remove('subscribed');
+                        bellBtn.title = 'Enable push notifications';
+                        showToast('🔕 Push notifications disabled');
+                    } else {
+                        // Subscribe
+                        const permission = await Notification.requestPermission();
+                        if (permission !== 'granted') {
+                            alert('Please allow notifications to enable push alerts.');
+                            return;
+                        }
+                        const newSub = await reg.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                        });
+                        await saveSubscriptionToDB(newSub);
+                        bellBtn.classList.add('subscribed');
+                        bellBtn.title = 'Push notifications ON — tap to disable';
+                        showToast('🔔 Push notifications enabled!');
+                    }
+                });
+
+            } catch(err) {
+                console.error('Push setup error:', err);
+            }
+        }
+
+        async function saveSubscriptionToDB(subscription) {
+            const sub = subscription.toJSON();
+            await supabaseClient.from('push_subscriptions').upsert({
+                endpoint: sub.endpoint,
+                subscription: sub
+            }, { onConflict: 'endpoint' });
+        }
+
+        async function removeSubscriptionFromDB(endpoint) {
+            await supabaseClient.from('push_subscriptions').delete().eq('endpoint', endpoint);
+        }
     </script>
 </body>
 </html>
