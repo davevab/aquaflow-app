@@ -2211,9 +2211,13 @@
             document.getElementById('notifBanner').classList.remove('show');
         }
 
-        function playNotifSound() {
+        async function playNotifSound() {
             try {
                 const ctx = getAudioContext();
+                // iOS: always await resume before playing
+                if (ctx.state !== 'running') {
+                    await ctx.resume();
+                }
                 const oscillator = ctx.createOscillator();
                 const gainNode = ctx.createGain();
                 oscillator.connect(gainNode);
