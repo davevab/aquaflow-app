@@ -1035,8 +1035,22 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_8kUVR1zO703wEgv1je_wtQ_88YK988G';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Price per gallon
-        const PRICE_PER_GALLON = 20;
+        // Price per gallon — loaded from settings
+        let PRICE_PER_GALLON = 20; // default fallback
+
+        async function loadPriceFromSettings() {
+            try {
+                const { data } = await supabaseClient
+                    .from('settings')
+                    .select('price_per_gallon')
+                    .single();
+                if (data && data.price_per_gallon) {
+                    PRICE_PER_GALLON = parseFloat(data.price_per_gallon);
+                }
+            } catch(e) {
+                console.warn('Could not load price from settings, using default ₱20');
+            }
+        }
 
         // Current customer data
         let currentCustomer = null;
@@ -1056,8 +1070,12 @@
         };
 
         // Wait for DOM to be fully loaded
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             console.log('App loaded successfully');
+
+            // Load price from settings first
+            await loadPriceFromSettings();
+            updateTotal(); // refresh display with correct price
 
             // Auto-fill phone number from localStorage if available
             var savedPhone = localStorage.getItem('aquaflow_phone');
