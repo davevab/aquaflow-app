@@ -2175,6 +2175,27 @@
         // ─── LEVEL 1: Supabase Realtime ─────────────────────
         let notifBannerTimer = null;
 
+        // iOS requires AudioContext to be created/resumed after a user gesture
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+        // Unlock audio on first touch (iOS requirement)
+        document.addEventListener('touchstart', function unlockAudio() {
+            getAudioContext();
+            document.removeEventListener('touchstart', unlockAudio);
+        }, { once: true });
+        document.addEventListener('click', function unlockAudioClick() {
+            getAudioContext();
+            document.removeEventListener('click', unlockAudioClick);
+        }, { once: true });
+
         function showNotifBanner(title, body) {
             document.getElementById('notifTitle').textContent = title;
             document.getElementById('notifBody').textContent = body;
@@ -2192,7 +2213,7 @@
 
         function playNotifSound() {
             try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const ctx = getAudioContext();
                 const oscillator = ctx.createOscillator();
                 const gainNode = ctx.createGain();
                 oscillator.connect(gainNode);
