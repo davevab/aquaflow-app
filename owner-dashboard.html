@@ -1073,9 +1073,9 @@
         function updateStats() {
             const today = new Date().toISOString().split('T')[0];
             
-            // Today's Orders (delivery_date = today)
+            // Today's Orders (created_at = today)
             const todayOrders = allOrders.filter(order => 
-                order.delivery_date === today
+                order.created_at.split('T')[0] === today
             );
             
             // Pending Payments (₱ total of pending orders)
@@ -1131,7 +1131,7 @@
             
             switch (filter) {
                 case 'today':
-                    return allOrders.filter(order => order.delivery_date === today);
+                    return allOrders.filter(order => order.created_at.split('T')[0] === today);
                 case 'pending':
                     return allOrders.filter(order => order.payment_status === 'pending');
                 case 'paid':
