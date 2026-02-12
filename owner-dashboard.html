@@ -1642,6 +1642,12 @@
         // Display orders - COLLAPSIBLE DATE GROUPS
         function displayOrders(filter) {
             const container = document.getElementById('ordersContainer');
+
+            // Save currently open groups before re-render
+            const openGroups = new Set();
+            container.querySelectorAll('.date-group.open').forEach(el => {
+                openGroups.add(el.id);
+            });
             const filteredOrders = filterOrders(filter);
             const todayStr = getToday();
 
@@ -1677,6 +1683,7 @@
             // Sort dates newest first
             const sortedDates = Object.keys(groups).sort((a, b) => b.localeCompare(a));
 
+            // Render all groups
             container.innerHTML = sortedDates.map(dateKey => {
                 const orders = groups[dateKey];
                 const isToday = dateKey === todayStr;
@@ -1701,6 +1708,12 @@
                     </div>
                 </div>`;
             }).join('');
+
+            // Restore previously open groups
+            openGroups.forEach(groupId => {
+                const el = document.getElementById(groupId);
+                if (el) el.classList.add('open');
+            });
         }
 
         // Format date for modal
