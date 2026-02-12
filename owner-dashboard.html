@@ -1312,7 +1312,7 @@
                 // Fetch ALL paid orders (no date limit) for accurate revenue stats
                 const { data: paidData } = await supabaseClient
                     .from('orders')
-                    .select('id, total_amount, updated_at, payment_status')
+                    .select('id, total_amount, quantity, created_at, updated_at, payment_status')
                     .eq('payment_status', 'paid');
                 allPaidOrders = paidData || [];
                 
@@ -1460,7 +1460,7 @@
                 sum + parseFloat(order.total_amount || 0), 0
             );
 
-            // Revenue for selected date's month — uses allPaidOrders (no 30-day limit)
+            // Revenue for selected date's month — grouped by PAYMENT date (updated_at = cash basis)
             const paidOrders = allPaidOrders.filter(order => {
                 if (!order.updated_at) return false;
                 const d = new Date(order.updated_at);
@@ -1951,20 +1951,20 @@
             const curYear  = now.getFullYear();
             const curMonth = now.getMonth();
 
-            // Build per-month totals from ALL orders (not just loaded 30-day window)
-            // We need all paid orders, so fetch from supabase if needed
-            const months = Array.from({ length: 12 }, () => ({ total: 0, count: 0 }));
+            // Group by PAYMENT date (updated_at) — cash basis: revenue in month money was received
+            const months = Array.from({ length: 12 }, () => ({ total: 0, count: 0, gallons: 0 }));
 
             allPaidOrders.forEach(order => {
                 if (!order.updated_at) return;
                 const d = new Date(order.updated_at);
                 if (d.getFullYear() === curYear) {
-                    months[d.getMonth()].total += parseFloat(order.total_amount || 0);
+                    months[d.getMonth()].total   += parseFloat(order.total_amount || 0);
+                    months[d.getMonth()].gallons += parseInt(order.quantity || 0);
                     months[d.getMonth()].count++;
                 }
             });
 
-            document.getElementById('revenuePanelTitle').textContent = '📊 ' + curYear + ' Monthly Revenue';
+            document.getElementById('revenuePanelTitle').textContent = '📊 ' + curYear + ' Monthly Breakdown';
 
             document.getElementById('revenueMonthlyGrid').innerHTML = months.map((m, i) => {
                 const isCur = (i === curMonth);
@@ -1972,7 +1972,7 @@
                     <div class="revenue-month-cell ${isCur ? 'current-month' : ''}">
                         <div class="rev-month-name">${MONTH_NAMES[i]}${isCur ? ' ●' : ''}</div>
                         <div class="rev-month-amount ${m.total === 0 ? 'zero' : ''}">₱${m.total.toLocaleString('en-US', { minimumFractionDigits: 0 })}</div>
-                        <div class="rev-month-count">${m.count} ${m.count === 1 ? 'order' : 'orders'}</div>
+                        <div class="rev-month-count">${m.count} order${m.count !== 1 ? 's' : ''} · ${m.gallons.toLocaleString()} gal</div>
                     </div>
                 `;
             }).join('');
