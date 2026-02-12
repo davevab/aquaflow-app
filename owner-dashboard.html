@@ -1365,9 +1365,10 @@
                 // Filter by date based on viewMode
                 if (viewMode === 'recent') {
                     const now = new Date();
-                    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                    const dateFilter = firstOfMonth.toISOString().split('T')[0];
-                    query = query.gte('created_at', dateFilter);
+                    const firstOfMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+                    const lastOfMonth  = new Date(now.getFullYear(), now.getMonth()+1, 0);
+                    const lastOfMonthStr = `${lastOfMonth.getFullYear()}-${String(lastOfMonth.getMonth()+1).padStart(2,'0')}-${String(lastOfMonth.getDate()).padStart(2,'0')}`;
+                    query = query.gte('delivery_date', firstOfMonth).lte('delivery_date', lastOfMonthStr);
                 }
                 
                 const { data, error } = await query.order('created_at', { ascending: false });
