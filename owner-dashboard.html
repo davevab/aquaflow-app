@@ -864,6 +864,13 @@
             border-left: 4px solid #2563eb;
         }
         .date-group.today .date-group-header:hover { background: #dbeafe; }
+        /* Past date closed headers — slate background to separate from white order cards */
+        .date-group:not(.today) .date-group-header {
+            background: #f1f5f9;
+            border-left: 4px solid #cbd5e1;
+        }
+        .date-group:not(.today) .date-group-header:hover { background: #e2e8f0; }
+
         /* Sticky header when open */
         .date-group.open .date-group-header {
             position: sticky;
@@ -874,14 +881,18 @@
             border-left: 4px solid #667eea;
         }
         .date-group.open.today .date-group-header {
-            background: #1e40af;
-            border-left: 4px solid #60a5fa;
+            background: #f0fdf4;
+            border-left: 4px solid #10b981;
+            color: #064e3b;
         }
         .date-group.open .date-group-label { color: white; }
+        .date-group.open.today .date-group-label { color: #064e3b; }
         .date-group.open .date-group-meta { color: #94a3b8; }
+        .date-group.open.today .date-group-meta { color: #065f46; }
         .date-group.open .date-group-toggle { color: #94a3b8; }
+        .date-group.open.today .date-group-toggle { color: #065f46; }
         .date-group.open .date-group-header:hover { background: #334155; }
-        .date-group.open.today .date-group-header:hover { background: #1d4ed8; }
+        .date-group.open.today .date-group-header:hover { background: #dcfce7; }
         .date-group-left {
             display: flex;
             align-items: center;
