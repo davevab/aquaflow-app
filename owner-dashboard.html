@@ -864,6 +864,24 @@
             border-left: 4px solid #2563eb;
         }
         .date-group.today .date-group-header:hover { background: #dbeafe; }
+        /* Sticky header when open */
+        .date-group.open .date-group-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #1e293b;
+            color: white;
+            border-left: 4px solid #667eea;
+        }
+        .date-group.open.today .date-group-header {
+            background: #1e40af;
+            border-left: 4px solid #60a5fa;
+        }
+        .date-group.open .date-group-label { color: white; }
+        .date-group.open .date-group-meta { color: #94a3b8; }
+        .date-group.open .date-group-toggle { color: #94a3b8; }
+        .date-group.open .date-group-header:hover { background: #334155; }
+        .date-group.open.today .date-group-header:hover { background: #1d4ed8; }
         .date-group-left {
             display: flex;
             align-items: center;
