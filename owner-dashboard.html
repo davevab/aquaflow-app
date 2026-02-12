@@ -737,6 +737,74 @@
             }
         }
 
+        /* Date Picker Bar */
+        .date-nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            background: white;
+            border-radius: 0.75rem;
+            padding: 0.625rem 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .date-nav-btn {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            width: 2.25rem;
+            height: 2.25rem;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        .date-nav-btn:hover { background: #e5e7eb; }
+        .date-nav-btn:active { transform: scale(0.93); }
+        .date-nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .date-picker-input {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 0.375rem 0.625rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #111827;
+            background: #f9fafb;
+            cursor: pointer;
+            text-align: center;
+            flex: 1;
+            max-width: 160px;
+        }
+        .date-picker-input:focus { outline: none; border-color: #667eea; background: white; }
+        .btn-today {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        .btn-today:hover { background: #5a67d8; }
+        .btn-today.is-today { background: #10b981; }
+        .date-nav-bar.historical .date-picker-input {
+            color: #7c3aed;
+            background: #f5f3ff;
+            border-color: #c4b5fd;
+        }
+        .stat-card.historical { opacity: 0.85; }
+        .stat-label.historical-label::after {
+            content: ' (hist)';
+            font-size: 0.6875rem;
+            color: #7c3aed;
+        }
+
         /* Revenue Monthly Panel */
         .stat-card.revenue-card {
             border-top: 3px solid #10b981;
@@ -861,27 +929,35 @@
             Failed to load orders. Please check your connection and try again.
         </div>
 
+        <!-- Date Navigation Bar -->
+        <div class="date-nav-bar" id="dateNavBar">
+            <button class="date-nav-btn" id="datePrevBtn" title="Previous day">&#8592;</button>
+            <input type="date" class="date-picker-input" id="statsDatePicker">
+            <button class="date-nav-btn" id="dateNextBtn" title="Next day">&#8594;</button>
+            <button class="btn-today is-today" id="btnToday">Today</button>
+        </div>
+
         <!-- Stats Cards (Clickable Filters) -->
         <div class="stats-grid">
             <div class="stat-card" data-filter="today" id="statToday">
                 <div class="stat-card-arrow">→</div>
-                <div class="stat-label">Today's Orders</div>
+                <div class="stat-label" id="labelOrders">Today's Orders</div>
                 <div class="stat-value" id="todayOrders">-</div>
             </div>
             <div class="stat-card" data-filter="pending" id="statPending">
                 <div class="stat-card-arrow">→</div>
-                <div class="stat-label">Pending Payments</div>
+                <div class="stat-label" id="labelPending">Pending Payments</div>
                 <div class="stat-value currency" id="pendingPayments">0</div>
             </div>
             <div class="stat-card revenue-card" id="statRevenue" onclick="toggleRevenuePanel()">
                 <div class="stat-card-arrow">📊</div>
-                <div class="stat-label">This Month's Revenue</div>
+                <div class="stat-label" id="labelRevenue">This Month's Revenue</div>
                 <div class="stat-value currency" id="totalRevenue">0</div>
                 <div class="revenue-hint" id="revenueHint">📅 Tap to see all months</div>
             </div>
             <div class="stat-card" data-filter="collected" id="statCollected">
                 <div class="stat-card-arrow">→</div>
-                <div class="stat-label">Today's Collections</div>
+                <div class="stat-label" id="labelCollections">Today's Collections</div>
                 <div class="stat-value currency" id="todayCollections">0</div>
             </div>
         </div>
@@ -1168,64 +1244,119 @@
             loadOrders();
         }
 
+        // ─── Date Picker State ────────────────────────────────
+        let statsDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+        function getToday() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        function isToday() {
+            return statsDate === getToday();
+        }
+
+        function updateDatePickerUI() {
+            const picker = document.getElementById('statsDatePicker');
+            const navBar = document.getElementById('dateNavBar');
+            const nextBtn = document.getElementById('dateNextBtn');
+            const todayBtn = document.getElementById('btnToday');
+
+            picker.value = statsDate;
+
+            // Disable next if already on today
+            nextBtn.disabled = isToday();
+
+            // Style: historical vs today
+            if (isToday()) {
+                navBar.classList.remove('historical');
+                todayBtn.classList.add('is-today');
+                todayBtn.textContent = '✓ Today';
+            } else {
+                navBar.classList.add('historical');
+                todayBtn.classList.remove('is-today');
+                todayBtn.textContent = 'Today';
+            }
+
+            // Update stat labels
+            const isHist = !isToday();
+            const d = new Date(statsDate + 'T00:00:00');
+            const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            document.getElementById('labelOrders').textContent    = isHist ? label + ' Orders'      : "Today's Orders";
+            document.getElementById('labelPending').textContent   = isHist ? label + ' Pending ₱'   : 'Pending Payments';
+            document.getElementById('labelRevenue').textContent   = isHist ? label + "'s Month Rev" : "This Month's Revenue";
+            document.getElementById('labelCollections').textContent = isHist ? label + ' Collections' : "Today's Collections";
+        }
+
+        function shiftDay(delta) {
+            const d = new Date(statsDate + 'T00:00:00');
+            d.setDate(d.getDate() + delta);
+            const newDate = d.toISOString().split('T')[0];
+            // Don't go into the future
+            if (newDate > getToday()) return;
+            statsDate = newDate;
+            updateDatePickerUI();
+            updateStats();
+        }
+
+        function goToDate(dateStr) {
+            if (!dateStr || dateStr > getToday()) return;
+            statsDate = dateStr;
+            updateDatePickerUI();
+            updateStats();
+        }
+
+        function goToToday() {
+            statsDate = getToday();
+            updateDatePickerUI();
+            updateStats();
+        }
+
         // Update statistics
         function updateStats() {
-            const today = new Date().toISOString().split('T')[0];
-            
-            // Today's Orders (created_at = today)
-            const todayOrders = allOrders.filter(order => 
-                order.created_at.split('T')[0] === today
+            const selDate = statsDate; // selected date YYYY-MM-DD
+            const selDateObj = new Date(selDate + 'T00:00:00');
+            const selMonth = selDateObj.getMonth();
+            const selYear  = selDateObj.getFullYear();
+
+            // Orders placed ON selected date
+            const dayOrders = allOrders.filter(order =>
+                order.created_at.split('T')[0] === selDate
             );
-            
-            // Pending Payments (₱ total of pending orders)
-            const pendingOrders = allOrders.filter(order => 
-                order.payment_status === 'pending'
-            );
-            const pendingPayments = pendingOrders.reduce((sum, order) => 
+
+            // Pending Payments on selected date
+            // For historical: orders that were still pending as-of that date
+            // Practical approach: orders with payment_status = pending AND created on or before selDate
+            const pendingOrders = allOrders.filter(order => {
+                if (order.payment_status !== 'pending') return false;
+                return order.created_at.split('T')[0] <= selDate;
+            });
+            const pendingPayments = pendingOrders.reduce((sum, order) =>
                 sum + parseFloat(order.total_amount || 0), 0
             );
-            
-            // This Month's Revenue (₱ paid orders updated this month)
-            const curMonth = new Date().getMonth();
-            const curYear  = new Date().getFullYear();
+
+            // Revenue for selected date's month
             const paidOrders = allOrders.filter(order => {
                 if (order.payment_status !== 'paid' || !order.updated_at) return false;
                 const d = new Date(order.updated_at);
-                return d.getFullYear() === curYear && d.getMonth() === curMonth;
+                return d.getFullYear() === selYear && d.getMonth() === selMonth;
             });
-            const totalRevenue = paidOrders.reduce((sum, order) => 
+            const totalRevenue = paidOrders.reduce((sum, order) =>
                 sum + parseFloat(order.total_amount || 0), 0
             );
-            
-            // Today's Collections (₱ orders marked as paid today)
-            const todayCollected = allOrders.filter(order => {
+
+            // Collections ON selected date
+            const dayCollected = allOrders.filter(order => {
                 if (order.payment_status !== 'paid' || !order.updated_at) return false;
-                const updatedDate = new Date(order.updated_at).toISOString().split('T')[0];
-                return updatedDate === today;
+                return new Date(order.updated_at).toISOString().split('T')[0] === selDate;
             });
-            const todayCollections = todayCollected.reduce((sum, order) => 
+            const dayCollections = dayCollected.reduce((sum, order) =>
                 sum + parseFloat(order.total_amount || 0), 0
             );
-            
-            // Debug logging for Today's Collections
-            console.log('📊 Today\'s Collections Debug:');
-            console.log('  Today\'s date:', today);
-            console.log('  Total paid orders:', paidOrders.length);
-            console.log('  Orders marked paid TODAY:', todayCollected.length);
-            if (todayCollected.length > 0) {
-                console.log('  Today\'s collected orders:', todayCollected.map(o => ({
-                    id: o.id.slice(0, 8),
-                    customer: o.customer_name,
-                    amount: o.total_amount,
-                    updated_at: o.updated_at
-                })));
-            }
-            console.log('  Today\'s Collections Total: ₱' + todayCollections);
-            
-            document.getElementById('todayOrders').textContent = todayOrders.length;
+
+            document.getElementById('todayOrders').textContent     = dayOrders.length;
             document.getElementById('pendingPayments').textContent = pendingPayments.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-            document.getElementById('totalRevenue').textContent = totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-            document.getElementById('todayCollections').textContent = todayCollections.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('totalRevenue').textContent    = totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('todayCollections').textContent = dayCollections.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
         }
 
         // Filter orders
@@ -1731,6 +1862,18 @@
             
             // Initialize last updated time
             updateLastUpdatedTime();
+
+            // Date picker setup
+            const picker  = document.getElementById('statsDatePicker');
+            const today   = getToday();
+            picker.value  = today;
+            picker.max    = today; // can't pick future dates
+            updateDatePickerUI();
+
+            document.getElementById('datePrevBtn').addEventListener('click', () => shiftDay(-1));
+            document.getElementById('dateNextBtn').addEventListener('click', () => shiftDay(1));
+            document.getElementById('btnToday').addEventListener('click', goToToday);
+            picker.addEventListener('change', (e) => goToDate(e.target.value));
             
             // Clickable stat cards (skip revenue card - it has its own toggle)
             document.querySelectorAll('.stat-card').forEach(card => {
