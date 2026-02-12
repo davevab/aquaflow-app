@@ -362,8 +362,13 @@
         }
         
         .order-card:hover {
-            background: #f9fafb;
+            background: #e0e7ff;
         }
+        /* Alternating rows inside open groups */
+        .date-group.open .order-card:nth-child(odd)  { background: #ffffff; }
+        .date-group.open .order-card:nth-child(even) { background: #f8fafc; }
+        .date-group.open .order-card:nth-child(odd):hover  { background: #e0e7ff; }
+        .date-group.open .order-card:nth-child(even):hover { background: #e0e7ff; }
         
         .order-header {
             display: flex;
