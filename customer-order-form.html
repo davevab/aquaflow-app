@@ -1040,15 +1040,23 @@
 
         async function loadPriceFromSettings() {
             try {
-                const { data } = await supabaseClient
+                const { data, error } = await supabaseClient
                     .from('settings')
                     .select('price_per_gallon')
-                    .single();
+                    .maybeSingle();
+                console.log('Settings fetch result:', data, error);
+                if (error) {
+                    console.warn('Settings error:', error.message);
+                    return;
+                }
                 if (data && data.price_per_gallon) {
                     PRICE_PER_GALLON = parseFloat(data.price_per_gallon);
+                    console.log('Price loaded from settings: ₱' + PRICE_PER_GALLON);
+                } else {
+                    console.warn('No price in settings, using default ₱20');
                 }
             } catch(e) {
-                console.warn('Could not load price from settings, using default ₱20');
+                console.warn('Could not load price from settings:', e);
             }
         }
 
