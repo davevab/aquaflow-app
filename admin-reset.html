@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AquaFlow — Admin Reset</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #0f172a;
+            min-height: 100vh;
+            color: #f1f5f9;
+        }
+
+        /* ── PIN SCREEN ───────────────────────── */
+        .pin-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .pin-logo {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pin-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 0.25rem;
+        }
+
+        .pin-subtitle {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 2.5rem;
+        }
+
+        .pin-box {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 1rem;
+            padding: 2rem;
+            width: 100%;
+            max-width: 340px;
+        }
+
+        .pin-label {
+            font-size: 0.8125rem;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .pin-input {
+            width: 100%;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 0.5rem;
+            padding: 0.875rem 1rem;
+            font-size: 1.25rem;
+            color: #f1f5f9;
+            letter-spacing: 0.3em;
+            text-align: center;
+            margin-bottom: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .pin-input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        .pin-input.error {
+            border-color: #ef4444;
+            animation: shake 0.3s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        .pin-error {
+            color: #f87171;
+            font-size: 0.8125rem;
+            text-align: center;
+            margin-bottom: 0.75rem;
+            display: none;
+        }
+
+        .pin-error.show { display: block; }
+
+        .btn-unlock {
+            width: 100%;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.875rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-unlock:hover { background: #4f46e5; }
+
+        .pin-hint {
+            margin-top: 1.5rem;
+            font-size: 0.75rem;
+            color: #475569;
+            text-align: center;
+        }
+
+        /* ── MAIN RESET DASHBOARD ─────────────── */
+        .main-screen { display: none; }
+
+        .top-bar {
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .top-bar-logo { font-size: 1.5rem; }
+
+        .top-bar-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+
+        .top-bar-sub {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .btn-lock {
+            background: #334155;
+            border: none;
+            color: #94a3b8;
+            padding: 0.5rem 0.875rem;
+            border-radius: 0.5rem;
+            font-size: 0.8125rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-lock:hover { background: #475569; color: #f1f5f9; }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* Warning banner */
+        .warning-banner {
+            background: #451a03;
+            border: 1px solid #92400e;
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .warning-icon { font-size: 1.25rem; flex-shrink: 0; margin-top: 0.1rem; }
+
+        .warning-text { font-size: 0.875rem; color: #fbbf24; line-height: 1.5; }
+
+        .warning-text strong { color: #fde68a; }
+
+        /* Table cards */
+        .tables-grid {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .table-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 0.875rem;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        .table-card:hover { border-color: #475569; }
+
+        .table-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+        }
+
+        .table-card-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .table-icon { font-size: 1.5rem; }
+
+        .table-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+
+        .table-desc {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 0.125rem;
+        }
+
+        .table-count {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            padding: 0.375rem 0.875rem;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #94a3b8;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .table-count.loading { color: #475569; }
+        .table-count.has-data { color: #fbbf24; border-color: #78350f; background: #1c1008; }
+        .table-count.empty { color: #22c55e; border-color: #166534; background: #052e16; }
+
+        .table-card-footer {
+            padding: 0.75rem 1.25rem;
+            border-top: 1px solid #1e293b;
+            background: #0f172a;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn-clear-table {
+            background: #7f1d1d;
+            color: #fca5a5;
+            border: 1px solid #991b1b;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-clear-table:hover { background: #991b1b; color: #fecaca; }
+        .btn-clear-table:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-clear-table.cleared {
+            background: #052e16;
+            color: #4ade80;
+            border-color: #166534;
+            cursor: default;
+        }
+
+        /* Reset All */
+        .reset-all-card {
+            background: #1e293b;
+            border: 2px solid #7f1d1d;
+            border-radius: 0.875rem;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .reset-all-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fca5a5;
+            margin-bottom: 0.25rem;
+        }
+
+        .reset-all-desc {
+            font-size: 0.8125rem;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+        }
+
+        .btn-reset-all {
+            width: 100%;
+            background: #7f1d1d;
+            color: #fecaca;
+            border: 1px solid #991b1b;
+            border-radius: 0.5rem;
+            padding: 0.875rem;
+            font-size: 0.9375rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-reset-all:hover { background: #991b1b; }
+        .btn-reset-all:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Activity log */
+        .log-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 0.875rem;
+            overflow: hidden;
+        }
+
+        .log-header {
+            padding: 0.875rem 1.25rem;
+            border-bottom: 1px solid #334155;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .log-body {
+            padding: 0.75rem 1.25rem;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            font-size: 0.8125rem;
+            color: #64748b;
+            padding: 0.25rem 0;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .log-entry:last-child { border-bottom: none; }
+        .log-time { color: #475569; white-space: nowrap; }
+        .log-entry.success .log-msg { color: #4ade80; }
+        .log-entry.error .log-msg { color: #f87171; }
+        .log-entry.info .log-msg { color: #94a3b8; }
+
+        .log-empty {
+            font-size: 0.8125rem;
+            color: #475569;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        /* Confirm Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .modal-overlay.show { display: flex; }
+
+        .modal-box {
+            background: #1e293b;
+            border: 1px solid #7f1d1d;
+            border-radius: 1rem;
+            padding: 1.75rem;
+            max-width: 380px;
+            width: 100%;
+        }
+
+        .modal-icon { font-size: 2.5rem; text-align: center; margin-bottom: 0.75rem; }
+        .modal-title { font-size: 1.125rem; font-weight: 700; color: #fca5a5; text-align: center; margin-bottom: 0.5rem; }
+        .modal-body-text { font-size: 0.875rem; color: #94a3b8; text-align: center; line-height: 1.6; margin-bottom: 1.5rem; }
+        .modal-body-text strong { color: #fde68a; }
+
+        .modal-confirm-input {
+            width: 100%;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.9375rem;
+            color: #f1f5f9;
+            text-align: center;
+            margin-bottom: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .modal-confirm-input:focus { outline: none; border-color: #ef4444; }
+        .modal-confirm-input::placeholder { color: #475569; letter-spacing: 0; }
+
+        .modal-buttons {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-modal-cancel {
+            flex: 1;
+            background: #334155;
+            color: #94a3b8;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-modal-cancel:hover { background: #475569; color: #f1f5f9; }
+
+        .btn-modal-confirm {
+            flex: 1;
+            background: #7f1d1d;
+            color: #fecaca;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            font-size: 0.9375rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-modal-confirm:hover { background: #991b1b; }
+        .btn-modal-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.625rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            z-index: 2000;
+            display: none;
+            white-space: nowrap;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+
+        .toast.show { display: block; animation: toastIn 0.3s ease; }
+        .toast.success { background: #052e16; color: #4ade80; border: 1px solid #166534; }
+        .toast.error   { background: #450a0a; color: #f87171; border: 1px solid #7f1d1d; }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── PIN SCREEN ───────────────────────────────── -->
+<div class="pin-screen" id="pinScreen">
+    <div class="pin-logo">🔐</div>
+    <div class="pin-title">Admin Reset</div>
+    <div class="pin-subtitle">AquaFlow — Restricted Access</div>
+
+    <div class="pin-box">
+        <div class="pin-label">Enter PIN</div>
+        <input type="password" class="pin-input" id="pinInput" placeholder="••••" maxlength="10" autocomplete="off">
+        <div class="pin-error" id="pinError">Incorrect PIN. Try again.</div>
+        <button class="btn-unlock" id="btnUnlock">Unlock</button>
+    </div>
+
+    <p class="pin-hint">Only authorized personnel may access this page.</p>
+</div>
+
+<!-- ── MAIN SCREEN ──────────────────────────────── -->
+<div class="main-screen" id="mainScreen">
+
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <span class="top-bar-logo">💧</span>
+            <div>
+                <div class="top-bar-title">Admin Reset</div>
+                <div class="top-bar-sub">AquaFlow Data Management</div>
+            </div>
+        </div>
+        <button class="btn-lock" onclick="lockScreen()">🔒 Lock</button>
+    </div>
+
+    <div class="container">
+
+        <div class="warning-banner">
+            <span class="warning-icon">⚠️</span>
+            <div class="warning-text">
+                <strong>Destructive actions ahead.</strong> Clearing a table permanently deletes all its records from the database. This cannot be undone. Use this only when handing over the app to a new station or starting fresh.
+            </div>
+        </div>
+
+        <!-- Table Cards -->
+        <div class="tables-grid" id="tablesGrid">
+
+            <div class="table-card" id="card-orders">
+                <div class="table-card-header">
+                    <div class="table-card-left">
+                        <span class="table-icon">📦</span>
+                        <div>
+                            <div class="table-name">Orders</div>
+                            <div class="table-desc">All customer delivery orders</div>
+                        </div>
+                    </div>
+                    <div class="table-count loading" id="count-orders">...</div>
+                </div>
+                <div class="table-card-footer">
+                    <button class="btn-clear-table" id="btn-orders" onclick="confirmClear('orders')">🗑 Clear Orders</button>
+                </div>
+            </div>
+
+            <div class="table-card" id="card-expenses">
+                <div class="table-card-header">
+                    <div class="table-card-left">
+                        <span class="table-icon">💰</span>
+                        <div>
+                            <div class="table-name">Expenses</div>
+                            <div class="table-desc">All recorded business expenses</div>
+                        </div>
+                    </div>
+                    <div class="table-count loading" id="count-expenses">...</div>
+                </div>
+                <div class="table-card-footer">
+                    <button class="btn-clear-table" id="btn-expenses" onclick="confirmClear('expenses')">🗑 Clear Expenses</button>
+                </div>
+            </div>
+
+            <div class="table-card" id="card-personnel">
+                <div class="table-card-header">
+                    <div class="table-card-left">
+                        <span class="table-icon">👤</span>
+                        <div>
+                            <div class="table-name">Personnel</div>
+                            <div class="table-desc">Drivers and staff accounts</div>
+                        </div>
+                    </div>
+                    <div class="table-count loading" id="count-personnel">...</div>
+                </div>
+                <div class="table-card-footer">
+                    <button class="btn-clear-table" id="btn-personnel" onclick="confirmClear('personnel')">🗑 Clear Personnel</button>
+                </div>
+            </div>
+
+            <div class="table-card" id="card-customers">
+                <div class="table-card-header">
+                    <div class="table-card-left">
+                        <span class="table-icon">🏠</span>
+                        <div>
+                            <div class="table-name">Customers</div>
+                            <div class="table-desc">All registered customer profiles</div>
+                        </div>
+                    </div>
+                    <div class="table-count loading" id="count-customers">...</div>
+                </div>
+                <div class="table-card-footer">
+                    <button class="btn-clear-table" id="btn-customers" onclick="confirmClear('customers')">🗑 Clear Customers</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Reset All -->
+        <div class="reset-all-card">
+            <div class="reset-all-title">🚨 Reset Everything</div>
+            <div class="reset-all-desc">Clears all four tables at once — orders, expenses, personnel, and customers. Fresh start.</div>
+            <button class="btn-reset-all" id="btnResetAll" onclick="confirmClear('all')">🗑 Reset All Data</button>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="log-card">
+            <div class="log-header">📋 Activity Log</div>
+            <div class="log-body" id="logBody">
+                <div class="log-empty" id="logEmpty">No actions yet this session.</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ── CONFIRM MODAL ────────────────────────────── -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal-box">
+        <div class="modal-icon">🗑️</div>
+        <div class="modal-title" id="modalTitle">Clear Table?</div>
+        <div class="modal-body-text" id="modalBodyText">This will permanently delete all records.</div>
+        <input type="text" class="modal-confirm-input" id="modalConfirmInput" placeholder='Type "RESET" to confirm'>
+        <div class="modal-buttons">
+            <button class="btn-modal-cancel" onclick="closeModal()">Cancel</button>
+            <button class="btn-modal-confirm" id="btnModalConfirm" onclick="executeReset()" disabled>Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+    const SUPABASE_URL = 'https://objfqhffofsrttjxswkx.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_8kUVR1zO703wEgv1je_wtQ_88YK988G';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ── PIN ──────────────────────────────────────────
+    const ADMIN_PIN = '2026'; // Change this to your preferred PIN
+
+    document.getElementById('btnUnlock').addEventListener('click', tryUnlock);
+    document.getElementById('pinInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') tryUnlock();
+    });
+
+    function tryUnlock() {
+        const val = document.getElementById('pinInput').value.trim();
+        if (val === ADMIN_PIN) {
+            document.getElementById('pinScreen').style.display = 'none';
+            document.getElementById('mainScreen').style.display = 'block';
+            loadAllCounts();
+            addLog('info', 'Admin session started.');
+        } else {
+            const input = document.getElementById('pinInput');
+            input.classList.add('error');
+            document.getElementById('pinError').classList.add('show');
+            input.value = '';
+            setTimeout(() => input.classList.remove('error'), 500);
+        }
+    }
+
+    function lockScreen() {
+        document.getElementById('mainScreen').style.display = 'none';
+        document.getElementById('pinScreen').style.display = 'flex';
+        document.getElementById('pinInput').value = '';
+        document.getElementById('pinError').classList.remove('show');
+        addLog('info', 'Session locked.');
+    }
+
+    // ── COUNTS ───────────────────────────────────────
+    const TABLES = ['orders', 'expenses', 'personnel', 'customers'];
+
+    async function loadAllCounts() {
+        for (const table of TABLES) {
+            await loadCount(table);
+        }
+    }
+
+    async function loadCount(table) {
+        const el = document.getElementById('count-' + table);
+        el.className = 'table-count loading';
+        el.textContent = '...';
+        try {
+            const { count, error } = await supabaseClient
+                .from(table)
+                .select('*', { count: 'exact', head: true });
+
+            if (error) {
+                el.className = 'table-count';
+                el.textContent = 'Error';
+                return;
+            }
+
+            el.textContent = count + (count === 1 ? ' record' : ' records');
+            el.className = 'table-count ' + (count > 0 ? 'has-data' : 'empty');
+        } catch (err) {
+            el.className = 'table-count';
+            el.textContent = 'Error';
+        }
+    }
+
+    // ── CONFIRM MODAL ────────────────────────────────
+    let pendingTarget = null;
+
+    const TABLE_META = {
+        orders:    { label: 'Orders',    icon: '📦' },
+        expenses:  { label: 'Expenses',  icon: '💰' },
+        personnel: { label: 'Personnel', icon: '👤' },
+        customers: { label: 'Customers', icon: '🏠' },
+        all:       { label: 'ALL DATA',  icon: '🚨' },
+    };
+
+    function confirmClear(target) {
+        pendingTarget = target;
+        const meta = TABLE_META[target];
+        document.getElementById('modalTitle').textContent    = `Clear ${meta.label}?`;
+        document.getElementById('modalBodyText').innerHTML   =
+            `You are about to permanently delete all <strong>${meta.label}</strong> records. ` +
+            `Type <strong>"RESET"</strong> below to confirm.`;
+        document.getElementById('modalConfirmInput').value   = '';
+        document.getElementById('btnModalConfirm').disabled  = true;
+        document.getElementById('confirmModal').classList.add('show');
+        setTimeout(() => document.getElementById('modalConfirmInput').focus(), 100);
+    }
+
+    document.getElementById('modalConfirmInput').addEventListener('input', function() {
+        document.getElementById('btnModalConfirm').disabled = this.value.trim().toUpperCase() !== 'RESET';
+    });
+
+    function closeModal() {
+        document.getElementById('confirmModal').classList.remove('show');
+        pendingTarget = null;
+    }
+
+    // ── EXECUTE RESET ────────────────────────────────
+    async function executeReset() {
+        if (!pendingTarget) return;
+        closeModal();
+
+        const targets = pendingTarget === 'all' ? TABLES : [pendingTarget];
+
+        // Disable all buttons during operation
+        document.getElementById('btnResetAll').disabled = true;
+        targets.forEach(t => {
+            const b = document.getElementById('btn-' + t);
+            if (b) b.disabled = true;
+        });
+
+        let allOk = true;
+
+        for (const table of targets) {
+            try {
+                addLog('info', `Clearing ${table}...`);
+
+                // Delete all rows — Supabase requires a filter, so use neq on a common field
+                const { error } = await supabaseClient
+                    .from(table)
+                    .delete()
+                    .neq('id', '00000000-0000-0000-0000-000000000000');
+
+                if (error) throw error;
+
+                addLog('success', `✓ ${TABLE_META[table].label} cleared successfully.`);
+
+                // Mark button as cleared
+                const btn = document.getElementById('btn-' + table);
+                if (btn) {
+                    btn.textContent = '✓ Cleared';
+                    btn.className = 'btn-clear-table cleared';
+                }
+
+                // Refresh count
+                await loadCount(table);
+
+            } catch (err) {
+                allOk = false;
+                addLog('error', `✗ Failed to clear ${table}: ${err.message}`);
+                const btn = document.getElementById('btn-' + table);
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        document.getElementById('btnResetAll').disabled = false;
+
+        showToast(
+            allOk ? '✓ Reset complete!' : '⚠ Some tables failed — check log.',
+            allOk ? 'success' : 'error'
+        );
+    }
+
+    // ── LOG ──────────────────────────────────────────
+    function addLog(type, msg) {
+        document.getElementById('logEmpty').style.display = 'none';
+        const logBody = document.getElementById('logBody');
+        const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const entry = document.createElement('div');
+        entry.className = `log-entry ${type}`;
+        entry.innerHTML = `<span class="log-time">${now}</span><span class="log-msg">${msg}</span>`;
+        logBody.insertBefore(entry, logBody.firstChild);
+    }
+
+    // ── TOAST ────────────────────────────────────────
+    let toastTimer;
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `toast ${type} show`;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+</script>
+</body>
+</html>
