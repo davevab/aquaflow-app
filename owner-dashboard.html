@@ -1245,11 +1245,16 @@
         }
 
         // ─── Date Picker State ────────────────────────────────
-        let statsDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-
         function getToday() {
-            return new Date().toISOString().split('T')[0];
+            // Use LOCAL date (not UTC) to avoid timezone issues in PH (UTC+8)
+            const d = new Date();
+            const yyyy = d.getFullYear();
+            const mm   = String(d.getMonth() + 1).padStart(2, '0');
+            const dd   = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
         }
+
+        let statsDate = getToday(); // YYYY-MM-DD local time
 
         function isToday() {
             return statsDate === getToday();
@@ -1865,9 +1870,8 @@
 
             // Date picker setup
             const picker  = document.getElementById('statsDatePicker');
-            const today   = getToday();
-            picker.value  = today;
-            picker.max    = today; // can't pick future dates
+            picker.value  = getToday();
+            picker.max    = getToday(); // can't pick future dates
             updateDatePickerUI();
 
             document.getElementById('datePrevBtn').addEventListener('click', () => shiftDay(-1));
