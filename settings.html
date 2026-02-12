@@ -436,6 +436,28 @@
             background: #d1fae5;
             color: #065f46;
         }
+
+        /* Business info view */
+        .biz-info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.625rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .biz-info-row:last-child { border-bottom: none; }
+        .biz-info-label {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #6b7280;
+            min-width: 120px;
+            flex-shrink: 0;
+        }
+        .biz-info-value {
+            font-size: 0.9375rem;
+            color: #111827;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -507,8 +529,23 @@
                     <span>🏢</span>
                     <span>Business Information</span>
                 </h2>
+                <button class="btn btn-secondary btn-small" id="editBusinessBtn" onclick="toggleBusinessEdit()">✏️ Edit</button>
             </div>
-            <div class="section-body">
+
+            <!-- VIEW MODE -->
+            <div id="businessView" class="section-body">
+                <div style="display: grid; gap: 0.875rem;">
+                    <div class="biz-info-row"><span class="biz-info-label">🏢 Business Name</span><span class="biz-info-value" id="viewBusinessName">—</span></div>
+                    <div class="biz-info-row"><span class="biz-info-label">📱 Contact</span><span class="biz-info-value" id="viewContactNumber">—</span></div>
+                    <div class="biz-info-row"><span class="biz-info-label">✉️ Email</span><span class="biz-info-value" id="viewEmailAddress">—</span></div>
+                    <div class="biz-info-row"><span class="biz-info-label">📍 Address</span><span class="biz-info-value" id="viewOfficeAddress">—</span></div>
+                    <div class="biz-info-row"><span class="biz-info-label">🕐 Hours</span><span class="biz-info-value" id="viewOperatingHours">—</span></div>
+                    <div class="biz-info-row"><span class="biz-info-label">⏰ Cutoff</span><span class="biz-info-value" id="viewCutoffTime">—</span></div>
+                </div>
+            </div>
+
+            <!-- EDIT MODE (hidden by default) -->
+            <div id="businessForm" class="section-body" style="display: none;">
                 <div class="form-group">
                     <label class="form-label">Business Name</label>
                     <input type="text" class="form-input" id="businessName" placeholder="AquaFlow Water Delivery">
@@ -537,10 +574,13 @@
                         <input type="time" class="form-input" id="cutoffTime" value="17:00">
                     </div>
                 </div>
-                <button class="btn btn-primary" id="saveBusinessInfo">
-                    <span>💾</span>
-                    <span>Save Business Info</span>
-                </button>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn btn-primary" id="saveBusinessInfo">
+                        <span>💾</span>
+                        <span>Save</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="toggleBusinessEdit()">Cancel</button>
+                </div>
             </div>
         </div>
     </div>
@@ -628,6 +668,26 @@
             document.getElementById('officeAddress').value = settings.office_address || '';
             document.getElementById('operatingHours').value = settings.operating_hours || '';
             document.getElementById('cutoffTime').value = settings.cutoff_time || '17:00';
+            populateBusinessView(settings);
+        }
+
+        // Populate the read-only view
+        function populateBusinessView(s) {
+            document.getElementById('viewBusinessName').textContent  = s.business_name   || '—';
+            document.getElementById('viewContactNumber').textContent = s.contact_number  || '—';
+            document.getElementById('viewEmailAddress').textContent  = s.email_address   || '—';
+            document.getElementById('viewOfficeAddress').textContent = s.office_address  || '—';
+            document.getElementById('viewOperatingHours').textContent= s.operating_hours || '—';
+            document.getElementById('viewCutoffTime').textContent    = s.cutoff_time     || '—';
+        }
+
+        // Toggle between view and edit mode
+        let businessEditMode = false;
+        function toggleBusinessEdit() {
+            businessEditMode = !businessEditMode;
+            document.getElementById('businessView').style.display = businessEditMode ? 'none' : 'block';
+            document.getElementById('businessForm').style.display = businessEditMode ? 'block' : 'none';
+            document.getElementById('editBusinessBtn').textContent = businessEditMode ? '✕ Cancel' : '✏️ Edit';
         }
 
         // Load personnel
@@ -792,6 +852,8 @@
                 }
 
                 currentSettings = result.data;
+                populateBusinessView(result.data);
+                if (businessEditMode) toggleBusinessEdit();
                 showToast('✓ Business information saved successfully!');
 
             } catch (err) {
