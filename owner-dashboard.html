@@ -1147,7 +1147,7 @@
         <div class="section-header">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <h2 class="section-title" id="sectionTitle">All Orders</h2>
-                <span id="viewModeIndicator" style="font-size: 0.875rem; font-weight: 600; padding: 0.25rem 0.75rem; background: #eff6ff; color: #2563eb; border-radius: 0.375rem;">Last 30 Days</span>
+                <span id="viewModeIndicator" style="font-size: 0.875rem; font-weight: 600; padding: 0.25rem 0.75rem; background: #eff6ff; color: #2563eb; border-radius: 0.375rem;">This Month</span>
             </div>
             <div style="display: flex; gap: 0.5rem;">
                 <button class="reset-filter" id="toggleViewBtn" onclick="toggleViewMode()" style="background: #8b5cf6; color: white;">
@@ -1364,10 +1364,9 @@
                 
                 // Filter by date based on viewMode
                 if (viewMode === 'recent') {
-                    const thirtyDaysAgo = new Date();
-                    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                    const dateFilter = thirtyDaysAgo.toISOString().split('T')[0];
-                    
+                    const now = new Date();
+                    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                    const dateFilter = firstOfMonth.toISOString().split('T')[0];
                     query = query.gte('created_at', dateFilter);
                 }
                 
@@ -1417,13 +1416,13 @@
             const toggleBtn = document.getElementById('toggleViewBtn');
             
             if (viewMode === 'recent') {
-                indicator.textContent = 'Last 30 Days';
+                indicator.textContent = 'This Month';
                 indicator.style.color = '#2563eb';
                 toggleBtn.innerHTML = '📅 View All Orders';
             } else {
                 indicator.textContent = 'All Orders';
                 indicator.style.color = '#059669';
-                toggleBtn.innerHTML = '📅 View Recent (30 Days)';
+                toggleBtn.innerHTML = '📅 This Month Only';
             }
         }
 
