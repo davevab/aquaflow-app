@@ -736,6 +736,93 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Revenue Monthly Panel */
+        .stat-card.revenue-card {
+            border-top: 3px solid #10b981;
+            transition: all 0.2s;
+        }
+        .stat-card.revenue-card:hover {
+            box-shadow: 0 4px 12px rgba(16,185,129,0.25);
+        }
+        .stat-card.revenue-card.panel-open {
+            border-top-color: #059669;
+            background: #f0fdf4;
+        }
+        .revenue-hint {
+            font-size: 0.6875rem;
+            color: #10b981;
+            margin-top: 0.375rem;
+        }
+
+        .revenue-panel {
+            display: none;
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 2px solid #10b981;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        .revenue-panel.show {
+            display: block;
+            animation: slideDown 0.25s ease;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .revenue-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.875rem 1.25rem;
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            border-bottom: 1px solid #6ee7b7;
+        }
+        .revenue-panel-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #065f46;
+        }
+        .btn-close-revenue {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            color: #065f46;
+            cursor: pointer;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+        }
+        .btn-close-revenue:hover { background: rgba(6,95,70,0.1); }
+
+        .revenue-monthly-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+        }
+        .revenue-month-cell {
+            padding: 0.75rem 0.875rem;
+            border-right: 1px solid #f3f4f6;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.15s;
+        }
+        .revenue-month-cell:nth-child(4n)  { border-right: none; }
+        .revenue-month-cell:nth-child(n+9) { border-bottom: none; }
+        .revenue-month-cell.current-month  { background: #f0fdf4; }
+        .revenue-month-cell.current-month .rev-month-name { color: #065f46; font-weight: 700; }
+        .rev-month-name  { font-size: 0.8125rem; font-weight: 600; color: #374151; }
+        .rev-month-amount { font-size: 0.9375rem; font-weight: 700; color: #10b981; margin-top: 0.125rem; }
+        .rev-month-amount.zero { color: #9ca3af; font-weight: 500; }
+        .rev-month-count  { font-size: 0.6875rem; color: #9ca3af; margin-top: 0.125rem; }
+
+        @media (max-width: 640px) {
+            .revenue-monthly-grid { grid-template-columns: repeat(3, 1fr); }
+            .revenue-month-cell:nth-child(3n)  { border-right: none; }
+            .revenue-month-cell:nth-child(4n)  { border-right: 1px solid #f3f4f6; }
+            .revenue-month-cell:nth-child(n+10){ border-bottom: none; }
+            .revenue-month-cell:nth-child(n+9) { border-bottom: 1px solid #f3f4f6; }
+        }
     </style>
 </head>
 <body>
@@ -786,15 +873,27 @@
                 <div class="stat-label">Pending Payments</div>
                 <div class="stat-value currency" id="pendingPayments">0</div>
             </div>
-            <div class="stat-card" data-filter="paid" id="statRevenue">
-                <div class="stat-card-arrow">→</div>
-                <div class="stat-label">Total Paid Revenue</div>
+            <div class="stat-card revenue-card" id="statRevenue" onclick="toggleRevenuePanel()">
+                <div class="stat-card-arrow">📊</div>
+                <div class="stat-label">This Month's Revenue</div>
                 <div class="stat-value currency" id="totalRevenue">0</div>
+                <div class="revenue-hint" id="revenueHint">📅 Tap to see all months</div>
             </div>
             <div class="stat-card" data-filter="collected" id="statCollected">
                 <div class="stat-card-arrow">→</div>
                 <div class="stat-label">Today's Collections</div>
                 <div class="stat-value currency" id="todayCollections">0</div>
+            </div>
+        </div>
+
+        <!-- Revenue Monthly Panel -->
+        <div class="revenue-panel" id="revenuePanel">
+            <div class="revenue-panel-header">
+                <h3 id="revenuePanelTitle">📊 2026 Monthly Revenue</h3>
+                <button class="btn-close-revenue" onclick="toggleRevenuePanel()">✕</button>
+            </div>
+            <div class="revenue-monthly-grid" id="revenueMonthlyGrid">
+                <!-- populated by JS -->
             </div>
         </div>
 
@@ -1086,10 +1185,14 @@
                 sum + parseFloat(order.total_amount || 0), 0
             );
             
-            // Total Paid Revenue (₱ total of all paid orders)
-            const paidOrders = allOrders.filter(order => 
-                order.payment_status === 'paid'
-            );
+            // This Month's Revenue (₱ paid orders updated this month)
+            const curMonth = new Date().getMonth();
+            const curYear  = new Date().getFullYear();
+            const paidOrders = allOrders.filter(order => {
+                if (order.payment_status !== 'paid' || !order.updated_at) return false;
+                const d = new Date(order.updated_at);
+                return d.getFullYear() === curYear && d.getMonth() === curMonth;
+            });
             const totalRevenue = paidOrders.reduce((sum, order) => 
                 sum + parseFloat(order.total_amount || 0), 0
             );
@@ -1529,6 +1632,60 @@
             assigningOrderId = null;
         }
 
+        // ─── Revenue Monthly Panel ───────────────────────────
+        const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        let revenuePanelOpen = false;
+
+        function toggleRevenuePanel() {
+            revenuePanelOpen = !revenuePanelOpen;
+            const panel = document.getElementById('revenuePanel');
+            const card  = document.getElementById('statRevenue');
+            const hint  = document.getElementById('revenueHint');
+
+            if (revenuePanelOpen) {
+                panel.classList.add('show');
+                card.classList.add('panel-open');
+                hint.textContent = '✕ Tap to close';
+                renderRevenueMonthlyGrid();
+            } else {
+                panel.classList.remove('show');
+                card.classList.remove('panel-open');
+                hint.textContent = '📅 Tap to see all months';
+            }
+        }
+
+        function renderRevenueMonthlyGrid() {
+            const now      = new Date();
+            const curYear  = now.getFullYear();
+            const curMonth = now.getMonth();
+
+            // Build per-month totals from ALL orders (not just loaded 30-day window)
+            // We need all paid orders, so fetch from supabase if needed
+            const months = Array.from({ length: 12 }, () => ({ total: 0, count: 0 }));
+
+            allOrders.forEach(order => {
+                if (order.payment_status !== 'paid' || !order.updated_at) return;
+                const d = new Date(order.updated_at);
+                if (d.getFullYear() === curYear) {
+                    months[d.getMonth()].total += parseFloat(order.total_amount || 0);
+                    months[d.getMonth()].count++;
+                }
+            });
+
+            document.getElementById('revenuePanelTitle').textContent = '📊 ' + curYear + ' Monthly Revenue';
+
+            document.getElementById('revenueMonthlyGrid').innerHTML = months.map((m, i) => {
+                const isCur = (i === curMonth);
+                return `
+                    <div class="revenue-month-cell ${isCur ? 'current-month' : ''}">
+                        <div class="rev-month-name">${MONTH_NAMES[i]}${isCur ? ' ●' : ''}</div>
+                        <div class="rev-month-amount ${m.total === 0 ? 'zero' : ''}">₱${m.total.toLocaleString('en-US', { minimumFractionDigits: 0 })}</div>
+                        <div class="rev-month-count">${m.count} ${m.count === 1 ? 'order' : 'orders'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         // Event Listeners
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Dashboard loaded');
@@ -1575,8 +1732,9 @@
             // Initialize last updated time
             updateLastUpdatedTime();
             
-            // Clickable stat cards
+            // Clickable stat cards (skip revenue card - it has its own toggle)
             document.querySelectorAll('.stat-card').forEach(card => {
+                if (card.id === 'statRevenue') return; // handled by toggleRevenuePanel
                 card.addEventListener('click', function() {
                     currentFilter = this.dataset.filter;
                     displayOrders(currentFilter);
