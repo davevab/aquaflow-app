@@ -179,6 +179,22 @@
         .empty-state { text-align: center; padding: 3rem; color: #6b7280; }
         .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.5; }
 
+        /* Segment tabs */
+        .seg-tab {
+            flex: 1;
+            padding: 0.625rem 1rem;
+            background: none;
+            border: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s;
+        }
+        .seg-tab:hover { color: #374151; background: #f9fafb; }
+        .seg-tab.active { color: #667eea; border-bottom-color: #667eea; background: #f5f3ff; }
+
         /* Segment cells */
         .segment-cell {
             padding: 1.25rem;
@@ -254,28 +270,40 @@
 
     <!-- Customer Segment Breakdown -->
     <div class="table-card" style="margin-bottom: 1.25rem;">
-        <div class="table-header">
+        <div class="table-header" style="display:flex; justify-content:space-between; align-items:center;">
             <div class="table-title">👥 Customer Segment Breakdown</div>
+            <div style="font-size:0.75rem; color:#9ca3af;" id="segmentPeriodLabel"></div>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0;">
-            <div class="segment-cell" style="border-top: 4px solid #3b82f6;">
+
+        <!-- Period Tabs -->
+        <div style="display:flex; border-bottom:1px solid #e5e7eb;">
+            <button class="seg-tab active" id="tabMonth" onclick="switchSegTab('month')">This Month</button>
+            <button class="seg-tab" id="tabYear" onclick="switchSegTab('year')">This Year</button>
+        </div>
+
+        <!-- Segment Grid -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0;">
+            <div class="segment-cell" style="border-top:4px solid #3b82f6;">
                 <div class="segment-icon">🏠</div>
                 <div class="segment-label">Household</div>
-                <div class="segment-count" id="hhCount">—</div>
+                <div class="segment-count" id="hhCustomers">—</div>
+                <div class="segment-sub" id="hhOrders"></div>
                 <div class="segment-sub" id="hhRevenue"></div>
                 <div class="segment-sub" id="hhGallons"></div>
             </div>
-            <div class="segment-cell" style="border-top: 4px solid #f59e0b;">
+            <div class="segment-cell" style="border-top:4px solid #f59e0b;">
                 <div class="segment-icon">🏪</div>
                 <div class="segment-label">Reseller</div>
-                <div class="segment-count" id="rsCount">—</div>
+                <div class="segment-count" id="rsCustomers">—</div>
+                <div class="segment-sub" id="rsOrders"></div>
                 <div class="segment-sub" id="rsRevenue"></div>
                 <div class="segment-sub" id="rsGallons"></div>
             </div>
-            <div class="segment-cell" style="border-top: 4px solid #8b5cf6;">
+            <div class="segment-cell" style="border-top:4px solid #8b5cf6;">
                 <div class="segment-icon">🏢</div>
                 <div class="segment-label">Company</div>
-                <div class="segment-count" id="coCount">—</div>
+                <div class="segment-count" id="coCustomers">—</div>
+                <div class="segment-sub" id="coOrders"></div>
                 <div class="segment-sub" id="coRevenue"></div>
                 <div class="segment-sub" id="coGallons"></div>
             </div>
@@ -415,13 +443,52 @@
         document.getElementById('topSegment').textContent   = topSeg[1] > 0 ? segLabels[topSeg[0]] : '—';
         document.getElementById('topSegmentAmt').textContent = topSeg[1] > 0 ? '₱' + topSeg[1].toLocaleString('en-US', {maximumFractionDigits: 0}) + ' revenue' : 'No data yet';
 
-        // Segment breakdown cells
+        // Segment breakdown — render current tab
+        renderSegmentBreakdown(currentSegTab);
+    }
+
+    let currentSegTab = 'month';
+
+    function switchSegTab(tab) {
+        currentSegTab = tab;
+        document.getElementById('tabMonth').classList.toggle('active', tab === 'month');
+        document.getElementById('tabYear').classList.toggle('active', tab === 'year');
+        renderSegmentBreakdown(tab);
+    }
+
+    function renderSegmentBreakdown(tab) {
+        const now = new Date();
+        const curYear = now.getFullYear(), curMonth = now.getMonth();
         const fmt = n => n.toLocaleString('en-US', {maximumFractionDigits: 0});
-        ['household', 'reseller', 'company'].forEach(t => {
-            const prefix = t === 'household' ? 'hh' : t === 'reseller' ? 'rs' : 'co';
-            document.getElementById(prefix + 'Count').textContent   = segAllOrders[t] + ' orders';
-            document.getElementById(prefix + 'Revenue').textContent = '₱' + fmt(segRevenue[t] || 0) + ' collected';
-            document.getElementById(prefix + 'Gallons').textContent = (segGallons[t] || 0).toLocaleString() + ' gal delivered';
+
+        // Filter orders to the period
+        const periodOrders = allOrders.filter(o => {
+            const d = new Date(o.created_at);
+            if (tab === 'month') return d.getFullYear() === curYear && d.getMonth() === curMonth;
+            return d.getFullYear() === curYear;
+        });
+
+        // Period label
+        const monthName = now.toLocaleDateString('en-US', { month: 'long' });
+        document.getElementById('segmentPeriodLabel').textContent =
+            tab === 'month' ? monthName + ' ' + curYear : 'Jan – Dec ' + curYear + ' (auto-resets yearly)';
+
+        const types = ['household', 'reseller', 'company'];
+        const prefixes = { household: 'hh', reseller: 'rs', company: 'co' };
+
+        types.forEach(t => {
+            const filtered = periodOrders.filter(o => (o.customer_type || 'household') === t);
+            const paid     = filtered.filter(o => o.payment_status === 'paid');
+            const rev      = paid.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);
+            const gal      = paid.reduce((s, o) => s + parseInt(o.quantity || 0), 0);
+            // Unique customers by phone number
+            const uniqueCustomers = new Set(filtered.map(o => o.customer_phone || o.customer_name)).size;
+
+            const p = prefixes[t];
+            document.getElementById(p + 'Customers').textContent = uniqueCustomers + ' customer' + (uniqueCustomers !== 1 ? 's' : '');
+            document.getElementById(p + 'Orders').textContent    = filtered.length + ' order' + (filtered.length !== 1 ? 's' : '');
+            document.getElementById(p + 'Revenue').textContent   = '₱' + fmt(rev) + ' collected';
+            document.getElementById(p + 'Gallons').textContent   = gal.toLocaleString() + ' gal delivered';
         });
     }
 
