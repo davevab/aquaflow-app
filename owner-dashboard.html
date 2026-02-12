@@ -1144,6 +1144,7 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let allOrders = [];
+        let allPaidOrders = []; // ALL paid orders (no date limit) — used for revenue stats
         let driverNames = {}; // Lookup for driver_id -> name
 
         let currentFilter = 'all';
@@ -1307,6 +1308,13 @@
 
                 console.log('Orders loaded:', data);
                 allOrders = data || [];
+
+                // Fetch ALL paid orders (no date limit) for accurate revenue stats
+                const { data: paidData } = await supabaseClient
+                    .from('orders')
+                    .select('id, total_amount, updated_at, payment_status')
+                    .eq('payment_status', 'paid');
+                allPaidOrders = paidData || [];
                 
                 // Fetch driver names for assigned orders
                 await fetchAllDriverNames();
@@ -1452,9 +1460,9 @@
                 sum + parseFloat(order.total_amount || 0), 0
             );
 
-            // Revenue for selected date's month
-            const paidOrders = allOrders.filter(order => {
-                if (order.payment_status !== 'paid' || !order.updated_at) return false;
+            // Revenue for selected date's month — uses allPaidOrders (no 30-day limit)
+            const paidOrders = allPaidOrders.filter(order => {
+                if (!order.updated_at) return false;
                 const d = new Date(order.updated_at);
                 return d.getFullYear() === selYear && d.getMonth() === selMonth;
             });
@@ -1947,8 +1955,8 @@
             // We need all paid orders, so fetch from supabase if needed
             const months = Array.from({ length: 12 }, () => ({ total: 0, count: 0 }));
 
-            allOrders.forEach(order => {
-                if (order.payment_status !== 'paid' || !order.updated_at) return;
+            allPaidOrders.forEach(order => {
+                if (!order.updated_at) return;
                 const d = new Date(order.updated_at);
                 if (d.getFullYear() === curYear) {
                     months[d.getMonth()].total += parseFloat(order.total_amount || 0);
