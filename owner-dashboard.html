@@ -1282,8 +1282,9 @@
 
                 <!-- Customer Name (optional) -->
                 <div style="margin-bottom:1.5rem;">
-                    <div style="font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">Customer Name <span style="font-weight:400;color:#9ca3af;">(optional)</span></div>
-                    <input type="text" id="qsCustomerName" placeholder="Walk-in customer" style="width:100%;padding:0.625rem 0.875rem;border:1px solid #d1d5db;border-radius:0.5rem;font-size:0.9375rem;box-sizing:border-box;">
+                    <div style="font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">Customer Name <span style="font-weight:400;color:#ef4444;">*required</span></div>
+                    <input type="text" id="qsCustomerName" placeholder="Enter customer name" style="width:100%;padding:0.625rem 0.875rem;border:1px solid #d1d5db;border-radius:0.5rem;font-size:0.9375rem;box-sizing:border-box;">
+                    <div id="qsNameError" style="display:none;color:#ef4444;font-size:0.75rem;margin-top:0.375rem;">⚠ Please enter a customer name</div>
                 </div>
 
                 <button id="qsConfirmBtn" onclick="confirmQuickSale()" style="width:100%;padding:1rem;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:0.5rem;font-size:1.0625rem;font-weight:700;cursor:pointer;">✓ Confirm Sale</button>
@@ -2571,12 +2572,24 @@
 
         async function confirmQuickSale() {
             if (qsSubmitting) return;
+
+            const customerName = document.getElementById('qsCustomerName').value.trim();
+            const nameError = document.getElementById('qsNameError');
+            const nameInput = document.getElementById('qsCustomerName');
+            if (!customerName) {
+                nameError.style.display = 'block';
+                nameInput.style.borderColor = '#ef4444';
+                nameInput.focus();
+                return;
+            }
+            nameError.style.display = 'none';
+            nameInput.style.borderColor = '#d1d5db';
+
             qsSubmitting = true;
             const confirmBtn = document.getElementById('qsConfirmBtn');
             if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = '⏳ Saving...'; }
 
             const qty = parseInt(document.getElementById('qsQty').value) || 1;
-            const customerName = document.getElementById('qsCustomerName').value.trim() || 'Walk-in';
             const total = qty * qsPricePerGallon;
             const today = getToday();
 
