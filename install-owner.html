@@ -17,7 +17,7 @@
     <link rel="icon" type="image/svg+xml" href="/owner-icon.svg">
     
     <!-- PWA Manifest - CACHE BUSTED -->
-    <link rel="manifest" href="/manifest-owner.json?v=6">
+    <link rel="manifest" href="/manifest-owner.json?v=7">
     
     <!-- Theme Color -->
     <meta name="theme-color" content="#667eea">
@@ -270,9 +270,15 @@
                     Add to Home Screen
                 </div>
                 <div class="step-content">
-                    <p style="margin-bottom: 1rem; color: #111827;">Follow these steps based on your device:</p>
 
-                    <div class="platform">
+                    <div id="installBtnWrapper" style="display:none; margin-bottom:1rem;">
+                        <button id="installBtn" class="btn-open" style="margin-bottom:0;">
+                            📲 Install AquaFlow
+                        </button>
+                        <p style="text-align:center; font-size:0.8125rem; color:#6b7280; margin-top:0.5rem;">Tap to install directly to your home screen</p>
+                    </div>
+
+                    <div class="platform" id="iosSteps">
                         <div class="platform-title">
                             <span class="platform-icon">📱</span>
                             iPhone / iPad
@@ -281,20 +287,18 @@
                             <li>Tap the <strong>Share button</strong> (□ with arrow)</li>
                             <li>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
                             <li>Tap <strong>"Add"</strong> in the top right</li>
-                            <li>Done! Find the AquaFlow icon on your home screen</li>
                         </ol>
                     </div>
 
-                    <div class="platform">
+                    <div class="platform" id="androidFallback">
                         <div class="platform-title">
                             <span class="platform-icon">📱</span>
                             Android Phone
                         </div>
                         <ol class="platform-steps">
-                            <li>Tap the <strong>Menu</strong> (3 dots ⋮ in corner)</li>
-                            <li>Tap <strong>"Add to Home Screen"</strong> or <strong>"Install"</strong></li>
-                            <li>Tap <strong>"Add"</strong> or <strong>"Install"</strong></li>
-                            <li>Done! Find the AquaFlow icon on your home screen</li>
+                            <li>Tap the <strong>3-dot menu ⋮</strong> at the top right</li>
+                            <li>Tap <strong>"Add to Home Screen"</strong> or <strong>"Install app"</strong></li>
+                            <li>Tap <strong>"Add"</strong></li>
                         </ol>
                     </div>
                 </div>
@@ -333,8 +337,31 @@
     </div>
     
     <script>
-    // Always show install instructions - let users manually open app if already installed
-    document.body.classList.add('loaded');
+    let deferredPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('installBtnWrapper').style.display = 'block';
+        document.getElementById('androidFallback').style.display = 'none';
+    });
+
+    document.getElementById('installBtn').addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        if (outcome === 'accepted') {
+            document.getElementById('installBtnWrapper').innerHTML =
+                '<p style="text-align:center;color:#059669;font-weight:600;">✅ Installed! Find AquaFlow on your home screen.</p>';
+        }
+    });
+
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+        window.location.replace('/owner-dashboard.html');
+    } else {
+        document.body.classList.add('loaded');
+    }
     </script>
 </body>
 </html>
