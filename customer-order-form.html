@@ -751,21 +751,20 @@
 <body>
     <div class="container">
         <!-- Phone Lookup Screen -->
-        <div id="phoneLookupScreen">
+        <div id="phoneLookupScreen" style="display:flex;flex-direction:column;min-height:100vh;">
             <div class="header">
                 <div class="logo">💧</div>
                 <h1>AquaFlow Water</h1>
                 <p class="subtitle">Pure Water Delivery</p>
             </div>
 
-            <div class="card">
+            <div class="card" style="margin-top:auto;">
                 <h3 class="section-title">Enter Your Phone Number</h3>
                 
                 <div class="form-group">
                     <label>Phone Number <span class="required">*</span></label>
                     <input type="tel" id="phoneInput" placeholder="0912 345 6789" autofocus>
                     <p class="error-text" id="phoneInputError">Please enter a valid Philippine mobile number</p>
-                    <p class="hint-text" id="phoneAutoFillHint" style="display: none; color: #059669;">✓ We remembered your number from last time</p>
                 </div>
 
                 <button class="btn btn-primary" id="checkPhoneBtn">Continue</button>
@@ -1082,9 +1081,7 @@
             // Auto-fill phone number from localStorage if available
             var savedPhone = localStorage.getItem('aquaflow_phone');
             if (savedPhone) {
-                console.log('Found saved phone number, auto-filling...');
                 document.getElementById('phoneInput').value = savedPhone;
-                document.getElementById('phoneAutoFillHint').style.display = 'block';
             }
 
             // Set minimum date to today
@@ -1092,11 +1089,6 @@
             document.getElementById('deliveryDate').setAttribute('min', today);
 
             // ===== PHONE LOOKUP SECTION =====
-
-            // Hide auto-fill hint when user starts typing
-            document.getElementById('phoneInput').addEventListener('input', function() {
-                document.getElementById('phoneAutoFillHint').style.display = 'none';
-            });
 
             // Check phone button
             document.getElementById('checkPhoneBtn').addEventListener('click', async function() {
@@ -1115,7 +1107,6 @@
                 document.getElementById('phoneInput').classList.remove('error');
                 document.getElementById('phoneInputError').classList.remove('show');
 
-                // Disable button while checking
                 this.disabled = true;
                 this.textContent = 'Checking...';
 
@@ -1830,7 +1821,6 @@
                 var savedPhone = localStorage.getItem('aquaflow_phone');
                 if (savedPhone) {
                     document.getElementById('phoneInput').value = savedPhone;
-                    document.getElementById('phoneAutoFillHint').style.display = 'block';
                 }
                 
                 // Clear order form fields
