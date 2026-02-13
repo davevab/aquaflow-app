@@ -1751,7 +1751,7 @@
                     var deliveryDate = document.getElementById('deliveryDate').value;
                     var deliveryTime = document.getElementById('radioPM').dataset.selected === '1' ? 'pm' : 'am';
                     var isDigital = document.getElementById('payDigital').dataset.selected === '1';
-                    var paymentMethod = isDigital ? 'digital' : 'cod';
+                    var paymentMethod = isDigital && selectedDigitalOption ? selectedDigitalOption.type : 'cod';
                     var notes = document.getElementById('specialInstructions').value.trim();
 
                     // Calculate total
@@ -1784,8 +1784,8 @@
                         .single();
 
                     if (orderError) {
-                        console.error('Supabase error:', orderError);
-                        alert('Failed to place order. Please try again.');
+                        console.error('Supabase error:', JSON.stringify(orderError));
+                        alert('Failed to place order.\n\nError: ' + (orderError.message || orderError.code || JSON.stringify(orderError)));
                         btn.disabled = false;
                         btn.textContent = 'Place Order';
                         return;
@@ -1834,7 +1834,7 @@
                     }
 
                     // Show digital payment instructions if needed
-                    if (paymentMethod === 'digital' && selectedDigitalOption) {
+                    if (isDigital && selectedDigitalOption) {
                         const dMeta = { gcash:'GCash', maya:'Maya', bank:'Bank Transfer' };
                         const dLabel = dMeta[selectedDigitalOption.type] || 'Digital';
                         const dName  = selectedDigitalOption.bank_name ? dLabel + ' — ' + selectedDigitalOption.bank_name : dLabel;
