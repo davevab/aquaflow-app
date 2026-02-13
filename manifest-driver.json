@@ -4,7 +4,7 @@
   "short_name": "AquaFlow",
   "description": "Deliver water to customers",
   "start_url": "/driver-app.html",
-  "scope": "/",
+  "scope": "/driver-app.html",
   "display": "standalone",
   "background_color": "#f0fdf4",
   "theme_color": "#16a34a",

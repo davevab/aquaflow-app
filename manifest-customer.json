@@ -1,9 +1,9 @@
 {
-  "id": "customer-app",
-  "name": "AquaFlow Customer",
+  "id": "/customer-order-form.html",
+  "name": "AquaFlow",
   "short_name": "AquaFlow",
   "description": "Order pure water delivery",
-  "start_url": "/customer-order-form.html?pwa=customer",
+  "start_url": "/customer-order-form.html",
   "scope": "/customer-order-form.html",
   "display": "standalone",
   "background_color": "#eff6ff",
