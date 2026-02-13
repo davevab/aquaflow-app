@@ -1240,6 +1240,57 @@
         <span id="toastMessage">✓ Payment status updated!</span>
     </div>
 
+    <!-- Quick Sale Floating Button -->
+    <button id="quickSaleBtn" onclick="openQuickSale()" style="position:fixed;bottom:2rem;right:1.5rem;z-index:900;background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;border-radius:1rem;padding:0.875rem 1.25rem;font-size:1rem;font-weight:700;box-shadow:0 4px 16px rgba(16,185,129,0.4);cursor:pointer;display:flex;align-items:center;gap:0.5rem;transition:all 0.2s;">
+        ⚡ Quick Sale
+    </button>
+
+    <!-- Quick Sale Modal -->
+    <div class="modal" id="quickSaleModal">
+        <div class="modal-content" style="max-width:420px;">
+            <div class="modal-header" style="background:linear-gradient(135deg,#10b981,#059669);border-radius:1rem 1rem 0 0;">
+                <h3 class="modal-title" style="color:white;">⚡ Quick Sale</h3>
+                <button class="close-btn" onclick="closeQuickSale()" style="color:white;">×</button>
+            </div>
+            <div class="modal-body" style="padding:1.5rem;">
+
+                <!-- Quantity -->
+                <div style="margin-bottom:1.5rem;">
+                    <div style="font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.75rem;">Gallons</div>
+                    <div style="display:flex;align-items:center;gap:1rem;">
+                        <button onclick="changeQty(-1)" style="width:3rem;height:3rem;border-radius:50%;border:2px solid #e5e7eb;background:white;font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:600;">−</button>
+                        <input type="number" id="qsQty" value="1" min="1" style="flex:1;text-align:center;font-size:2rem;font-weight:700;color:#111827;border:2px solid #e5e7eb;border-radius:0.5rem;padding:0.5rem;" oninput="updateQsTotal()">
+                        <button onclick="changeQty(1)" style="width:3rem;height:3rem;border-radius:50%;border:2px solid #e5e7eb;background:white;font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:600;">+</button>
+                    </div>
+                </div>
+
+                <!-- Total Display -->
+                <div style="background:#f0fdf4;border:2px solid #10b981;border-radius:0.75rem;padding:1rem;text-align:center;margin-bottom:1.5rem;">
+                    <div style="font-size:0.75rem;color:#059669;font-weight:600;margin-bottom:0.25rem;">TOTAL</div>
+                    <div id="qsTotal" style="font-size:2rem;font-weight:700;color:#059669;">₱20</div>
+                    <div id="qsPriceNote" style="font-size:0.75rem;color:#6b7280;margin-top:0.25rem;">₱20/gallon</div>
+                </div>
+
+                <!-- Payment Method -->
+                <div style="margin-bottom:1.5rem;">
+                    <div style="font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.75rem;">Payment Method</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                        <button id="qsCash" onclick="selectQsPayment('cash')" style="padding:0.875rem;border:2px solid #10b981;background:#f0fdf4;border-radius:0.5rem;font-weight:600;font-size:0.9375rem;cursor:pointer;">💵 Cash</button>
+                        <button id="qsGcash" onclick="selectQsPayment('gcash')" style="padding:0.875rem;border:2px solid #e5e7eb;background:white;border-radius:0.5rem;font-weight:600;font-size:0.9375rem;cursor:pointer;">📱 GCash</button>
+                    </div>
+                </div>
+
+                <!-- Customer Name (optional) -->
+                <div style="margin-bottom:1.5rem;">
+                    <div style="font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">Customer Name <span style="font-weight:400;color:#9ca3af;">(optional)</span></div>
+                    <input type="text" id="qsCustomerName" placeholder="Walk-in customer" style="width:100%;padding:0.625rem 0.875rem;border:1px solid #d1d5db;border-radius:0.5rem;font-size:0.9375rem;">
+                </div>
+
+                <button onclick="confirmQuickSale()" style="width:100%;padding:1rem;background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;border-radius:0.5rem;font-size:1.0625rem;font-weight:700;cursor:pointer;">✓ Confirm Sale</button>
+            </div>
+        </div>
+    </div>
+
     <!-- New Order Notification Banner (Level 1) -->
     <div class="notif-banner" id="notifBanner" onclick="dismissNotifBanner()">
         <span class="notif-banner-icon">🔔</span>
@@ -2445,6 +2496,106 @@
         async function removeSubscriptionFromDB(endpoint) {
             await supabaseClient.from('push_subscriptions').delete().eq('endpoint', endpoint);
         }
+
+        // ─── QUICK SALE ───────────────────────────────────────
+        let qsPaymentMethod = 'cash';
+        let qsPricePerGallon = 20;
+
+        async function openQuickSale() {
+            // Fetch latest price from settings
+            const { data } = await supabaseClient.from('settings').select('price_per_gallon').single();
+            qsPricePerGallon = data?.price_per_gallon || 20;
+
+            // Reset modal
+            document.getElementById('qsQty').value = 1;
+            document.getElementById('qsCustomerName').value = '';
+            qsPaymentMethod = 'cash';
+            selectQsPayment('cash');
+            updateQsTotal();
+            document.getElementById('quickSaleModal').classList.add('show');
+        }
+
+        function closeQuickSale() {
+            document.getElementById('quickSaleModal').classList.remove('show');
+        }
+
+        function changeQty(delta) {
+            const input = document.getElementById('qsQty');
+            const newVal = Math.max(1, parseInt(input.value || 1) + delta);
+            input.value = newVal;
+            updateQsTotal();
+        }
+
+        function updateQsTotal() {
+            const qty = parseInt(document.getElementById('qsQty').value) || 1;
+            const total = qty * qsPricePerGallon;
+            document.getElementById('qsTotal').textContent = '₱' + total.toLocaleString();
+            document.getElementById('qsPriceNote').textContent = '₱' + qsPricePerGallon + '/gallon';
+        }
+
+        function selectQsPayment(method) {
+            qsPaymentMethod = method;
+            const cashBtn  = document.getElementById('qsCash');
+            const gcashBtn = document.getElementById('qsGcash');
+            if (method === 'cash') {
+                cashBtn.style.border  = '2px solid #10b981';
+                cashBtn.style.background = '#f0fdf4';
+                gcashBtn.style.border = '2px solid #e5e7eb';
+                gcashBtn.style.background = 'white';
+            } else {
+                gcashBtn.style.border  = '2px solid #10b981';
+                gcashBtn.style.background = '#f0fdf4';
+                cashBtn.style.border  = '2px solid #e5e7eb';
+                cashBtn.style.background = 'white';
+            }
+        }
+
+        async function confirmQuickSale() {
+            const qty = parseInt(document.getElementById('qsQty').value) || 1;
+            const customerName = document.getElementById('qsCustomerName').value.trim() || 'Walk-in';
+            const total = qty * qsPricePerGallon;
+            const today = getToday();
+
+            try {
+                const { error } = await supabaseClient.from('orders').insert([{
+                    customer_name: customerName,
+                    customer_phone: 'walk-in',
+                    customer_address: 'Walk-in purchase',
+                    customer_type: 'household',
+                    quantity: qty,
+                    total_amount: total,
+                    payment_method: qsPaymentMethod === 'cash' ? 'cod' : 'gcash',
+                    payment_status: 'paid',
+                    order_status: 'completed',
+                    order_type: 'walk_in',
+                    delivery_date: today,
+                    delivery_time: 'am',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }]);
+
+                if (error) {
+                    console.error('Quick sale error:', error);
+                    alert('Failed to save sale. Please try again.');
+                    return;
+                }
+
+                closeQuickSale();
+                showToast('⚡ Sale recorded! ₱' + total.toLocaleString());
+                loadOrders();
+
+            } catch (err) {
+                console.error('Quick sale error:', err);
+                alert('An error occurred. Please try again.');
+            }
+        }
+
+        // Close quick sale modal on background click
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('quickSaleModal').addEventListener('click', function(e) {
+                if (e.target === this) closeQuickSale();
+            });
+        });
     </script>
 </body>
 </html>
