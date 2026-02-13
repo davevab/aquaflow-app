@@ -1726,12 +1726,12 @@
                                 ${order.payment_status === 'paid' ? '✓ Paid' : '⏳ Pending'}
                             </span>
                             <span class="badge ${order.payment_method === 'cod' ? 'badge-cod' : 'badge-gcash'}">
-                                ${order.payment_method === 'cod' ? 'COD' : 'GCash'}
+                                ${isWalkIn && order.payment_method === 'cod' ? 'Cash' : order.payment_method === 'cod' ? 'COD' : 'GCash'}
                             </span>
                             ${assignmentBadge}
                         </div>
                         <div class="order-datetime">
-                            <span>${formatDateCompact(order.delivery_date)} • ${order.delivery_time}</span>
+                            <span>${isWalkIn ? 'Walk-in' : formatDateCompact(order.delivery_date) + ' • ' + order.delivery_time}</span>
                             <span class="order-arrow">→</span>
                         </div>
                     </div>
