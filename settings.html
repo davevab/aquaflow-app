@@ -522,6 +522,18 @@
             </div>
         </div>
 
+        <!-- Digital Payments -->
+        <div class="section-card">
+            <div class="section-header">
+                <h2 class="section-title"><span>💳</span><span>Digital Payments</span></h2>
+                <button class="btn btn-success btn-small" onclick="openAddPaymentModal()">+ Add</button>
+            </div>
+            <div class="section-body">
+                <div class="info-box">💡 These payment options will be shown to customers when they choose Digital Pay.</div>
+                <div id="paymentOptionsList"></div>
+            </div>
+        </div>
+
         <!-- Business Information -->
         <div class="section-card">
             <div class="section-header">
@@ -581,6 +593,51 @@
                     </button>
                     <button class="btn btn-secondary" onclick="toggleBusinessEdit()">Cancel</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Digital Payment Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="paymentModalTitle">Add Payment Option</h3>
+                <button class="modal-close" onclick="closePaymentModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Payment Type</label>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:0.25rem;">
+                        <button type="button" id="ptGcash" onclick="selectPaymentType('gcash')" style="padding:0.625rem 0.25rem;border:2px solid #2563eb;background:#eff6ff;border-radius:0.625rem;cursor:pointer;text-align:center;">
+                            <div style="font-size:1.25rem;">📱</div>
+                            <div style="font-size:0.7rem;font-weight:600;color:#1e40af;margin-top:0.25rem;">GCash</div>
+                        </button>
+                        <button type="button" id="ptMaya" onclick="selectPaymentType('maya')" style="padding:0.625rem 0.25rem;border:2px solid #e5e7eb;background:white;border-radius:0.625rem;cursor:pointer;text-align:center;">
+                            <div style="font-size:1.25rem;">💚</div>
+                            <div style="font-size:0.7rem;font-weight:600;color:#6b7280;margin-top:0.25rem;">Maya</div>
+                        </button>
+                        <button type="button" id="ptBank" onclick="selectPaymentType('bank')" style="padding:0.625rem 0.25rem;border:2px solid #e5e7eb;background:white;border-radius:0.625rem;cursor:pointer;text-align:center;">
+                            <div style="font-size:1.25rem;">🏦</div>
+                            <div style="font-size:0.7rem;font-weight:600;color:#6b7280;margin-top:0.25rem;">Bank</div>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Account Name <span style="color:#ef4444;">*</span></label>
+                    <input type="text" class="form-input" id="pmAccountName" placeholder="Juan Dela Cruz">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" id="pmNumberLabel">Number <span style="color:#ef4444;">*</span></label>
+                    <input type="text" class="form-input" id="pmAccountNumber" placeholder="09XX XXX XXXX">
+                </div>
+                <div class="form-group" id="pmBankNameGroup" style="display:none;">
+                    <label class="form-label">Bank Name <span style="color:#ef4444;">*</span></label>
+                    <input type="text" class="form-input" id="pmBankName" placeholder="BDO, BPI, UnionBank...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closePaymentModal()">Cancel</button>
+                <button class="btn btn-success" onclick="savePaymentOption()">💾 Save</button>
             </div>
         </div>
     </div>
@@ -646,6 +703,7 @@
                 if (settings) {
                     currentSettings = settings;
                     populateSettings(settings);
+                    renderPaymentOptions();
                 } else {
                     // Set defaults
                     document.getElementById('pricePerGallon').value = 20;
@@ -1092,11 +1150,144 @@
 
             // Close modal on background click
             document.getElementById('personnelModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeModal();
-                }
+                if (e.target === this) closeModal();
             });
+            document.getElementById('paymentModal').addEventListener('click', function(e) {
+                if (e.target === this) closePaymentModal();
+            });
+
+            // Load payment options
+            renderPaymentOptions();
         });
+
+        // ─── DIGITAL PAYMENTS ────────────────────────────────
+        let paymentOptions = [];
+        let editingPaymentIndex = null;
+        let selectedPaymentType = 'gcash';
+
+        const PAYMENT_META = {
+            gcash: { label: 'GCash',         emoji: '📱', color: '#2563eb', bg: '#eff6ff' },
+            maya:  { label: 'Maya',          emoji: '💚', color: '#059669', bg: '#f0fdf4' },
+            bank:  { label: 'Bank Transfer', emoji: '🏦', color: '#7c3aed', bg: '#f5f3ff' }
+        };
+
+        function selectPaymentType(type) {
+            selectedPaymentType = type;
+            ['gcash','maya','bank'].forEach(t => {
+                const btn = document.getElementById('pt' + t.charAt(0).toUpperCase() + t.slice(1));
+                const m = PAYMENT_META[t];
+                const active = t === type;
+                btn.style.border = active ? `2px solid ${m.color}` : '2px solid #e5e7eb';
+                btn.style.background = active ? m.bg : 'white';
+                btn.querySelector('div:last-child').style.color = active ? m.color : '#6b7280';
+            });
+            // Toggle bank name field
+            document.getElementById('pmBankNameGroup').style.display = type === 'bank' ? 'block' : 'none';
+            document.getElementById('pmNumberLabel').innerHTML = type === 'bank'
+                ? 'Account Number <span style="color:#ef4444;">*</span>'
+                : 'Number <span style="color:#ef4444;">*</span>';
+            document.getElementById('pmAccountNumber').placeholder = type === 'bank' ? '1234-5678-9012' : '09XX XXX XXXX';
+        }
+
+        function renderPaymentOptions() {
+            // Load from currentSettings
+            paymentOptions = currentSettings.payment_options || [];
+            const container = document.getElementById('paymentOptionsList');
+            if (paymentOptions.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-icon">💳</div><p>No payment options yet</p></div>`;
+                return;
+            }
+            container.innerHTML = paymentOptions.map((p, i) => {
+                const m = PAYMENT_META[p.type] || PAYMENT_META.gcash;
+                return `
+                <div class="personnel-card" style="border-left:4px solid ${m.color};">
+                    <div class="personnel-info">
+                        <div class="personnel-name">${m.emoji} ${m.label}</div>
+                        <div class="personnel-details">
+                            ${p.bank_name ? `<span>🏦 ${p.bank_name} &nbsp;·&nbsp; </span>` : ''}
+                            <span>👤 ${p.account_name}</span>
+                            <span style="margin-left:0.5rem;font-weight:600;">📱 ${p.account_number}</span>
+                        </div>
+                    </div>
+                    <div class="personnel-actions">
+                        <button class="btn btn-secondary btn-small" onclick="editPaymentOption(${i})">Edit</button>
+                        <button class="btn btn-danger btn-small" onclick="deletePaymentOption(${i})">Delete</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function openAddPaymentModal() {
+            editingPaymentIndex = null;
+            document.getElementById('paymentModalTitle').textContent = 'Add Payment Option';
+            document.getElementById('pmAccountName').value = '';
+            document.getElementById('pmAccountNumber').value = '';
+            document.getElementById('pmBankName').value = '';
+            selectPaymentType('gcash');
+            document.getElementById('paymentModal').classList.add('show');
+        }
+
+        function editPaymentOption(index) {
+            editingPaymentIndex = index;
+            const p = paymentOptions[index];
+            document.getElementById('paymentModalTitle').textContent = 'Edit Payment Option';
+            selectPaymentType(p.type);
+            document.getElementById('pmAccountName').value = p.account_name;
+            document.getElementById('pmAccountNumber').value = p.account_number;
+            document.getElementById('pmBankName').value = p.bank_name || '';
+            document.getElementById('paymentModal').classList.add('show');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.remove('show');
+        }
+
+        async function savePaymentOption() {
+            const accountName   = document.getElementById('pmAccountName').value.trim();
+            const accountNumber = document.getElementById('pmAccountNumber').value.trim();
+            const bankName      = document.getElementById('pmBankName').value.trim();
+
+            if (!accountName || !accountNumber || (selectedPaymentType === 'bank' && !bankName)) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+
+            const entry = { type: selectedPaymentType, account_name: accountName, account_number: accountNumber };
+            if (selectedPaymentType === 'bank') entry.bank_name = bankName;
+
+            if (editingPaymentIndex !== null) {
+                paymentOptions[editingPaymentIndex] = entry;
+            } else {
+                paymentOptions.push(entry);
+            }
+
+            await persistPaymentOptions();
+        }
+
+        async function deletePaymentOption(index) {
+            if (!confirm('Remove this payment option?')) return;
+            paymentOptions.splice(index, 1);
+            await persistPaymentOptions();
+        }
+
+        async function persistPaymentOptions() {
+            try {
+                let result;
+                if (currentSettings.id) {
+                    result = await supabaseClient.from('settings').update({ payment_options: paymentOptions }).eq('id', currentSettings.id).select().single();
+                } else {
+                    result = await supabaseClient.from('settings').insert([{ price_per_gallon: 20, payment_options: paymentOptions }]).select().single();
+                }
+                if (result.error) { alert('Failed to save. Please try again.'); return; }
+                currentSettings = result.data;
+                closePaymentModal();
+                renderPaymentOptions();
+                showToast('✓ Payment options saved!');
+            } catch(err) {
+                console.error(err);
+                alert('An error occurred.');
+            }
+        }
     </script>
 </body>
 </html>

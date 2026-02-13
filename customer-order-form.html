@@ -912,8 +912,21 @@
                     <div style="margin-bottom:1rem;">
                         <div style="font-size:0.8125rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">Payment</div>
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
-                            <button type="button" id="payCOD" onclick="selectPayment('cod')" style="padding:0.625rem;border:2px solid #2563eb;background:#eff6ff;border-radius:0.5rem;font-size:0.875rem;font-weight:600;cursor:pointer;color:#1e40af;">💵 COD</button>
-                            <button type="button" id="payGCash" onclick="selectPayment('gcash')" style="padding:0.625rem;border:2px solid #e5e7eb;background:white;border-radius:0.5rem;font-size:0.875rem;font-weight:600;cursor:pointer;color:#6b7280;">📱 GCash</button>
+                            <button type="button" id="payCOD" onclick="selectPayment('cod',null)" style="padding:0.625rem;border:2px solid #2563eb;background:#eff6ff;border-radius:0.5rem;font-size:0.875rem;font-weight:600;cursor:pointer;color:#1e40af;">💵 COD</button>
+                            <button type="button" id="payDigital" onclick="openDigitalPaySheet()" style="padding:0.625rem;border:2px solid #e5e7eb;background:white;border-radius:0.5rem;font-size:0.875rem;font-weight:600;cursor:pointer;color:#6b7280;">💳 Digital Pay</button>
+                        </div>
+                        <div id="selectedDigitalLabel" style="display:none;margin-top:0.375rem;font-size:0.75rem;color:#059669;font-weight:600;"></div>
+                    </div>
+
+                    <!-- Digital Pay Bottom Sheet -->
+                    <div id="digitalPaySheet" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:2000;background:rgba(0,0,0,0.4);" onclick="closeDigitalPaySheet()">
+                        <div style="background:white;border-radius:1.25rem 1.25rem 0 0;padding:1.25rem;max-width:480px;margin:0 auto;" onclick="event.stopPropagation()">
+                            <div style="text-align:center;margin-bottom:1rem;">
+                                <div style="width:2.5rem;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 0.75rem;"></div>
+                                <div style="font-weight:700;font-size:1rem;">Choose Digital Payment</div>
+                            </div>
+                            <div id="digitalPayOptions"></div>
+                            <button onclick="closeDigitalPaySheet()" style="width:100%;margin-top:0.75rem;padding:0.75rem;background:#f3f4f6;border:none;border-radius:0.5rem;font-weight:600;cursor:pointer;color:#6b7280;">Cancel</button>
                         </div>
                     </div>
 
@@ -1488,20 +1501,72 @@
             selectTime('am'); // default
 
             // Payment toggle
-            window.selectPayment = function(val) {
-                const cod   = document.getElementById('payCOD');
-                const gcash = document.getElementById('payGCash');
+            let selectedDigitalOption = null; // stores the full payment option object
+
+            window.selectPayment = function(val, digitalOption) {
+                const cod     = document.getElementById('payCOD');
+                const digital = document.getElementById('payDigital');
+                const label   = document.getElementById('selectedDigitalLabel');
                 if (val === 'cod') {
                     cod.style.border = '2px solid #2563eb'; cod.style.background = '#eff6ff'; cod.style.color = '#1e40af';
-                    gcash.style.border = '2px solid #e5e7eb'; gcash.style.background = 'white'; gcash.style.color = '#6b7280';
+                    digital.style.border = '2px solid #e5e7eb'; digital.style.background = 'white'; digital.style.color = '#6b7280';
+                    digital.textContent = '💳 Digital Pay';
+                    label.style.display = 'none';
+                    selectedDigitalOption = null;
                 } else {
-                    gcash.style.border = '2px solid #2563eb'; gcash.style.background = '#eff6ff'; gcash.style.color = '#1e40af';
+                    digital.style.border = '2px solid #2563eb'; digital.style.background = '#eff6ff'; digital.style.color = '#1e40af';
                     cod.style.border = '2px solid #e5e7eb'; cod.style.background = 'white'; cod.style.color = '#6b7280';
+                    selectedDigitalOption = digitalOption;
+                    if (digitalOption) {
+                        const META = { gcash:'📱', maya:'💚', bank:'🏦' };
+                        digital.textContent = (META[digitalOption.type]||'💳') + ' ' + (digitalOption.type === 'bank' ? digitalOption.bank_name : digitalOption.type.charAt(0).toUpperCase()+digitalOption.type.slice(1));
+                        label.style.display = 'block';
+                        label.textContent = '✓ ' + digitalOption.account_name + ' · ' + digitalOption.account_number;
+                    }
                 }
-                cod.dataset.selected   = val === 'cod'   ? '1' : '0';
-                gcash.dataset.selected = val === 'gcash' ? '1' : '0';
+                cod.dataset.selected     = val === 'cod'     ? '1' : '0';
+                digital.dataset.selected = val === 'digital' ? '1' : '0';
             };
-            selectPayment('cod'); // default
+            selectPayment('cod', null); // default
+
+            // Digital Pay bottom sheet
+            let ownerPaymentOptions = [];
+
+            async function loadOwnerPaymentOptions() {
+                try {
+                    const { data } = await supabaseClient.from('settings').select('payment_options').single();
+                    ownerPaymentOptions = data?.payment_options || [];
+                } catch(e) { ownerPaymentOptions = []; }
+            }
+
+            window.openDigitalPaySheet = async function() {
+                if (ownerPaymentOptions.length === 0) await loadOwnerPaymentOptions();
+                const container = document.getElementById('digitalPayOptions');
+                const META = {
+                    gcash: { label:'GCash',         emoji:'📱', color:'#2563eb', bg:'#eff6ff' },
+                    maya:  { label:'Maya',          emoji:'💚', color:'#059669', bg:'#f0fdf4' },
+                    bank:  { label:'Bank Transfer', emoji:'🏦', color:'#7c3aed', bg:'#f5f3ff' }
+                };
+                if (ownerPaymentOptions.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:#6b7280;">No digital payment options configured yet.</div>';
+                } else {
+                    container.innerHTML = ownerPaymentOptions.map((p, i) => {
+                        const m = META[p.type] || META.gcash;
+                        return `<button onclick="selectPayment('digital', ${JSON.stringify(p).replace(/"/g,'&quot;')});closeDigitalPaySheet()" style="width:100%;display:flex;align-items:center;gap:0.875rem;padding:0.875rem;border:1px solid #e5e7eb;border-radius:0.625rem;background:white;cursor:pointer;margin-bottom:0.5rem;text-align:left;">
+                            <div style="width:2.5rem;height:2.5rem;background:${m.bg};border-radius:0.5rem;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">${m.emoji}</div>
+                            <div>
+                                <div style="font-weight:700;color:#111827;">${m.label}${p.bank_name ? ' — '+p.bank_name : ''}</div>
+                                <div style="font-size:0.8125rem;color:#6b7280;">${p.account_name} · ${p.account_number}</div>
+                            </div>
+                        </button>`;
+                    }).join('');
+                }
+                document.getElementById('digitalPaySheet').style.display = 'block';
+            };
+
+            window.closeDigitalPaySheet = function() {
+                document.getElementById('digitalPaySheet').style.display = 'none';
+            };
 
             // Quantity stepper
             window.changeCustomerQty = function(delta) {
@@ -1685,7 +1750,8 @@
                     var quantity = parseInt(document.getElementById('quantity').value);
                     var deliveryDate = document.getElementById('deliveryDate').value;
                     var deliveryTime = document.getElementById('radioPM').dataset.selected === '1' ? 'pm' : 'am';
-                    var paymentMethod = document.getElementById('payGCash').dataset.selected === '1' ? 'gcash' : 'cod';
+                    var isDigital = document.getElementById('payDigital').dataset.selected === '1';
+                    var paymentMethod = isDigital ? 'digital' : 'cod';
                     var notes = document.getElementById('specialInstructions').value.trim();
 
                     // Calculate total
@@ -1750,8 +1816,11 @@
                     document.getElementById('confirmTime').textContent = 
                         deliveryTime === 'am' ? 'Morning (10AM-12PM)' : 'Afternoon (3PM-5PM)';
                     document.getElementById('confirmTotal').textContent = '₱' + total;
+                    const META = { gcash:'GCash', maya:'Maya', bank:'Bank Transfer' };
                     document.getElementById('confirmPayment').textContent = 
-                        paymentMethod === 'cod' ? 'Cash on Delivery' : 'GCash';
+                        paymentMethod === 'cod' ? 'Cash on Delivery'
+                        : selectedDigitalOption ? (META[selectedDigitalOption.type] || 'Digital') + (selectedDigitalOption.bank_name ? ' — '+selectedDigitalOption.bank_name : '')
+                        : 'Digital Pay';
                     document.getElementById('confirmName').textContent = customerName;
                     document.getElementById('confirmPhone').textContent = customerPhone;
                     document.getElementById('confirmAddress').textContent = customerAddress;
@@ -1764,11 +1833,19 @@
                         document.getElementById('instructionsBox').classList.add('hidden');
                     }
 
-                    // Show GCash instructions if needed
-                    if (paymentMethod === 'gcash') {
+                    // Show digital payment instructions if needed
+                    if (paymentMethod === 'digital' && selectedDigitalOption) {
+                        const dMeta = { gcash:'GCash', maya:'Maya', bank:'Bank Transfer' };
+                        const dLabel = dMeta[selectedDigitalOption.type] || 'Digital';
+                        const dName  = selectedDigitalOption.bank_name ? dLabel + ' — ' + selectedDigitalOption.bank_name : dLabel;
                         document.getElementById('gcashInstructions').classList.remove('hidden');
-                        document.getElementById('gcashAmount').textContent = '₱' + total;
-                        document.getElementById('gcashReference').textContent = '#' + trackingNumber;
+                        document.getElementById('gcashInstructions').querySelector('.gcash-title').textContent = '💳 ' + dName + ' Payment Instructions:';
+                        document.getElementById('gcashInstructions').querySelector('.gcash-content').innerHTML =
+                            `Send payment to: <strong>${selectedDigitalOption.account_number}</strong><br>` +
+                            `Account Name: <strong>${selectedDigitalOption.account_name}</strong><br>` +
+                            `Amount: <strong id="gcashAmount">₱${total}</strong><br>` +
+                            `Reference: <strong id="gcashReference">#${trackingNumber}</strong>` +
+                            `<p style="font-size:0.875rem;margin-top:0.75rem;font-weight:700;color:#dc2626;background:#fee2e2;padding:0.5rem;border-radius:0.375rem;border-left:3px solid #dc2626;">⚠️ Send payment first, then the station will verify and schedule your delivery.</p>`;
                         document.getElementById('confirmMessage').classList.add('hidden');
                     } else {
                         document.getElementById('gcashInstructions').classList.add('hidden');
@@ -1816,7 +1893,8 @@
                 
                 // Reset time + payment toggles
                 selectTime('am');
-                selectPayment('cod');
+                selectPayment('cod', null);
+                selectedDigitalOption = null;
                 // Hide notes
                 document.getElementById('notesSection').style.display = 'none';
                 document.getElementById('notesArrow').textContent = '▾';
