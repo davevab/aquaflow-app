@@ -760,7 +760,6 @@
 
             <div class="card">
                 <h3 class="section-title">Enter Your Phone Number</h3>
-                <p class="hint-text" style="margin-bottom: 1rem;">We'll check if you're a returning customer</p>
                 
                 <div class="form-group">
                     <label>Phone Number <span class="required">*</span></label>
@@ -889,69 +888,64 @@
 
                 <!-- Order Details Section (hidden when editing profile) -->
                 <div id="orderDetailsSection">
-                    <h3 class="section-title">Order Details</h3>
 
-                    <div class="form-group">
-                        <label>Quantity (Gallons) <span class="required">*</span></label>
-                        <input type="number" id="quantity" min="1" placeholder="3">
+                    <!-- Quantity Stepper -->
+                    <div style="margin-bottom:1rem;">
+                        <div style="font-size:0.8125rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">Gallons <span style="color:#ef4444;">*</span></div>
+                        <div style="display:flex;align-items:center;gap:0.75rem;background:#f9fafb;border:1px solid #e5e7eb;border-radius:0.625rem;padding:0.625rem;">
+                            <button type="button" onclick="changeCustomerQty(-1)" style="width:3rem;height:3rem;flex-shrink:0;border-radius:0.625rem;border:1px solid #e5e7eb;background:white;font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:600;">−</button>
+                            <input type="number" id="quantity" min="1" value="1" style="flex:1;min-width:0;text-align:center;font-size:1.5rem;font-weight:700;color:#111827;border:none;background:transparent;outline:none;" oninput="updateTotal()">
+                            <button type="button" onclick="changeCustomerQty(1)" style="width:3rem;height:3rem;flex-shrink:0;border-radius:0.625rem;border:1px solid #e5e7eb;background:white;font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:600;">+</button>
+                        </div>
                         <p class="error-text" id="quantityError">Please enter quantity</p>
                     </div>
 
-                <div class="form-group">
-                    <label>Delivery Date <span class="required">*</span></label>
-                    <input type="date" id="deliveryDate">
-                    <p class="error-text" id="dateError">Please select delivery date</p>
-                </div>
+                    <!-- Date + Time in one row -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+                        <div>
+                            <div style="font-size:0.8125rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">Date <span style="color:#ef4444;">*</span></div>
+                            <input type="date" id="deliveryDate" style="width:100%;padding:0.625rem 0.75rem;border:1px solid #d1d5db;border-radius:0.625rem;font-size:0.875rem;background:#f9fafb;box-sizing:border-box;min-height:unset;">
+                            <p class="error-text" id="dateError">Select a date</p>
+                        </div>
+                        <div>
+                            <div style="font-size:0.8125rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">Time</div>
+                            <div style="display:flex;flex-direction:column;gap:0.375rem;">
+                                <button type="button" id="radioAM" onclick="selectTime('am')" style="padding:0.5rem;border:1px solid #2563eb;background:#eff6ff;border-radius:0.5rem;font-size:0.8125rem;font-weight:600;cursor:pointer;color:#1e40af;">☀️ Morning</button>
+                                <button type="button" id="radioPM" onclick="selectTime('pm')" style="padding:0.5rem;border:1px solid #e5e7eb;background:white;border-radius:0.5rem;font-size:0.8125rem;font-weight:600;cursor:pointer;color:#6b7280;">🌤 Afternoon</button>
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="form-group">
-                    <label>Delivery Time Window</label>
-                    <div class="cutoff-warning" id="cutoffWarning">
+                    <!-- Cutoff warning -->
+                    <div class="cutoff-warning" id="cutoffWarning" style="margin-bottom:0.75rem;">
                         ⚠️ <span id="cutoffMessage"></span>
                     </div>
-                    <div class="radio-option selected" id="radioAM">
-                        <input type="radio" name="deliveryWindow" value="am" checked>
-                        <div class="radio-content">
-                            <p class="radio-title">Morning Delivery (10AM-12PM)</p>
-                            <p class="radio-description">Order before 10:00 AM on delivery day</p>
+
+                    <!-- Payment -->
+                    <div style="margin-bottom:1rem;">
+                        <div style="font-size:0.8125rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">Payment</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+                            <button type="button" id="payCOD" onclick="selectPayment('cod')" style="padding:0.625rem;border:2px solid #2563eb;background:#eff6ff;border-radius:0.5rem;font-size:0.875rem;font-weight:600;cursor:pointer;color:#1e40af;">💵 COD</button>
+                            <button type="button" id="payGCash" onclick="selectPayment('gcash')" style="padding:0.625rem;border:2px solid #e5e7eb;background:white;border-radius:0.5rem;font-size:0.875rem;font-weight:600;cursor:pointer;color:#6b7280;">📱 GCash</button>
                         </div>
                     </div>
-                    <div class="radio-option" id="radioPM">
-                        <input type="radio" name="deliveryWindow" value="pm">
-                        <div class="radio-content">
-                            <p class="radio-title">Afternoon Delivery (3PM-5PM)</p>
-                            <p class="radio-description">Order before 3:00 PM on delivery day</p>
+
+                    <!-- Special Instructions collapsible -->
+                    <div style="margin-bottom:1rem;">
+                        <button type="button" id="toggleNotesBtn" onclick="toggleNotes()" style="background:none;border:none;font-size:0.8125rem;color:#6b7280;cursor:pointer;padding:0;display:flex;align-items:center;gap:0.375rem;">📝 Add note <span id="notesArrow">▾</span></button>
+                        <div id="notesSection" style="display:none;margin-top:0.5rem;">
+                            <textarea id="specialInstructions" placeholder="e.g., Ring the doorbell, Leave at gate..." style="width:100%;padding:0.625rem;border:1px solid #d1d5db;border-radius:0.5rem;font-size:0.875rem;min-height:3rem;resize:none;box-sizing:border-box;"></textarea>
                         </div>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label>Payment Method</label>
-                    <div class="payment-grid">
-                        <div class="payment-option selected" id="payCOD">
-                            <input type="radio" name="paymentMethod" value="cod" checked>
-                            <span>Cash on Delivery</span>
-                        </div>
-                        <div class="payment-option" id="payGCash">
-                            <input type="radio" name="paymentMethod" value="gcash">
-                            <span>GCash</span>
-                        </div>
+                    <!-- Total + Place Order -->
+                    <div style="background:#eff6ff;border-radius:0.625rem;padding:0.875rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:0.875rem;">
+                        <span style="font-weight:600;color:#374151;">Total</span>
+                        <span style="font-size:1.5rem;font-weight:700;color:#2563eb;" id="totalAmount">₱0</span>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label>Special Instructions (Optional)</label>
-                    <textarea id="specialInstructions" placeholder="e.g., Please ring the doorbell, Leave at gate..."></textarea>
-                </div>
-
-                <div class="total-box">
-                    <span class="total-label">Order Total:</span>
-                    <span class="total-amount" id="totalAmount">₱0</span>
-                </div>
-
-                <button class="btn btn-primary" id="placeOrderBtn">Place Order</button>
-                <button class="btn btn-secondary" id="changePhoneBtn">Use Different Number</button>
-
-                <p class="terms">By placing an order, you agree to our terms and conditions</p>
+                    <button class="btn btn-primary" id="placeOrderBtn">Place Order</button>
+                    <button class="btn btn-secondary" id="changePhoneBtn" style="margin-top:0.5rem;">Use Different Number</button>
                 </div>
                 <!-- End Order Details Section -->
             </div>
@@ -1440,35 +1434,25 @@
                 
                 if (selectedDate === todayDate) {
                     if (currentHour >= 15) {
-                        amOption.classList.add('disabled');
-                        pmOption.classList.add('disabled');
+                        amOption.disabled = true; amOption.style.opacity = '0.4';
+                        pmOption.disabled = true; pmOption.style.opacity = '0.4';
                         warningBox.classList.add('show');
-                        warningMessage.textContent = 'Orders placed after 3 PM will be delivered tomorrow. Please select tomorrow\'s date.';
-                        
-                        document.querySelector('input[name="deliveryWindow"][value="pm"]').checked = true;
-                        pmOption.classList.add('selected');
-                        amOption.classList.remove('selected');
-                    }
-                    else if (currentHour >= 10) {
-                        amOption.classList.add('disabled');
-                        pmOption.classList.remove('disabled');
+                        warningMessage.textContent = 'Orders after 3 PM will be delivered tomorrow. Please select tomorrow.';
+                        selectTime('pm');
+                    } else if (currentHour >= 10) {
+                        amOption.disabled = true; amOption.style.opacity = '0.4';
+                        pmOption.disabled = false; pmOption.style.opacity = '1';
                         warningBox.classList.add('show');
-                        warningMessage.textContent = 'Morning delivery cutoff (10 AM) has passed. Only afternoon delivery is available for today.';
-                        
-                        if (document.querySelector('input[name="deliveryWindow"][value="am"]').checked) {
-                            document.querySelector('input[name="deliveryWindow"][value="pm"]').checked = true;
-                            pmOption.classList.add('selected');
-                            amOption.classList.remove('selected');
-                        }
-                    }
-                    else {
-                        amOption.classList.remove('disabled');
-                        pmOption.classList.remove('disabled');
+                        warningMessage.textContent = 'Morning cutoff (10 AM) passed. Only afternoon available today.';
+                        if (document.getElementById('radioAM').dataset.selected === '1') selectTime('pm');
+                    } else {
+                        amOption.disabled = false; amOption.style.opacity = '1';
+                        pmOption.disabled = false; pmOption.style.opacity = '1';
                         warningBox.classList.remove('show');
                     }
                 } else {
-                    amOption.classList.remove('disabled');
-                    pmOption.classList.remove('disabled');
+                    amOption.disabled = false; amOption.style.opacity = '1';
+                    pmOption.disabled = false; pmOption.style.opacity = '1';
                     warningBox.classList.remove('show');
                 }
             }
@@ -1510,37 +1494,53 @@
                 checkDeliveryAvailability();
             }
 
-            // Radio button for delivery window
-            document.getElementById('radioAM').addEventListener('click', function(e) {
-                e.preventDefault();
-                if (this.classList.contains('disabled')) return;
-                document.getElementById('radioAM').classList.add('selected');
-                document.getElementById('radioPM').classList.remove('selected');
-                document.querySelector('input[name="deliveryWindow"][value="am"]').checked = true;
-            });
+            // Delivery time toggle
+            window.selectTime = function(val) {
+                const am = document.getElementById('radioAM');
+                const pm = document.getElementById('radioPM');
+                if (val === 'am') {
+                    am.style.border = '1px solid #2563eb'; am.style.background = '#eff6ff'; am.style.color = '#1e40af';
+                    pm.style.border = '1px solid #e5e7eb'; pm.style.background = 'white'; pm.style.color = '#6b7280';
+                } else {
+                    pm.style.border = '1px solid #2563eb'; pm.style.background = '#eff6ff'; pm.style.color = '#1e40af';
+                    am.style.border = '1px solid #e5e7eb'; am.style.background = 'white'; am.style.color = '#6b7280';
+                }
+                am.dataset.selected = val === 'am' ? '1' : '0';
+                pm.dataset.selected = val === 'pm' ? '1' : '0';
+            };
+            selectTime('am'); // default
 
-            document.getElementById('radioPM').addEventListener('click', function(e) {
-                e.preventDefault();
-                if (this.classList.contains('disabled')) return;
-                document.getElementById('radioPM').classList.add('selected');
-                document.getElementById('radioAM').classList.remove('selected');
-                document.querySelector('input[name="deliveryWindow"][value="pm"]').checked = true;
-            });
+            // Payment toggle
+            window.selectPayment = function(val) {
+                const cod   = document.getElementById('payCOD');
+                const gcash = document.getElementById('payGCash');
+                if (val === 'cod') {
+                    cod.style.border = '2px solid #2563eb'; cod.style.background = '#eff6ff'; cod.style.color = '#1e40af';
+                    gcash.style.border = '2px solid #e5e7eb'; gcash.style.background = 'white'; gcash.style.color = '#6b7280';
+                } else {
+                    gcash.style.border = '2px solid #2563eb'; gcash.style.background = '#eff6ff'; gcash.style.color = '#1e40af';
+                    cod.style.border = '2px solid #e5e7eb'; cod.style.background = 'white'; cod.style.color = '#6b7280';
+                }
+                cod.dataset.selected   = val === 'cod'   ? '1' : '0';
+                gcash.dataset.selected = val === 'gcash' ? '1' : '0';
+            };
+            selectPayment('cod'); // default
 
-            // Payment option buttons
-            document.getElementById('payCOD').addEventListener('click', function(e) {
-                e.preventDefault();
-                document.getElementById('payCOD').classList.add('selected');
-                document.getElementById('payGCash').classList.remove('selected');
-                document.querySelector('input[name="paymentMethod"][value="cod"]').checked = true;
-            });
+            // Quantity stepper
+            window.changeCustomerQty = function(delta) {
+                const input = document.getElementById('quantity');
+                input.value = Math.max(1, parseInt(input.value || 1) + delta);
+                updateTotal();
+            };
 
-            document.getElementById('payGCash').addEventListener('click', function(e) {
-                e.preventDefault();
-                document.getElementById('payGCash').classList.add('selected');
-                document.getElementById('payCOD').classList.remove('selected');
-                document.querySelector('input[name="paymentMethod"][value="gcash"]').checked = true;
-            });
+            // Notes toggle
+            window.toggleNotes = function() {
+                const section = document.getElementById('notesSection');
+                const arrow   = document.getElementById('notesArrow');
+                const visible = section.style.display !== 'none';
+                section.style.display = visible ? 'none' : 'block';
+                arrow.textContent = visible ? '▾' : '▴';
+            };
 
             // Form validation
             function validateForm() {
@@ -1707,8 +1707,8 @@
                     // Get order data
                     var quantity = parseInt(document.getElementById('quantity').value);
                     var deliveryDate = document.getElementById('deliveryDate').value;
-                    var deliveryTime = document.querySelector('input[name="deliveryWindow"]:checked').value;
-                    var paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+                    var deliveryTime = document.getElementById('radioPM').dataset.selected === '1' ? 'pm' : 'am';
+                    var paymentMethod = document.getElementById('payGCash').dataset.selected === '1' ? 'gcash' : 'cod';
                     var notes = document.getElementById('specialInstructions').value.trim();
 
                     // Calculate total
@@ -1838,15 +1838,12 @@
                 document.getElementById('deliveryDate').value = '';
                 document.getElementById('specialInstructions').value = '';
                 
-                // Reset radio buttons
-                document.querySelector('input[name="deliveryWindow"][value="am"]').checked = true;
-                document.querySelector('input[name="paymentMethod"][value="cod"]').checked = true;
-                
-                // Reset styling
-                document.getElementById('radioAM').classList.add('selected');
-                document.getElementById('radioPM').classList.remove('selected');
-                document.getElementById('payCOD').classList.add('selected');
-                document.getElementById('payGCash').classList.remove('selected');
+                // Reset time + payment toggles
+                selectTime('am');
+                selectPayment('cod');
+                // Hide notes
+                document.getElementById('notesSection').style.display = 'none';
+                document.getElementById('notesArrow').textContent = '▾';
                 
                 // Clear errors
                 var errorTexts = document.querySelectorAll('.error-text');
