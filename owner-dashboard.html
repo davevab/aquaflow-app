@@ -1698,13 +1698,16 @@
 
         // Render a single order card HTML
         function renderOrderCard(order) {
-            const customerTypeBadge = order.customer_type && CUSTOMER_TYPE_BADGES[order.customer_type]
+            const isWalkIn = order.customer_phone === 'walk-in';
+            const customerTypeBadge = isWalkIn
+                ? `<span class="badge badge-gcash">🚶 Walk-in</span>`
+                : order.customer_type && CUSTOMER_TYPE_BADGES[order.customer_type]
                 ? `<span class="badge ${CUSTOMER_TYPE_BADGES[order.customer_type].class}">
                     ${CUSTOMER_TYPE_BADGES[order.customer_type].emoji} ${CUSTOMER_TYPE_BADGES[order.customer_type].label}
                    </span>`
                 : '';
             const driverName = order.driver_id ? driverNames[order.driver_id] : null;
-            const assignmentBadge = driverName
+            const assignmentBadge = isWalkIn ? '' : driverName
                 ? `<span class="badge badge-assigned">✓ ${driverName}</span>`
                 : `<span class="badge badge-not-assigned">⚠️ Not Assigned</span>`;
             return `
@@ -1932,18 +1935,22 @@
                     </div>
                 </div>
 
+                ${order.customer_phone !== 'walk-in' ? `
                 <div class="info-section highlight" id="driverAssignmentSection">
                     <div class="info-title">Assigned Driver</div>
                     <div class="info-value" id="assignedDriverName">
                         ${order.driver_id ? '<span style="color: #2563eb;">Loading...</span>' : '<span style="color: #6b7280;">Not assigned</span>'}
                     </div>
                 </div>
+                ` : ''}
 
                 <div class="info-section" style="padding: 1rem 1.5rem; background: white;">
                     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        ${order.customer_phone !== 'walk-in' ? `
                         <button class="btn-action" style="background: #8b5cf6; color: white;" onclick="openAssignDriverModal('${order.id}')">
                             🚚 Assign Driver
                         </button>
+                        ` : ''}
                         ${order.delivery_date < getToday() && order.order_status !== 'completed' ? `
                         <button class="btn-action" style="background: #dc2626; color: white;" onclick="rescheduleToToday('${order.id}')">
                             📅 Reschedule to Today
