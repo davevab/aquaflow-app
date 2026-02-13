@@ -1,7 +1,4 @@
-// api/notify.js - Vercel Serverless Function
-// Triggered by Supabase webhook on new order insert
-// Sends Web Push notifications to all subscribed devices
-
+// api/notify.js - Handles both owner notifications and driver assignment notifications
 const webpush = require('web-push');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -13,65 +10,57 @@ webpush.setVapidDetails(
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_KEY // service role key for server-side access
+    process.env.SUPABASE_SERVICE_KEY
 );
 
 module.exports = async function handler(req, res) {
-    // Only allow POST
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
-        const order = req.body.record || req.body;
+        const order  = req.body.record || req.body;
+        const type   = req.body.type || 'INSERT'; // INSERT = new order, UPDATE = assignment
 
-        // Build notification payload
-        const customerName = order.customer_name || 'Customer';
-        const quantity     = order.quantity || '?';
-        const total        = order.total_amount ? '₱' + order.total_amount : '';
-        const paymentMethod = order.payment_method === 'gcash' ? 'GCash' : 'COD';
+        let payload, query;
 
-        const payload = JSON.stringify({
-            title: '🔔 New Order Received!',
-            body: `${customerName} — ${quantity} gal ${total} (${paymentMethod})`,
-            orderId: order.id || Date.now().toString()
-        });
+        if (type === 'INSERT') {
+            // New order → notify ALL owner subscriptions (no driver_id)
+            payload = JSON.stringify({
+                title: '🔔 New Order Received!',
+                body: `${order.customer_name || 'Customer'} — ${order.quantity || '?'} gal ₱${order.total_amount || ''}`,
+                orderId: order.id || ''
+            });
+            query = supabase.from('push_subscriptions').select('subscription').is('driver_id', null);
 
-        // Get all push subscriptions
-        const { data: subscriptions, error } = await supabase
-            .from('push_subscriptions')
-            .select('subscription');
+        } else if (type === 'UPDATE' && order.driver_id) {
+            // Assignment → notify only THAT driver's subscriptions
+            payload = JSON.stringify({
+                title: '🚚 New Delivery Assigned!',
+                body: `${order.customer_name || 'Customer'} — ${order.quantity || '?'} gal ₱${order.total_amount || ''}`,
+                orderId: order.id || ''
+            });
+            query = supabase.from('push_subscriptions').select('subscription').eq('driver_id', order.driver_id);
 
-        if (error) {
-            console.error('Error fetching subscriptions:', error);
-            return res.status(500).json({ error: 'Failed to fetch subscriptions' });
+        } else {
+            return res.status(200).json({ message: 'No notification needed' });
         }
 
-        if (!subscriptions || subscriptions.length === 0) {
-            return res.status(200).json({ message: 'No subscriptions found' });
-        }
+        const { data: subscriptions, error } = await query;
+        if (error) return res.status(500).json({ error: 'Failed to fetch subscriptions' });
+        if (!subscriptions || subscriptions.length === 0) return res.status(200).json({ message: 'No subscriptions' });
 
-        // Send push to all subscribed devices
         const results = await Promise.allSettled(
-            subscriptions.map(row =>
-                webpush.sendNotification(row.subscription, payload)
-            )
+            subscriptions.map(row => webpush.sendNotification(row.subscription, payload))
         );
 
-        const sent    = results.filter(r => r.status === 'fulfilled').length;
-        const failed  = results.filter(r => r.status === 'rejected').length;
+        const sent   = results.filter(r => r.status === 'fulfilled').length;
+        const failed = results.filter(r => r.status === 'rejected').length;
 
-        // Clean up expired subscriptions (410 Gone)
-        const expiredIndices = results
-            .map((r, i) => r.status === 'rejected' && r.reason?.statusCode === 410 ? i : -1)
-            .filter(i => i >= 0);
-
-        if (expiredIndices.length > 0) {
-            const expiredSubs = expiredIndices.map(i => subscriptions[i].subscription.endpoint);
-            await supabase
-                .from('push_subscriptions')
-                .delete()
-                .in('endpoint', expiredSubs);
+        // Clean up expired subscriptions
+        const expired = results
+            .map((r, i) => r.status === 'rejected' && r.reason?.statusCode === 410 ? subscriptions[i].subscription.endpoint : null)
+            .filter(Boolean);
+        if (expired.length > 0) {
+            await supabase.from('push_subscriptions').delete().in('endpoint', expired);
         }
 
         return res.status(200).json({ sent, failed });
