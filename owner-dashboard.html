@@ -1248,7 +1248,7 @@
     <!-- Quick Sale Modal -->
     <div class="modal" id="quickSaleModal">
         <div class="modal-content" style="max-width:420px;">
-            <div class="modal-header" style="background:linear-gradient(135deg,#10b981,#059669);border-radius:1rem 1rem 0 0;">
+            <div class="modal-header" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);">
                 <h3 class="modal-title" style="color:white;">⚡ Quick Sale</h3>
                 <button class="close-btn" onclick="closeQuickSale()" style="color:white;">×</button>
             </div>
@@ -1257,17 +1257,17 @@
                 <!-- Quantity -->
                 <div style="margin-bottom:1.5rem;">
                     <div style="font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.75rem;">Gallons</div>
-                    <div style="display:flex;align-items:center;gap:1rem;">
-                        <button onclick="changeQty(-1)" style="width:3rem;height:3rem;border-radius:50%;border:2px solid #e5e7eb;background:white;font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:600;">−</button>
-                        <input type="number" id="qsQty" value="1" min="1" style="flex:1;text-align:center;font-size:2rem;font-weight:700;color:#111827;border:2px solid #e5e7eb;border-radius:0.5rem;padding:0.5rem;" oninput="updateQsTotal()">
-                        <button onclick="changeQty(1)" style="width:3rem;height:3rem;border-radius:50%;border:2px solid #e5e7eb;background:white;font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:600;">+</button>
+                    <div style="display:flex;align-items:center;gap:0.75rem;">
+                        <button onclick="changeQty(-1)" style="width:3rem;height:3rem;flex-shrink:0;border-radius:50%;border:2px solid #e5e7eb;background:white;font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:600;">−</button>
+                        <input type="number" id="qsQty" value="1" min="1" style="width:0;flex:1;min-width:0;text-align:center;font-size:2rem;font-weight:700;color:#111827;border:2px solid #e5e7eb;border-radius:0.5rem;padding:0.5rem;box-sizing:border-box;" oninput="updateQsTotal()">
+                        <button onclick="changeQty(1)" style="width:3rem;height:3rem;flex-shrink:0;border-radius:50%;border:2px solid #e5e7eb;background:white;font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:600;">+</button>
                     </div>
                 </div>
 
                 <!-- Total Display -->
-                <div style="background:#f0fdf4;border:2px solid #10b981;border-radius:0.75rem;padding:1rem;text-align:center;margin-bottom:1.5rem;">
-                    <div style="font-size:0.75rem;color:#059669;font-weight:600;margin-bottom:0.25rem;">TOTAL</div>
-                    <div id="qsTotal" style="font-size:2rem;font-weight:700;color:#059669;">₱20</div>
+                <div style="background:#f5f3ff;border:2px solid #667eea;border-radius:0.75rem;padding:1rem;text-align:center;margin-bottom:1.5rem;">
+                    <div style="font-size:0.75rem;color:#5b21b6;font-weight:600;margin-bottom:0.25rem;">TOTAL</div>
+                    <div id="qsTotal" style="font-size:2rem;font-weight:700;color:#667eea;">₱20</div>
                     <div id="qsPriceNote" style="font-size:0.75rem;color:#6b7280;margin-top:0.25rem;">₱20/gallon</div>
                 </div>
 
@@ -1275,7 +1275,7 @@
                 <div style="margin-bottom:1.5rem;">
                     <div style="font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.75rem;">Payment Method</div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-                        <button id="qsCash" onclick="selectQsPayment('cash')" style="padding:0.875rem;border:2px solid #10b981;background:#f0fdf4;border-radius:0.5rem;font-weight:600;font-size:0.9375rem;cursor:pointer;">💵 Cash</button>
+                        <button id="qsCash" onclick="selectQsPayment('cash')" style="padding:0.875rem;border:2px solid #667eea;background:#f5f3ff;border-radius:0.5rem;font-weight:600;font-size:0.9375rem;cursor:pointer;">💵 Cash</button>
                         <button id="qsGcash" onclick="selectQsPayment('gcash')" style="padding:0.875rem;border:2px solid #e5e7eb;background:white;border-radius:0.5rem;font-weight:600;font-size:0.9375rem;cursor:pointer;">📱 GCash</button>
                     </div>
                 </div>
@@ -1283,10 +1283,10 @@
                 <!-- Customer Name (optional) -->
                 <div style="margin-bottom:1.5rem;">
                     <div style="font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">Customer Name <span style="font-weight:400;color:#9ca3af;">(optional)</span></div>
-                    <input type="text" id="qsCustomerName" placeholder="Walk-in customer" style="width:100%;padding:0.625rem 0.875rem;border:1px solid #d1d5db;border-radius:0.5rem;font-size:0.9375rem;">
+                    <input type="text" id="qsCustomerName" placeholder="Walk-in customer" style="width:100%;padding:0.625rem 0.875rem;border:1px solid #d1d5db;border-radius:0.5rem;font-size:0.9375rem;box-sizing:border-box;">
                 </div>
 
-                <button onclick="confirmQuickSale()" style="width:100%;padding:1rem;background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;border-radius:0.5rem;font-size:1.0625rem;font-weight:700;cursor:pointer;">✓ Confirm Sale</button>
+                <button onclick="confirmQuickSale()" style="width:100%;padding:1rem;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:0.5rem;font-size:1.0625rem;font-weight:700;cursor:pointer;">✓ Confirm Sale</button>
             </div>
         </div>
     </div>
@@ -2538,13 +2538,13 @@
             const cashBtn  = document.getElementById('qsCash');
             const gcashBtn = document.getElementById('qsGcash');
             if (method === 'cash') {
-                cashBtn.style.border  = '2px solid #10b981';
-                cashBtn.style.background = '#f0fdf4';
+                cashBtn.style.border  = '2px solid #667eea';
+                cashBtn.style.background = '#f5f3ff';
                 gcashBtn.style.border = '2px solid #e5e7eb';
                 gcashBtn.style.background = 'white';
             } else {
-                gcashBtn.style.border  = '2px solid #10b981';
-                gcashBtn.style.background = '#f0fdf4';
+                gcashBtn.style.border  = '2px solid #667eea';
+                gcashBtn.style.background = '#f5f3ff';
                 cashBtn.style.border  = '2px solid #e5e7eb';
                 cashBtn.style.background = 'white';
             }
@@ -2567,7 +2567,6 @@
                     payment_method: qsPaymentMethod === 'cash' ? 'cod' : 'gcash',
                     payment_status: 'paid',
                     order_status: 'completed',
-                    order_type: 'walk_in',
                     delivery_date: today,
                     delivery_time: 'am',
                     created_at: new Date().toISOString(),
