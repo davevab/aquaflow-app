@@ -1164,7 +1164,7 @@
                 <div class="stat-label" id="labelCollections">Today's Collections</div>
                 <div class="stat-value currency" id="todayCollections">0</div>
             </div>
-            <div class="stat-card" data-filter="overdue" id="statOverdue" style="border-top: 3px solid #dc2626;">
+            <div class="stat-card" data-filter="overdue" id="statOverdue" style="border-top: 3px solid #dc2626; display: none;">
                 <div class="stat-card-arrow">→</div>
                 <div class="stat-label" style="color: #dc2626;">Overdue Orders</div>
                 <div class="stat-value" id="overdueCount" style="color: #dc2626;">0</div>
@@ -1599,6 +1599,7 @@
             document.getElementById('totalRevenue').textContent     = totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
             document.getElementById('todayCollections').textContent = dayCollections.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
             document.getElementById('overdueCount').textContent     = overdueOrders.length;
+            document.getElementById('statOverdue').style.display    = overdueOrders.length > 0 ? 'block' : 'none';
         }
 
         // Filter orders
