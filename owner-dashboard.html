@@ -1836,11 +1836,17 @@
             
             currentOrderId = orderId;
             
-            const customerTypeBadge = order.customer_type && CUSTOMER_TYPE_BADGES[order.customer_type]
+            const isWalkIn = order.customer_phone === 'walk-in';
+            const customerTypeBadge = isWalkIn
+                ? `<span class="badge badge-gcash">🚶 Walk-in</span>`
+                : order.customer_type && CUSTOMER_TYPE_BADGES[order.customer_type]
                 ? `<span class="badge ${CUSTOMER_TYPE_BADGES[order.customer_type].class}">
                     ${CUSTOMER_TYPE_BADGES[order.customer_type].emoji} ${CUSTOMER_TYPE_BADGES[order.customer_type].label}
                    </span>`
                 : 'Not specified';
+            const paymentMethodLabel = isWalkIn
+                ? (order.payment_method === 'cod' ? 'Cash' : 'GCash')
+                : (order.payment_method === 'cod' ? 'Cash on Delivery' : 'GCash');
             
             const modalBody = document.getElementById('modalBody');
             modalBody.innerHTML = `
@@ -1863,6 +1869,7 @@
                     <div class="info-value">${customerTypeBadge}</div>
                 </div>
                 
+                ${!isWalkIn ? `
                 <div class="info-section highlight">
                     <div class="info-grid">
                         <div>
@@ -1875,6 +1882,7 @@
                         </div>
                     </div>
                 </div>
+                ` : ''}
                 
                 <div class="info-section highlight">
                     <div class="info-title">Quantity</div>
@@ -1887,7 +1895,7 @@
                     <div class="info-grid">
                         <div>
                             <div class="info-title">Payment Method</div>
-                            <div class="info-value">${order.payment_method === 'cod' ? 'Cash on Delivery' : 'GCash'}</div>
+                            <div class="info-value">${paymentMethodLabel}</div>
                         </div>
                         <div>
                             <div class="info-title">Payment Status</div>
