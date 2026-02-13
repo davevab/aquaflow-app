@@ -2527,6 +2527,9 @@
             qsPaymentMethod = 'cash';
             selectQsPayment('cash');
             updateQsTotal();
+            // Reset confirm button
+            const btn = [...document.querySelectorAll('#quickSaleModal button')].find(b => b.textContent.includes('Confirm') || b.textContent.includes('Saving'));
+            if (btn) { btn.disabled = false; btn.textContent = '✓ Confirm Sale'; }
             document.getElementById('quickSaleModal').classList.add('show');
         }
 
@@ -2566,6 +2569,14 @@
         }
 
         async function confirmQuickSale() {
+            const confirmBtn = document.querySelector('#quickSaleModal .btn-action, #quickSaleModal button[onclick="confirmQuickSale()"]') 
+                || [...document.querySelectorAll('#quickSaleModal button')].find(b => b.textContent.includes('Confirm'));
+            if (confirmBtn) {
+                if (confirmBtn.disabled) return;
+                confirmBtn.disabled = true;
+                confirmBtn.textContent = '⏳ Saving...';
+            }
+
             const qty = parseInt(document.getElementById('qsQty').value) || 1;
             const customerName = document.getElementById('qsCustomerName').value.trim() || 'Walk-in';
             const total = qty * qsPricePerGallon;
@@ -2592,6 +2603,7 @@
                 if (error) {
                     console.error('Quick sale error:', error);
                     alert('Failed to save sale.\n\nError: ' + (error.message || JSON.stringify(error)));
+                    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = '✓ Confirm Sale'; }
                     return;
                 }
 
