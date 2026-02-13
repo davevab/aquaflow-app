@@ -846,31 +846,19 @@
 
                     <div class="form-group">
                         <label>I am ordering as a: <span class="required">*</span></label>
-                        <div class="customer-type-options">
-                            <label class="type-option selected">
-                                <input type="radio" name="customerType" value="household" checked>
-                                <span class="type-icon">🏠</span>
-                                <div class="type-content">
-                                    <div class="type-title">Household Consumer</div>
-                                    <div class="type-description">Buying water for home use</div>
-                                </div>
-                            </label>
-                            <label class="type-option">
-                                <input type="radio" name="customerType" value="reseller">
-                                <span class="type-icon">🏪</span>
-                                <div class="type-content">
-                                    <div class="type-title">Reseller / Sari-Sari Store</div>
-                                    <div class="type-description">Selling water to others</div>
-                                </div>
-                            </label>
-                            <label class="type-option">
-                                <input type="radio" name="customerType" value="company">
-                                <span class="type-icon">🏢</span>
-                                <div class="type-content">
-                                    <div class="type-title">Company / Business</div>
-                                    <div class="type-description">Ordering for office or business use</div>
-                                </div>
-                            </label>
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;">
+                            <button type="button" id="typeHousehold" onclick="selectCustomerType('household')" style="padding:0.625rem 0.25rem;border:2px solid #2563eb;background:#eff6ff;border-radius:0.625rem;cursor:pointer;text-align:center;">
+                                <div style="font-size:1.25rem;">🏠</div>
+                                <div style="font-size:0.7rem;font-weight:600;color:#1e40af;margin-top:0.25rem;">Household</div>
+                            </button>
+                            <button type="button" id="typeReseller" onclick="selectCustomerType('reseller')" style="padding:0.625rem 0.25rem;border:2px solid #e5e7eb;background:white;border-radius:0.625rem;cursor:pointer;text-align:center;">
+                                <div style="font-size:1.25rem;">🏪</div>
+                                <div style="font-size:0.7rem;font-weight:600;color:#6b7280;margin-top:0.25rem;">Reseller</div>
+                            </button>
+                            <button type="button" id="typeCompany" onclick="selectCustomerType('company')" style="padding:0.625rem 0.25rem;border:2px solid #e5e7eb;background:white;border-radius:0.625rem;cursor:pointer;text-align:center;">
+                                <div style="font-size:1.25rem;">🏢</div>
+                                <div style="font-size:0.7rem;font-weight:600;color:#6b7280;margin-top:0.25rem;">Company</div>
+                            </button>
                         </div>
                     </div>
 
@@ -1246,13 +1234,7 @@
                 document.getElementById('address').value = currentCustomer.address;
 
                 // Select current customer type
-                document.querySelector(`input[name="customerType"][value="${currentCustomer.customer_type}"]`).checked = true;
-                
-                // Update type option styling
-                document.querySelectorAll('.type-option').forEach(option => {
-                    option.classList.remove('selected');
-                });
-                document.querySelector(`input[name="customerType"][value="${currentCustomer.customer_type}"]`).closest('.type-option').classList.add('selected');
+                selectCustomerType(currentCustomer.customer_type);
 
                 // Enable phone field for editing
                 document.getElementById('phone').disabled = false;
@@ -1266,7 +1248,7 @@
                 const name = document.getElementById('name').value.trim();
                 const phone = document.getElementById('phone').value.trim();
                 const address = document.getElementById('address').value.trim();
-                const customerType = document.querySelector('input[name="customerType"]:checked').value;
+                const customerType = ['household','reseller','company'].find(t => document.getElementById('type' + t.charAt(0).toUpperCase() + t.slice(1))?.dataset.selected === '1') || 'household';
                 
                 // Validate
                 if (!name || !phone || !address) {
@@ -1398,14 +1380,18 @@
                 window.scrollTo(0, 0);
             });
 
-            // Customer type option styling
-            document.querySelectorAll('.type-option').forEach(option => {
-                option.addEventListener('click', function() {
-                    document.querySelectorAll('.type-option').forEach(opt => opt.classList.remove('selected'));
-                    this.classList.add('selected');
-                    this.querySelector('input[type="radio"]').checked = true;
+            // Customer type toggle
+            window.selectCustomerType = function(val) {
+                ['household','reseller','company'].forEach(t => {
+                    const btn = document.getElementById('type' + t.charAt(0).toUpperCase() + t.slice(1));
+                    const active = t === val;
+                    btn.style.border = active ? '2px solid #2563eb' : '2px solid #e5e7eb';
+                    btn.style.background = active ? '#eff6ff' : 'white';
+                    btn.querySelector('div:last-child').style.color = active ? '#1e40af' : '#6b7280';
+                    btn.dataset.selected = active ? '1' : '0';
                 });
-            });
+            };
+            selectCustomerType('household'); // default
 
             // ===== ORDER FORM SECTION =====
 
@@ -1640,7 +1626,7 @@
                         customerName = document.getElementById('name').value.trim();
                         customerPhone = document.getElementById('phone').value.trim().replace(/\s/g, '');
                         customerAddress = document.getElementById('address').value.trim();
-                        customerType = document.querySelector('input[name="customerType"]:checked').value;
+                        customerType = ['household','reseller','company'].find(t => document.getElementById('type' + t.charAt(0).toUpperCase() + t.slice(1))?.dataset.selected === '1') || 'household';
 
                         if (isReturningCustomer) {
                             // Update existing customer
