@@ -1164,6 +1164,11 @@
                 <div class="stat-label" id="labelCollections">Today's Collections</div>
                 <div class="stat-value currency" id="todayCollections">0</div>
             </div>
+            <div class="stat-card" data-filter="overdue" id="statOverdue" style="border-top: 3px solid #dc2626;">
+                <div class="stat-card-arrow">→</div>
+                <div class="stat-label" style="color: #dc2626;">Overdue Orders</div>
+                <div class="stat-value" id="overdueCount" style="color: #dc2626;">0</div>
+            </div>
         </div>
 
         <!-- Revenue Monthly Panel -->
@@ -1271,7 +1276,8 @@
             'today': "Today's Orders",
             'pending': 'Pending Payments',
             'paid': 'Paid Orders',
-            'collected': "Today's Collections"
+            'collected': "Today's Collections",
+            'overdue': '⚠️ Overdue Orders'
         };
 
         // Show success toast notification
@@ -1585,10 +1591,14 @@
                 sum + parseFloat(order.total_amount || 0), 0
             );
 
-            document.getElementById('todayOrders').textContent     = dayOrders.length;
-            document.getElementById('pendingPayments').textContent = pendingPayments.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-            document.getElementById('totalRevenue').textContent    = totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            // Overdue: delivery_date < today AND not completed
+            const overdueOrders = allOrders.filter(o => o.delivery_date < getToday() && o.order_status !== 'completed');
+
+            document.getElementById('todayOrders').textContent      = dayOrders.length;
+            document.getElementById('pendingPayments').textContent  = pendingPayments.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('totalRevenue').textContent     = totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
             document.getElementById('todayCollections').textContent = dayCollections.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('overdueCount').textContent     = overdueOrders.length;
         }
 
         // Filter orders
@@ -1606,6 +1616,10 @@
                     return allOrders.filter(order => {
                         if (order.payment_status !== 'paid' || !order.updated_at) return false;
                         return toLocalDateStr(order.updated_at) === today;
+                    });
+                case 'overdue':
+                    return allOrders.filter(order => {
+                        return order.delivery_date < getToday() && order.order_status !== 'completed';
                     });
                 default:
                     return allOrders;
@@ -1878,6 +1892,11 @@
                         <button class="btn-action" style="background: #8b5cf6; color: white;" onclick="openAssignDriverModal('${order.id}')">
                             🚚 Assign Driver
                         </button>
+                        ${order.delivery_date < getToday() && order.order_status !== 'completed' ? `
+                        <button class="btn-action" style="background: #dc2626; color: white;" onclick="rescheduleToToday('${order.id}')">
+                            📅 Reschedule to Today
+                        </button>
+                        ` : ''}
                         ${order.payment_status === 'pending' ? `
                             <button class="btn-action btn-mark-paid" onclick="confirmPaymentUpdate('${order.id}', 'paid')">
                                 ✓ Mark as Paid
@@ -2049,6 +2068,46 @@
         function closeAssignDriverModal() {
             document.getElementById('assignDriverModal').classList.remove('show');
             assigningOrderId = null;
+        }
+
+        async function rescheduleToToday(orderId) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) return;
+
+            const today = getToday();
+            const confirmed = confirm(
+                `Reschedule this order to today (${today})?\n\n` +
+                `Customer: ${order.customer_name}\n` +
+                `Original date: ${order.delivery_date}`
+            );
+            if (!confirmed) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('orders')
+                    .update({ delivery_date: today, updated_at: new Date().toISOString() })
+                    .eq('id', orderId)
+                    .select()
+                    .single();
+
+                if (error) {
+                    alert('Failed to reschedule. Please try again.');
+                    return;
+                }
+
+                // Update local data
+                const index = allOrders.findIndex(o => o.id === orderId);
+                if (index !== -1) allOrders[index] = data;
+
+                showToast('📅 Rescheduled to today!');
+                closeOrderModal();
+                updateStats();
+                displayOrders(currentFilter);
+
+            } catch (err) {
+                console.error('Reschedule error:', err);
+                alert('An error occurred. Please try again.');
+            }
         }
 
         // ─── Revenue Monthly Panel ───────────────────────────
