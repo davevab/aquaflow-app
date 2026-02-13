@@ -1498,14 +1498,30 @@
                     filter: `driver_id=eq.${currentDriver.id}`
                 }, (payload) => {
                     const order = payload.new;
-                    // Only notify if driver_id was just set (assignment)
-                    if (payload.old.driver_id !== payload.new.driver_id) {
-                        showNotifBanner(
-                            '🚚 New Delivery Assigned!',
-                            `${order.customer_name} — ${order.quantity} gal ₱${order.total_amount}`
-                        );
-                        loadDeliveries();
-                    }
+                    const prevCount = allDeliveries.length;
+                    loadDeliveries().then(() => {
+                        // Notify if a new order appeared OR this order wasn't previously assigned
+                        const isNew = !allDeliveries.find(d => d.id === order.id) || allDeliveries.length > prevCount;
+                        if (order.order_status !== 'completed') {
+                            showNotifBanner(
+                                '🚚 New Delivery Assigned!',
+                                `${order.customer_name} — ${order.quantity} gal ₱${order.total_amount}`
+                            );
+                        }
+                    });
+                })
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'orders',
+                    filter: `driver_id=eq.${currentDriver.id}`
+                }, (payload) => {
+                    const order = payload.new;
+                    loadDeliveries();
+                    showNotifBanner(
+                        '🚚 New Delivery Assigned!',
+                        `${order.customer_name} — ${order.quantity} gal ₱${order.total_amount}`
+                    );
                 })
                 .subscribe();
 
