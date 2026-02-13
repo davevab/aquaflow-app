@@ -1,4 +1,4 @@
-// api/notify.js - Handles both owner notifications and driver assignment notifications
+// api/notify.js - Auto-detects INSERT (new order) vs UPDATE (driver assignment)
 const webpush = require('web-push');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -17,13 +17,14 @@ module.exports = async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
-        const order  = req.body.record || req.body;
-        const type   = req.body.type || 'INSERT'; // INSERT = new order, UPDATE = assignment
+        // Supabase sends: { type, table, record, old_record }
+        const { type, record, old_record } = req.body;
+        const order = record || req.body;
 
         let payload, query;
 
         if (type === 'INSERT') {
-            // New order → notify ALL owner subscriptions (no driver_id)
+            // New order → notify owner subscriptions (driver_id is null)
             payload = JSON.stringify({
                 title: '🔔 New Order Received!',
                 body: `${order.customer_name || 'Customer'} — ${order.quantity || '?'} gal ₱${order.total_amount || ''}`,
@@ -31,8 +32,8 @@ module.exports = async function handler(req, res) {
             });
             query = supabase.from('push_subscriptions').select('subscription').is('driver_id', null);
 
-        } else if (type === 'UPDATE' && order.driver_id) {
-            // Assignment → notify only THAT driver's subscriptions
+        } else if (type === 'UPDATE' && order.driver_id && old_record && old_record.driver_id !== order.driver_id) {
+            // Driver just got assigned → notify that specific driver only
             payload = JSON.stringify({
                 title: '🚚 New Delivery Assigned!',
                 body: `${order.customer_name || 'Customer'} — ${order.quantity || '?'} gal ₱${order.total_amount || ''}`,
@@ -55,7 +56,7 @@ module.exports = async function handler(req, res) {
         const sent   = results.filter(r => r.status === 'fulfilled').length;
         const failed = results.filter(r => r.status === 'rejected').length;
 
-        // Clean up expired subscriptions
+        // Clean up expired subscriptions (410 Gone)
         const expired = results
             .map((r, i) => r.status === 'rejected' && r.reason?.statusCode === 410 ? subscriptions[i].subscription.endpoint : null)
             .filter(Boolean);
