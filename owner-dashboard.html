@@ -1241,7 +1241,7 @@
     </div>
 
     <!-- Quick Sale Floating Button -->
-    <button id="quickSaleBtn" onclick="openQuickSale()" style="position:fixed;bottom:2rem;right:1.5rem;z-index:900;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:1rem;padding:0.875rem 1.25rem;font-size:1rem;font-weight:700;box-shadow:0 4px 16px rgba(102,126,234,0.4);cursor:pointer;display:flex;align-items:center;gap:0.5rem;transition:all 0.2s;outline:none;-webkit-tap-highlight-color:transparent;">
+    <button id="quickSaleBtn" style="position:fixed;z-index:900;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:1rem;padding:0.875rem 1.25rem;font-size:1rem;font-weight:700;box-shadow:0 4px 16px rgba(102,126,234,0.4);cursor:grab;display:flex;align-items:center;gap:0.5rem;outline:none;-webkit-tap-highlight-color:transparent;user-select:none;touch-action:none;">
         ⚡ Quick Sale
     </button>
 
@@ -2635,6 +2635,108 @@
                 if (e.target === this) closeQuickSale();
             });
         });
+
+        // ─── DRAGGABLE QUICK SALE BUTTON ─────────────────────
+        (function() {
+            const btn = document.getElementById('quickSaleBtn');
+            let dragging = false;
+            let startX, startY, startLeft, startTop;
+            const STORAGE_KEY = 'qsBtnPos';
+
+            // Set default or saved position
+            function initPosition() {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const { left, top } = JSON.parse(saved);
+                    btn.style.left = left;
+                    btn.style.top  = top;
+                } else {
+                    btn.style.bottom = '2rem';
+                    btn.style.right  = '1.5rem';
+                }
+            }
+
+            function savePosition() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    left: btn.style.left,
+                    top:  btn.style.top
+                }));
+            }
+
+            function clamp(value, min, max) {
+                return Math.min(Math.max(value, min), max);
+            }
+
+            function onMove(clientX, clientY) {
+                const dx = clientX - startX;
+                const dy = clientY - startY;
+                const newLeft = clamp(startLeft + dx, 0, window.innerWidth  - btn.offsetWidth);
+                const newTop  = clamp(startTop  + dy, 0, window.innerHeight - btn.offsetHeight);
+                btn.style.left   = newLeft + 'px';
+                btn.style.top    = newTop  + 'px';
+                btn.style.right  = 'auto';
+                btn.style.bottom = 'auto';
+            }
+
+            // Touch
+            btn.addEventListener('touchstart', function(e) {
+                const t = e.touches[0];
+                startX = t.clientX;
+                startY = t.clientY;
+                startLeft = btn.getBoundingClientRect().left;
+                startTop  = btn.getBoundingClientRect().top;
+                dragging = false;
+                btn.style.transition = 'none';
+            }, { passive: true });
+
+            btn.addEventListener('touchmove', function(e) {
+                const t = e.touches[0];
+                const dx = Math.abs(t.clientX - startX);
+                const dy = Math.abs(t.clientY - startY);
+                if (dx > 5 || dy > 5) dragging = true;
+                if (dragging) {
+                    e.preventDefault();
+                    onMove(t.clientX, t.clientY);
+                }
+            }, { passive: false });
+
+            btn.addEventListener('touchend', function() {
+                if (!dragging) openQuickSale();
+                else savePosition();
+                dragging = false;
+                btn.style.cursor = 'grab';
+            });
+
+            // Mouse
+            btn.addEventListener('mousedown', function(e) {
+                startX = e.clientX;
+                startY = e.clientY;
+                startLeft = btn.getBoundingClientRect().left;
+                startTop  = btn.getBoundingClientRect().top;
+                dragging = false;
+                btn.style.transition = 'none';
+                btn.style.cursor = 'grabbing';
+
+                function onMouseMove(e) {
+                    const dx = Math.abs(e.clientX - startX);
+                    const dy = Math.abs(e.clientY - startY);
+                    if (dx > 5 || dy > 5) dragging = true;
+                    if (dragging) onMove(e.clientX, e.clientY);
+                }
+                function onMouseUp() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    if (!dragging) openQuickSale();
+                    else savePosition();
+                    dragging = false;
+                    btn.style.cursor = 'grab';
+                }
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            initPosition();
+        })();
     </script>
 </body>
 </html>
