@@ -923,9 +923,7 @@
                     🔔
                     <span id="bellDot" style="position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:#facc15;display:none;border:1px solid rgba(0,0,0,0.2);"></span>
                 </button>
-                <button class="refresh-btn" id="refreshBtn" title="Refresh deliveries">
-                    🔄
-                </button>
+
                 <button onclick="logout()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:white;padding:0.5rem 0.75rem;border-radius:0.5rem;cursor:pointer;font-size:0.8125rem;font-weight:600;">
                     Logout
                 </button>
@@ -1418,19 +1416,8 @@
             // If no session, show login screen (default state)
             // Otherwise dashboard is already showing from checkExistingSession()
             
-            // Refresh button
-            document.getElementById('refreshBtn').addEventListener('click', function() {
-                this.disabled = true;
-                this.classList.add('refreshing');
-                loadDeliveries();
-                setTimeout(() => {
-                    this.disabled = false;
-                    this.classList.remove('refreshing');
-                }, 1000);
-            });
-            
-            // Auto-refresh every 60 seconds
-            setInterval(loadDeliveries, 60000);
+            // Auto-refresh every 10 seconds
+            setInterval(loadDeliveries, 10000);
 
             // Close modal on background click
             document.getElementById('deliveryModal').addEventListener('click', function(e) {
