@@ -362,11 +362,7 @@
     });
 
     // Redirect if already running as installed PWA
-    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-        window.location.replace('/driver-app.html');
-    } else {
-        document.body.classList.add('loaded');
-    }
+    document.body.classList.add('loaded');
     </script>
 </body>
 </html>

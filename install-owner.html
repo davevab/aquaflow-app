@@ -357,11 +357,7 @@
         }
     });
 
-    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-        window.location.replace('/owner-dashboard.html');
-    } else {
-        document.body.classList.add('loaded');
-    }
+    document.body.classList.add('loaded');
     </script>
 </body>
 </html>
