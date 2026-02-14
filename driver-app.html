@@ -995,9 +995,7 @@
                 Logout
             </button>
 
-            <button class="btn-share-qr" id="shareQRBtn">
-                Share QR Code to Others
-            </button>
+
         </div>
     </div>
 
@@ -1037,10 +1035,10 @@
                 <!-- Dropdown Menu -->
                 <div id="hamburgerMenu" style="display:none;position:absolute;top:3rem;right:0;background:white;border-radius:0.75rem;box-shadow:0 8px 24px rgba(0,0,0,0.15);min-width:180px;z-index:500;overflow:hidden;">
                     <button onclick="document.getElementById('qrModalOverlay').classList.add('active');toggleHamburgerMenu()" style="width:100%;padding:1rem 1.25rem;background:none;border:none;text-align:left;font-size:0.9375rem;font-weight:600;color:#111827;cursor:pointer;display:flex;align-items:center;gap:0.75rem;border-bottom:1px solid #f3f4f6;">
-                        📲 Share QR Code
+                        Share QR Code
                     </button>
                     <button onclick="logout()" style="width:100%;padding:1rem 1.25rem;background:none;border:none;text-align:left;font-size:0.9375rem;font-weight:600;color:#dc2626;cursor:pointer;display:flex;align-items:center;gap:0.75rem;">
-                        🚪 Logout
+                        Logout
                     </button>
                 </div>
             </div>
@@ -1525,10 +1523,6 @@
             console.log('Driver app loaded');
 
             // Share QR Modal
-            document.getElementById('shareQRBtn').addEventListener('click', function() {
-                document.getElementById('qrModalOverlay').classList.add('active');
-            });
-
             window.closeQRModal = function() {
                 document.getElementById('qrModalOverlay').classList.remove('active');
             };
